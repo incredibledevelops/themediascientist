@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Portal | The Media Scientist</title>
+    
+    <!-- Google Fonts: Inter & Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0B0E17',
+                        cyanAccent: '#00F2FE',
+                        purpleAccent: '#7928CA',
+                        emeraldAccent: '#00F5A0',
+                        glassBg: 'rgba(30, 41, 59, 0.4)',
+                        glassBorder: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #0B0E17;
+            color: #f8fafc; /* slate-50 */
+        }
+        
+        .font-mono-heading {
+            font-family: 'Space Grotesk', monospace;
+            letter-spacing: -0.025em;
+        }
+        
+        /* Transparent grid overlay */
+        .tech-grid-bg {
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Glass card effect */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(0, 242, 254, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 242, 254, 0.07);
+        }
+
+        /* Custom Scrollbar for Main Content */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(11, 14, 23, 0.5); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2); 
+        }
+        
+        /* Gradient Text Helper */
+        .text-gradient {
+            background: linear-gradient(to right, #00F2FE, #7928CA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="antialiased overflow-hidden flex h-screen selection:bg-cyanAccent/30 selection:text-white">
+    
+    <!-- Background Grid -->
+    <div class="tech-grid-bg"></div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Left Sidebar -->
+    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-72 flex flex-col glass-card !rounded-none !border-y-0 !border-l-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        
+        <!-- Brand Header -->
+        <div class="p-6 border-b border-glassBorder flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyanAccent to-purpleAccent flex items-center justify-center text-white shadow-[0_0_15px_rgba(0,242,254,0.3)]">
+                    <i class="fa-solid fa-camera-retro text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-mono-heading font-bold text-lg tracking-wide text-white">THE MEDIA</h1>
+                    <h2 class="font-mono-heading font-semibold text-xs tracking-[0.2em] text-cyanAccent uppercase">Scientist</h2>
+                </div>
+            </div>
+            <!-- Mobile Close Button -->
+            <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 px-6 text-xs font-semibold tracking-wider text-slate-500 uppercase mt-4 mb-2">
+            Client Portal
+        </div>
+
+        <!-- Menu Items -->
+        <nav class="flex-1 px-4 space-y-2 overflow-y-auto">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 text-white border border-white/10 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-r from-cyanAccent/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <i class="fa-solid fa-border-all w-5 text-cyanAccent relative z-10"></i>
+                <span class="font-medium text-sm relative z-10">Dashboard</span>
+            </a>
+            
+            <a href="#" class="flex items-center justify-between px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors group">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-layer-group w-5 group-hover:text-cyanAccent transition-colors"></i>
+                    <span class="font-medium text-sm">My Projects</span>
+                </div>
+                <span class="bg-cyanAccent/20 text-cyanAccent text-[10px] font-bold px-2 py-0.5 rounded-full">2</span>
+            </a>
+            
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors group">
+                <i class="fa-solid fa-file-invoice-dollar w-5 group-hover:text-emeraldAccent transition-colors"></i>
+                <span class="font-medium text-sm">Invoices & Billing</span>
+            </a>
+            
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors group">
+                <i class="fa-solid fa-cloud-arrow-down w-5 group-hover:text-purpleAccent transition-colors"></i>
+                <span class="font-medium text-sm">Files & Deliverables</span>
+            </a>
+            
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors group">
+                <i class="fa-solid fa-messages w-5 group-hover:text-cyanAccent transition-colors"></i>
+                <span class="font-medium text-sm">Support Messages</span>
+            </a>
+        </nav>
+
+        <!-- User Profile Snippet Footer -->
+        <div class="p-5 border-t border-glassBorder m-4 rounded-xl bg-black/30 backdrop-blur-md">
+            <div class="flex items-center gap-3">
+                <img src="https://ui-avatars.com/api/?name=STBM&background=0D8ABC&color=fff&rounded=true&bold=true" alt="Profile" class="w-10 h-10 rounded-full border-2 border-white/10">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate">STBM E-Commerce Admin</p>
+                    <p class="text-xs text-slate-400 truncate">client@stbm.com</p>
+                </div>
+            </div>
+            <button class="w-full mt-4 py-2 text-xs font-semibold text-slate-300 hover:text-white border border-glassBorder rounded-lg hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 relative h-full">
+        
+        <!-- Top Header -->
+        <header class="h-20 flex items-center justify-between px-6 lg:px-10 border-b border-glassBorder bg-darkBg/60 backdrop-blur-xl z-30 sticky top-0">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden text-slate-300 hover:text-white bg-white/5 p-2 rounded-lg border border-white/10">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div>
+                    <h2 class="font-mono-heading font-semibold text-xl lg:text-2xl text-white tracking-tight">Client Dashboard</h2>
+                    <p class="text-xs lg:text-sm text-slate-400 mt-0.5">Welcome back, STBM E-Commerce.</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4 lg:gap-6">
+                <!-- System Clock (Hidden on very small mobile) -->
+                <div class="hidden md:flex items-center gap-2 text-sm text-slate-300 font-mono-heading bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
+                    <i class="fa-regular fa-clock text-cyanAccent"></i>
+                    <span id="sys-clock">--:--:--</span>
+                </div>
+                
+                <!-- Notification Bell -->
+                <button class="relative text-slate-300 hover:text-white transition-colors">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emeraldAccent rounded-full border border-darkBg shadow-[0_0_8px_#00F5A0]"></span>
+                </button>
+                
+                <!-- New Request Button -->
+                <button class="hidden sm:flex items-center gap-2 bg-gradient-to-r from-cyanAccent to-purpleAccent hover:from-[#38f6ff] hover:to-[#9146df] text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-[0_4px_14px_rgba(0,242,254,0.25)] hover:shadow-[0_6px_20px_rgba(0,242,254,0.4)]">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>New Request</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto p-6 lg:p-10 pb-24">
+            
+            <!-- 4 Metric Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Card 1 -->
+                <div class="glass-card p-5 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyanAccent/10 rounded-full blur-2xl group-hover:bg-cyanAccent/20 transition-all"></div>
+                    <div class="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium mb-1">Active Projects</p>
+                            <h3 class="font-mono-heading text-3xl font-bold text-white">2</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-cyanAccent/20 border border-cyanAccent/30 flex items-center justify-center text-cyanAccent">
+                            <i class="fa-solid fa-bolt text-lg"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 relative z-10"><span class="text-emeraldAccent"><i class="fa-solid fa-arrow-up text-[10px]"></i> 1</span> completed this month</p>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="glass-card p-5 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-purpleAccent/10 rounded-full blur-2xl group-hover:bg-purpleAccent/20 transition-all"></div>
+                    <div class="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium mb-1">Pending Invoices</p>
+                            <h3 class="font-mono-heading text-3xl font-bold text-white">GH₵ 4,250</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-purpleAccent/20 border border-purpleAccent/30 flex items-center justify-center text-purpleAccent">
+                            <i class="fa-solid fa-wallet text-lg"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 relative z-10">Due in 5 days</p>
+                </div>
+                
+                <!-- Card 3 -->
+                <div class="glass-card p-5 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-emeraldAccent/10 rounded-full blur-2xl group-hover:bg-emeraldAccent/20 transition-all"></div>
+                    <div class="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium mb-1">Files for Review</p>
+                            <h3 class="font-mono-heading text-3xl font-bold text-white">4</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-emeraldAccent/20 border border-emeraldAccent/30 flex items-center justify-center text-emeraldAccent">
+                            <i class="fa-solid fa-file-circle-check text-lg"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 relative z-10">Awaiting your approval</p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="glass-card p-5 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-all"></div>
+                    <div class="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium mb-1">Next Deadline</p>
+                            <h3 class="font-mono-heading text-2xl font-bold text-white mt-1">Oct 15</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                            <i class="fa-solid fa-calendar-day text-lg"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 relative z-10 truncate">E-Commerce Final Launch</p>
+                </div>
+            </div>
+
+            <!-- Active & Recent Projects Table -->
+            <div class="glass-card mb-8 overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-glassBorder flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h3 class="font-mono-heading text-lg font-semibold text-white">Active & Recent Projects</h3>
+                    <button class="text-sm text-cyanAccent hover:text-white transition-colors">View All Projects &rarr;</button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-black/30 text-slate-400 text-xs uppercase tracking-wider">
+                                <th class="p-4 pl-6 font-medium">Project Name</th>
+                                <th class="p-4 font-medium">Service</th>
+                                <th class="p-4 font-medium">Timeline</th>
+                                <th class="p-4 font-medium">Progress</th>
+                                <th class="p-4 pr-6 font-medium text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-glassBorder text-sm">
+                            <!-- Row 1 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 pl-6">
+                                    <p class="font-semibold text-white">STBM E-Commerce Web App</p>
+                                    <p class="text-xs text-slate-400">Req: #REQ-8294</p>
+                                </td>
+                                <td class="p-4 text-slate-300">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-code text-cyanAccent w-4"></i> Web Dev
+                                    </div>
+                                </td>
+                                <td class="p-4 text-slate-400">Sep 1 - Oct 15</td>
+                                <td class="p-4 min-w-[150px]">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-slate-300">Frontend Integration</span>
+                                        <span class="text-cyanAccent">75%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-full h-1.5 border border-slate-700">
+                                        <div class="bg-gradient-to-r from-cyanAccent to-blue-500 h-1.5 rounded-full" style="width: 75%"></div>
+                                    </div>
+                                </td>
+                                <td class="p-4 pr-6 text-right">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyanAccent/10 text-cyanAccent border border-cyanAccent/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-cyanAccent animate-pulse"></span>
+                                        In Progress
+                                    </span>
+                                </td>
+                            </tr>
+                            
+                            <!-- Row 2 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 pl-6">
+                                    <p class="font-semibold text-white">Product Studio Photo Shoot</p>
+                                    <p class="text-xs text-slate-400">Req: #REQ-8302</p>
+                                </td>
+                                <td class="p-4 text-slate-300">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-camera text-purpleAccent w-4"></i> Photography
+                                    </div>
+                                </td>
+                                <td class="p-4 text-slate-400">Sep 20 - Sep 25</td>
+                                <td class="p-4">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-slate-300">Client Approval</span>
+                                        <span class="text-orange-400">90%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-full h-1.5 border border-slate-700">
+                                        <div class="bg-gradient-to-r from-orange-400 to-yellow-500 h-1.5 rounded-full" style="width: 90%"></div>
+                                    </div>
+                                </td>
+                                <td class="p-4 pr-6 text-right">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                        <i class="fa-solid fa-clock"></i>
+                                        Review
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 3 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 pl-6">
+                                    <p class="font-semibold text-white">Brand Strategy Consultation</p>
+                                    <p class="text-xs text-slate-400">Req: #REQ-8105</p>
+                                </td>
+                                <td class="p-4 text-slate-300">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-chess-knight text-emeraldAccent w-4"></i> Strategy
+                                    </div>
+                                </td>
+                                <td class="p-4 text-slate-400">Aug 10 - Aug 30</td>
+                                <td class="p-4">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-slate-300">Delivered</span>
+                                        <span class="text-emeraldAccent">100%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-full h-1.5 border border-slate-700">
+                                        <div class="bg-emeraldAccent h-1.5 rounded-full" style="width: 100%"></div>
+                                    </div>
+                                </td>
+                                <td class="p-4 pr-6 text-right">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emeraldAccent/10 text-emeraldAccent border border-emeraldAccent/20">
+                                        <i class="fa-solid fa-check"></i>
+                                        Completed
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Side-by-Side: Deliverables & Invoices -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                
+                <!-- Recent Deliverables -->
+                <div class="glass-card flex flex-col h-full">
+                    <div class="p-6 border-b border-glassBorder flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-down text-purpleAccent"></i>
+                            <h3 class="font-mono-heading text-lg font-semibold text-white">Recent Deliverables</h3>
+                        </div>
+                        <span class="bg-purpleAccent/20 text-purpleAccent text-xs px-2 py-1 rounded-md font-medium">4 New</span>
+                    </div>
+                    <div class="p-4 flex-1">
+                        <ul class="space-y-3">
+                            <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-purpleAccent/30 transition-colors group">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded bg-slate-800 flex items-center justify-center text-slate-300">
+                                        <i class="fa-regular fa-image text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white group-hover:text-purpleAccent transition-colors">Product_Shots_Final.zip</p>
+                                        <p class="text-xs text-slate-400">1.2 GB • Uploaded Today, 10:30 AM</p>
+                                    </div>
+                                </div>
+                                <button class="w-8 h-8 rounded-full bg-white/5 hover:bg-purpleAccent/20 text-slate-300 hover:text-purpleAccent flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                            </li>
+                            <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-purpleAccent/30 transition-colors group">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded bg-slate-800 flex items-center justify-center text-slate-300">
+                                        <i class="fa-brands fa-figma text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white group-hover:text-purpleAccent transition-colors">UI_Mockups_V3.fig</p>
+                                        <p class="text-xs text-slate-400">45 MB • Uploaded Yesterday</p>
+                                    </div>
+                                </div>
+                                <button class="w-8 h-8 rounded-full bg-white/5 hover:bg-purpleAccent/20 text-slate-300 hover:text-purpleAccent flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                            </li>
+                            <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-purpleAccent/30 transition-colors group">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded bg-slate-800 flex items-center justify-center text-slate-300">
+                                        <i class="fa-solid fa-file-pdf text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white group-hover:text-purpleAccent transition-colors">Brand_Guidelines_2026.pdf</p>
+                                        <p class="text-xs text-slate-400">5.4 MB • Uploaded Aug 30</p>
+                                    </div>
+                                </div>
+                                <button class="w-8 h-8 rounded-full bg-white/5 hover:bg-purpleAccent/20 text-slate-300 hover:text-purpleAccent flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="p-4 border-t border-glassBorder text-center">
+                        <a href="#" class="text-xs text-slate-400 hover:text-white transition-colors">View All Files</a>
+                    </div>
+                </div>
+
+                <!-- Recent Invoices -->
+                <div class="glass-card flex flex-col h-full">
+                    <div class="p-6 border-b border-glassBorder flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice text-emeraldAccent"></i>
+                            <h3 class="font-mono-heading text-lg font-semibold text-white">Recent Invoices</h3>
+                        </div>
+                        <button class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
+                            Pay Balance
+                        </button>
+                    </div>
+                    <div class="p-4 flex-1">
+                        <ul class="space-y-3">
+                            <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-emeraldAccent/30 transition-colors">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
+                                        <i class="fa-solid fa-hourglass-half"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">INV-2026-089</p>
+                                        <p class="text-xs text-slate-400">Due: Oct 01, 2026</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-mono-heading font-bold text-white">GH₵ 4,250.00</p>
+                                    <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wide">Pending</p>
+                                </div>
+                            </li>
+                            <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-emeraldAccent/30 transition-colors">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full bg-emeraldAccent/10 border border-emeraldAccent/20 flex items-center justify-center text-emeraldAccent">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">INV-2026-072</p>
+                                        <p class="text-xs text-slate-400">Paid: Aug 25, 2026</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-mono-heading font-bold text-slate-400">GH₵ 12,500.00</p>
+                                    <p class="text-[10px] font-bold text-emeraldAccent uppercase tracking-wide">Paid</p>
+                                </div>
+                            </li>
+                            <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-emeraldAccent/30 transition-colors">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full bg-emeraldAccent/10 border border-emeraldAccent/20 flex items-center justify-center text-emeraldAccent">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">INV-2026-045</p>
+                                        <p class="text-xs text-slate-400">Paid: Jul 10, 2026</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-mono-heading font-bold text-slate-400">GH₵ 3,000.00</p>
+                                    <p class="text-[10px] font-bold text-emeraldAccent uppercase tracking-wide">Paid</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="p-4 border-t border-glassBorder text-center">
+                        <a href="#" class="text-xs text-slate-400 hover:text-white transition-colors">View Billing History</a>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Footer text -->
+            <div class="mt-12 text-center text-xs text-slate-500 font-mono-heading">
+                &copy; 2026 The Media Scientist. Client Portal Engine v2.4.
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // System Clock Logic
+        function updateClock() {
+            const clockElement = document.getElementById('sys-clock');
+            if (!clockElement) return;
+            
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true
+            };
+            
+            clockElement.textContent = now.toLocaleDateString('en-US', options).replace(',', ' •');
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call
+
+        // Mobile Sidebar Toggle Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            // Toggle translate classes for the sidebar
+            sidebar.classList.toggle('-translate-x-full');
+            
+            // Toggle visibility for the overlay
+            if (overlay.classList.contains('hidden')) {
+                overlay.classList.remove('hidden');
+                // slight delay to allow display:block to apply before animating opacity
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                }, 10);
+            } else {
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300); // match standard tailwind duration-300
+            }
+        }
+    </script>
+</body>
+</html>

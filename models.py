@@ -1,7 +1,9 @@
 from pymongo import MongoClient, DESCENDING
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
+import secrets
+import string
 from config import Config
 
 client = MongoClient(Config.MONGO_URI)
@@ -15,24 +17,44 @@ portfolio_col = db.portfolio
 about_col = db.about
 contact_col = db.contact
 settings_col = db.settings
+projects_col = db.projects
+invoices_col = db.invoices
+deliverables_col = db.deliverables
+client_messages_col = db.client_messages
+payments_col = db.payments
 
 
+def gen_temp_password(length=10):
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
+def gen_client_code():
+    return "CLT-" + secrets.token_hex(3).upper()
+
+
+# ==========================================================
+#  USER
+# ==========================================================
 class User:
     @staticmethod
-    def create(email, password, name="Admin", is_admin=True):
+    def create(email, password, name="Admin", role="admin"):
         existing = users_col.find_one({"email": email.lower()})
         if existing:
-            return existing
+            return existing, None
         user = {
             "email": email.lower(),
             "password": generate_password_hash(password),
             "name": name,
-            "is_admin": is_admin,
+            "role": role,
+            "is_admin": role == "admin",
+            "client_code": gen_client_code() if role == "client" else None,
+            "is_active": True,
             "created_at": datetime.utcnow()
         }
         result = users_col.insert_one(user)
         user["_id"] = result.inserted_id
-        return user
+        return user, password
 
     @staticmethod
     def find_by_email(email):
@@ -56,10 +78,37 @@ class User:
         return list(users_col.find().sort("created_at", DESCENDING))
 
     @staticmethod
+    def get_all_clients():
+        return list(users_col.find({"role": "client"}).sort("created_at", DESCENDING))
+
+    @staticmethod
+    def count_clients():
+        return users_col.count_documents({"role": "client"})
+
+    @staticmethod
+    def update_password(user_id, new_password):
+        return users_col.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"password": generate_password_hash(new_password)}}
+        )
+
+    @staticmethod
+    def toggle_active(user_id):
+        user = User.find_by_id(user_id)
+        if not user:
+            return None
+        new_state = not user.get("is_active", True)
+        users_col.update_one({"_id": ObjectId(user_id)}, {"$set": {"is_active": new_state}})
+        return new_state
+
+    @staticmethod
     def delete(user_id):
         return users_col.delete_one({"_id": ObjectId(user_id)})
 
 
+# ==========================================================
+#  INQUIRY
+# ==========================================================
 class Inquiry:
     @staticmethod
     def create(data):
@@ -98,6 +147,9 @@ class Inquiry:
         return inquiries_col.delete_one({"_id": ObjectId(inquiry_id)})
 
 
+# ==========================================================
+#  SERVICE
+# ==========================================================
 class Service:
     @staticmethod
     def create(data):
@@ -187,6 +239,9 @@ class Service:
         services_col.insert_many(defaults)
 
 
+# ==========================================================
+#  PORTFOLIO
+# ==========================================================
 class PortfolioItem:
     @staticmethod
     def create(data):
@@ -279,6 +334,9 @@ class PortfolioItem:
         portfolio_col.insert_many(defaults)
 
 
+# ==========================================================
+#  SITE CONTENT
+# ==========================================================
 class SiteContent:
     @staticmethod
     def get_about():
@@ -350,9 +408,216 @@ class SiteContent:
         return settings_col.update_one({"_id": "settings"}, {"$set": data}, upsert=True)
 
 
+# ==========================================================
+#  PROJECT
+# ==========================================================
+class Project:
+    @staticmethod
+    def create(data):
+        data["created_at"] = datetime.utcnow()
+        data.setdefault("progress", 0)
+        data.setdefault("status", "in_progress")
+        data.setdefault("stage_label", "Kickoff")
+        return projects_col.insert_one(data)
+
+    @staticmethod
+    def get_for_client(client_id):
+        return list(projects_col.find({"client_id": ObjectId(client_id)}).sort("created_at", DESCENDING))
+
+    @staticmethod
+    def get_all():
+        return list(projects_col.find().sort("created_at", DESCENDING))
+
+    @staticmethod
+    def get_by_id(project_id):
+        try:
+            return projects_col.find_one({"_id": ObjectId(project_id)})
+        except Exception:
+            return None
+
+    @staticmethod
+    def update(project_id, data):
+        return projects_col.update_one({"_id": ObjectId(project_id)}, {"$set": data})
+
+    @staticmethod
+    def delete(project_id):
+        return projects_col.delete_one({"_id": ObjectId(project_id)})
+
+    @staticmethod
+    def count():
+        return projects_col.count_documents({})
+
+    @staticmethod
+    def count_active_for_client(client_id):
+        return projects_col.count_documents({
+            "client_id": ObjectId(client_id),
+            "status": {"$in": ["in_progress", "review"]}
+        })
+
+
+# ==========================================================
+#  INVOICE
+# ==========================================================
+class Invoice:
+    @staticmethod
+    def create(data):
+        data["created_at"] = datetime.utcnow()
+        data.setdefault("status", "pending")
+        return invoices_col.insert_one(data)
+
+    @staticmethod
+    def get_for_client(client_id):
+        return list(invoices_col.find({"client_id": ObjectId(client_id)}).sort("created_at", DESCENDING))
+
+    @staticmethod
+    def get_all():
+        return list(invoices_col.find().sort("created_at", DESCENDING))
+
+    @staticmethod
+    def get_by_id(invoice_id):
+        try:
+            return invoices_col.find_one({"_id": ObjectId(invoice_id)})
+        except Exception:
+            return None
+
+    @staticmethod
+    def get_by_reference(reference):
+        return invoices_col.find_one({"payment_reference": reference})
+
+    @staticmethod
+    def update(invoice_id, data):
+        return invoices_col.update_one({"_id": ObjectId(invoice_id)}, {"$set": data})
+
+    @staticmethod
+    def mark_paid(invoice_id, reference=None):
+        update_data = {
+            "status": "paid",
+            "paid_at": datetime.utcnow()
+        }
+        if reference:
+            update_data["payment_reference"] = reference
+        return invoices_col.update_one({"_id": ObjectId(invoice_id)}, {"$set": update_data})
+
+    @staticmethod
+    def delete(invoice_id):
+        return invoices_col.delete_one({"_id": ObjectId(invoice_id)})
+
+    @staticmethod
+    def pending_total_for_client(client_id):
+        pipeline = [
+            {"$match": {"client_id": ObjectId(client_id), "status": "pending"}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]
+        res = list(invoices_col.aggregate(pipeline))
+        return res[0]["total"] if res else 0
+
+
+# ==========================================================
+#  DELIVERABLE
+# ==========================================================
+class Deliverable:
+    @staticmethod
+    def create(data):
+        data["created_at"] = datetime.utcnow()
+        data.setdefault("reviewed", False)
+        return deliverables_col.insert_one(data)
+
+    @staticmethod
+    def get_for_client(client_id):
+        return list(deliverables_col.find({"client_id": ObjectId(client_id)}).sort("created_at", DESCENDING))
+
+    @staticmethod
+    def get_all():
+        return list(deliverables_col.find().sort("created_at", DESCENDING))
+
+    @staticmethod
+    def get_by_id(deliverable_id):
+        try:
+            return deliverables_col.find_one({"_id": ObjectId(deliverable_id)})
+        except Exception:
+            return None
+
+    @staticmethod
+    def count_for_client(client_id):
+        return deliverables_col.count_documents({"client_id": ObjectId(client_id), "reviewed": False})
+
+    @staticmethod
+    def mark_reviewed(deliverable_id):
+        return deliverables_col.update_one(
+            {"_id": ObjectId(deliverable_id)},
+            {"$set": {"reviewed": True}}
+        )
+
+    @staticmethod
+    def delete(deliverable_id):
+        return deliverables_col.delete_one({"_id": ObjectId(deliverable_id)})
+
+
+# ==========================================================
+#  CLIENT MESSAGE
+# ==========================================================
+class ClientMessage:
+    @staticmethod
+    def create(data):
+        data["created_at"] = datetime.utcnow()
+        data.setdefault("read", False)
+        data.setdefault("from_role", "client")
+        return client_messages_col.insert_one(data)
+
+    @staticmethod
+    def get_for_client(client_id):
+        return list(client_messages_col.find({"client_id": ObjectId(client_id)}).sort("created_at", 1))
+
+    @staticmethod
+    def count_unread_for_admin():
+        return client_messages_col.count_documents({"from_role": "client", "read": False})
+
+    @staticmethod
+    def count_unread_for_client(client_id):
+        return client_messages_col.count_documents({
+            "client_id": ObjectId(client_id),
+            "from_role": "admin",
+            "read": False
+        })
+
+    @staticmethod
+    def mark_read_for_client(client_id):
+        return client_messages_col.update_many(
+            {"client_id": ObjectId(client_id), "from_role": "admin"},
+            {"$set": {"read": True}}
+        )
+
+    @staticmethod
+    def mark_read_for_admin(client_id):
+        return client_messages_col.update_many(
+            {"client_id": ObjectId(client_id), "from_role": "client"},
+            {"$set": {"read": True}}
+        )
+
+
+# ==========================================================
+#  PAYMENT (audit log)
+# ==========================================================
+class Payment:
+    @staticmethod
+    def create(data):
+        data["created_at"] = datetime.utcnow()
+        return payments_col.insert_one(data)
+
+    @staticmethod
+    def get_all():
+        return list(payments_col.find().sort("created_at", DESCENDING))
+
+    @staticmethod
+    def get_for_client(client_id):
+        return list(payments_col.find({"client_id": ObjectId(client_id)}).sort("created_at", DESCENDING))
+
+
+# ==========================================================
+#  SEED
+# ==========================================================
 def seed_database():
-    """Call this on app startup to ensure data exists."""
-    User.create(Config.ADMIN_EMAIL, Config.ADMIN_PASSWORD, "Opoku Kwadwo Incredible", True)
+    User.create(Config.ADMIN_EMAIL, Config.ADMIN_PASSWORD, "Opoku Kwadwo Incredible", role="admin")
     Service.seed_defaults()
     PortfolioItem.seed_defaults()
     SiteContent.get_about()

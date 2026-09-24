@@ -1,0 +1,60 @@
+{% extends 'client/base.html' %}
+{% block title %}My Projects{% endblock %}
+{% block page_title %}My Projects{% endblock %}
+{% block page_subtitle %}All projects assigned to you.{% endblock %}
+
+{% block content %}
+{% if projects %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    {% for p in projects %}
+    <div class="glass-card rounded-2xl p-6 border border-slate-800">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h3 class="font-mono-heading font-bold text-lg text-white">{{ p.title }}</h3>
+                <p class="text-xs text-slate-500 font-mono mt-1">ID: {{ str(p._id)[:10] }}</p>
+            </div>
+            {% if p.get('status') == 'in_progress' %}
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">In Progress</span>
+            {% elif p.get('status') == 'review' %}
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400 border border-orange-500/20">Review</span>
+            {% elif p.get('status') == 'completed' %}
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Completed</span>
+            {% else %}
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">On Hold</span>
+            {% endif %}
+        </div>
+
+        <div class="space-y-3 text-xs">
+            <div class="flex justify-between">
+                <span class="text-slate-400">Service:</span>
+                <span class="text-white font-mono">{{ p.get('service','—') }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">Timeline:</span>
+                <span class="text-white font-mono">{{ p.get('timeline','—') }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">Stage:</span>
+                <span class="text-cyan-400 font-mono">{{ p.get('stage_label','—') }}</span>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300">Overall Progress</span>
+                <span class="text-cyan-400 font-bold">{{ p.get('progress',0) }}%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 border border-slate-700">
+                <div class="bg-gradient-to-r from-cyan-400 to-purple-500 h-2 rounded-full transition-all" style="width: {{ p.get('progress',0) }}%"></div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-card rounded-2xl p-12 text-center border border-slate-800">
+    <i class="fa-solid fa-folder-open text-5xl text-slate-600 mb-4"></i>
+    <p class="text-slate-400 text-sm font-mono">No projects assigned yet.</p>
+</div>
+{% endif %}
+{% endblock %}

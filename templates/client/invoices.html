@@ -1,0 +1,76 @@
+{% extends 'client/base.html' %}
+{% block title %}Invoices{% endblock %}
+{% block page_title %}Invoices & Billing{% endblock %}
+{% block page_subtitle %}View, download, and pay your invoices securely.{% endblock %}
+
+{% block content %}
+<div class="mb-6 p-6 glass-card rounded-2xl border border-slate-800 flex justify-between items-center">
+    <div>
+        <p class="text-xs font-mono text-slate-400 uppercase">Total Outstanding</p>
+        <p class="text-3xl font-mono-heading font-bold text-white mt-1">GH₵ {{ '%.2f' % pending_total }}</p>
+    </div>
+</div>
+
+<div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+    <div class="p-5 border-b border-slate-800 bg-slate-900/50">
+        <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-file-invoice text-emerald-400"></i> All Invoices
+        </h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
+                    <th class="py-3 px-5">Invoice #</th>
+                    <th class="py-3 px-5">Description</th>
+                    <th class="py-3 px-5">Due Date</th>
+                    <th class="py-3 px-5">Amount</th>
+                    <th class="py-3 px-5">Status</th>
+                    <th class="py-3 px-5 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in invoices %}
+                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
+                    <td class="py-4 px-5 text-xs font-mono text-white">{{ inv.number }}</td>
+                    <td class="py-4 px-5 text-xs text-slate-400 max-w-xs truncate">{{ inv.get('description','—') }}</td>
+                    <td class="py-4 px-5 text-xs text-slate-400">{{ inv.get('due_date','—') }}</td>
+                    <td class="py-4 px-5 text-xs font-mono text-white font-bold">GH₵ {{ '%.2f' % inv.amount }}</td>
+                    <td class="py-4 px-5">
+                        {% if inv.status == 'paid' %}
+                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Paid</span>
+                        {% elif inv.status == 'pending' %}
+                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-500/20 text-orange-300 border border-orange-500/30">Pending</span>
+                        {% else %}
+                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-red-500/20 text-red-300 border border-red-500/30">Overdue</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-5">
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ url_for('client_invoice_pdf', invoice_id=inv._id) }}"
+                               class="px-3 py-1.5 rounded-lg text-[10px] font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
+                               title="Download PDF">
+                                <i class="fa-solid fa-file-pdf"></i> PDF
+                            </a>
+                            {% if inv.status != 'paid' %}
+                            <a href="{{ url_for('client_invoice_pay', invoice_id=inv._id) }}"
+                               class="px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 hover:brightness-110 transition"
+                               onclick="return confirm('Proceed to Paystack checkout for GH₵ {{ '%.2f' % inv.amount }}?');">
+                                <i class="fa-solid fa-credit-card"></i> Pay Now
+                            </a>
+                            {% else %}
+                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                                <i class="fa-solid fa-check"></i> Paid
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="py-12 text-center text-slate-400 text-xs font-mono">No invoices yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

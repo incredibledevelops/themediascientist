@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Portal Login | The Media Scientist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme:{ extend:{ fontFamily:{ sans:['Inter','sans-serif'], mono:['Space Grotesk','monospace'] } } } }
+    </script>
+    <style>
+        body { background-color:#0B0E17; color:#F9FAFB; font-family:'Inter',sans-serif; }
+        .glass-card { background: rgba(17,24,39,.75); backdrop-filter: blur(16px); border:1px solid rgba(255,255,255,.08); }
+        .tech-grid-bg { background-size:40px 40px; background-image: linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px); }
+        .font-mono-heading { font-family:'Space Grotesk',monospace; }
+    </style>
+</head>
+<body class="tech-grid-bg min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-md">
+    <div class="text-center mb-8">
+        <a href="{{ url_for('index') }}" class="inline-flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 p-[1px]">
+                <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
+                    <i class="fa-solid fa-user-astronaut text-cyan-400"></i>
+                </div>
+            </div>
+        </a>
+        <h1 class="font-mono-heading font-bold text-2xl text-white mt-4">CLIENT PORTAL</h1>
+        <p class="text-xs text-cyan-400 font-mono tracking-widest uppercase mt-1">Access Your Projects</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+        <div class="mb-4 p-3 rounded-xl font-mono text-xs {% if category == 'error' %}bg-red-950/60 border border-red-500/40 text-red-200{% else %}bg-emerald-950/60 border border-emerald-500/40 text-emerald-200{% endif %}">
+            <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} mr-2"></i>{{ msg }}
+        </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="glass-card rounded-2xl p-8 border border-slate-800">
+        <form method="POST" action="{{ url_for('client_login') }}" class="space-y-5">
+            <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1.5">EMAIL ADDRESS</label>
+                <div class="relative">
+                    <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                    <input type="email" name="email" required placeholder="you@example.com"
+                           class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400 transition">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1.5">PASSWORD</label>
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                    <input type="password" name="password" required placeholder="••••••••"
+                           class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400 transition">
+                </div>
+            </div>
+            <button type="submit" class="w-full py-3.5 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:brightness-110 shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-right-to-bracket"></i> ACCESS MY PORTAL
+            </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-slate-800 text-center space-y-2">
+            <p class="text-[10px] font-mono text-slate-500">
+                <i class="fa-solid fa-shield-halved text-cyan-400"></i> Credentials provided by The Media Scientist.
+            </p>
+            <p class="text-[10px] font-mono text-slate-500">
+                Forgot password? Contact <span class="text-cyan-400">support</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="mt-6 text-center">
+        <a href="{{ url_for('index') }}" class="text-xs font-mono text-slate-400 hover:text-cyan-400">
+            <i class="fa-solid fa-arrow-left"></i> Back to public site
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

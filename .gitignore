@@ -35,3 +35,7 @@ Thumbs.db
 # Mongo
 *.bson
 dump/
+
+# Uploads (do not commit user files)
+uploads/
+!uploads/.gitkeep

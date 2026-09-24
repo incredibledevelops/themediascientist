@@ -1,0 +1,101 @@
+{% extends 'lab/base.html' %}
+{% block title %}Clients{% endblock %}
+{% block page_title %}Client Management{% endblock %}
+{% block page_subtitle %}Create client accounts, reset passwords, and manage access.{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1">
+        <div class="glass-card rounded-2xl border border-slate-800 p-6">
+            <h3 class="font-mono-heading font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-user-plus text-cyan-400"></i> Add New Client
+            </h3>
+            <form method="POST" action="{{ url_for('lab_client_create') }}" class="space-y-3">
+                <input type="text" name="name" required placeholder="Client Full Name" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <input type="email" name="email" required placeholder="client@email.com" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <label class="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                    <input type="checkbox" name="send_email" checked class="accent-cyan-400">
+                    <span>Email login credentials automatically</span>
+                </label>
+                <p class="text-[10px] font-mono text-slate-500">
+                    A random 10-char password will be generated and sent to the client.
+                </p>
+                <button type="submit" class="w-full py-2.5 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">CREATE CLIENT</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2">
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            <div class="p-5 border-b border-slate-800 bg-slate-900/50">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-group text-cyan-400"></i> All Clients ({{ clients|length }})
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
+                            <th class="py-3 px-5">Client</th>
+                            <th class="py-3 px-5">Code</th>
+                            <th class="py-3 px-5">Projects</th>
+                            <th class="py-3 px-5">Pending</th>
+                            <th class="py-3 px-5">Status</th>
+                            <th class="py-3 px-5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        {% for c in clients %}
+                        <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
+                            <td class="py-4 px-5">
+                                <div class="font-semibold text-white text-xs">{{ c.name }}</div>
+                                <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ c.email }}</div>
+                            </td>
+                            <td class="py-4 px-5">
+                                <span class="text-[10px] font-mono px-2 py-1 rounded bg-purple-950/40 text-purple-300 border border-purple-500/30">
+                                    {{ c.client_code or '—' }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-5 text-xs text-cyan-300 font-mono">{{ c.project_count }}</td>
+                            <td class="py-4 px-5 text-xs text-emeraldMint font-mono">GH₵ {{ '%.2f' % (c.pending_total or 0) }}</td>
+                            <td class="py-4 px-5">
+                                {% if c.is_active %}
+                                <span class="text-[10px] font-mono px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ACTIVE</span>
+                                {% else %}
+                                <span class="text-[10px] font-mono px-2 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">INACTIVE</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-5">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ url_for('lab_client_projects', client_id=c._id) }}" class="w-8 h-8 rounded-lg bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center text-cyan-400 hover:bg-cyan-500/20 transition" title="Manage Projects">
+                                        <i class="fa-solid fa-folder-open text-xs"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('lab_client_reset_password', client_id=c._id) }}" onsubmit="return confirm('Reset password and email new one?');">
+                                        <input type="hidden" name="send_email" value="on">
+                                        <button type="submit" class="w-8 h-8 rounded-lg bg-amber-950/50 border border-amber-500/30 flex items-center justify-center text-amber-400 hover:bg-amber-500/20 transition" title="Reset Password">
+                                            <i class="fa-solid fa-key text-xs"></i>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('lab_client_toggle', client_id=c._id) }}">
+                                        <button type="submit" class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:bg-slate-700 transition" title="Toggle Active">
+                                            <i class="fa-solid {% if c.is_active %}fa-toggle-on text-emerald-400{% else %}fa-toggle-off{% endif %} text-xs"></i>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('lab_client_delete', client_id=c._id) }}" onsubmit="return confirm('Delete this client permanently?');">
+                                        <button type="submit" class="w-8 h-8 rounded-lg bg-red-950/50 border border-red-500/30 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition" title="Delete">
+                                            <i class="fa-solid fa-trash text-xs"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="py-8 text-center text-slate-400 text-xs font-mono">No clients yet. Create one to get started.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

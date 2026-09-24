@@ -61,6 +61,9 @@
         </a>
 
         <p class="px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-8 mb-2">Content & Config</p>
+        <a href="{{ url_for('lab_clients') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_clients' or request.endpoint == 'lab_client_projects' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
+            <i class="fa-solid fa-user-group w-5 text-center"></i><span class="font-medium text-sm flex-1">Clients</span>
+        </a>
         <a href="{{ url_for('lab_about') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_about' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
             <i class="fa-solid fa-user-pen w-5 text-center"></i><span class="font-medium text-sm">About Page</span>
         </a>
@@ -134,7 +137,8 @@
 <script>
 function updateClock(){
     const now = new Date();
-    document.getElementById('sys-time').textContent = now.toLocaleTimeString('en-US',{hour12:false});
+    const el = document.getElementById('sys-time');
+    if (el) el.textContent = now.toLocaleTimeString('en-US',{hour12:false});
 }
 setInterval(updateClock,1000); updateClock();
 </script>

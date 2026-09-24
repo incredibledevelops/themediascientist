@@ -1,0 +1,197 @@
+{% extends 'lab/base.html' %}
+{% block title %}Manage Projects{% endblock %}
+{% block page_title %}Projects — {{ client.name }}{% endblock %}
+{% block page_subtitle %}Manage projects, invoices, and deliverables for this client.{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex flex-wrap items-center gap-3">
+    <a href="{{ url_for('lab_clients') }}" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-mono hover:bg-slate-700 transition">
+        <i class="fa-solid fa-arrow-left"></i> Back to Clients
+    </a>
+    <div class="px-4 py-2 rounded-xl bg-purple-950/40 border border-purple-500/30 text-xs font-mono text-purple-300">
+        Client ID: {{ client.client_code or '—' }}
+    </div>
+    <div class="px-4 py-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs font-mono text-cyan-300">
+        {{ client.email }}
+    </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <!-- Projects -->
+    <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+        <div class="p-5 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+            <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-cyan-400"></i> Projects ({{ projects|length }})
+            </h3>
+        </div>
+        <div class="p-5 space-y-3">
+            {% for p in projects %}
+            <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800">
+                <form method="POST" action="{{ url_for('lab_project_update', project_id=p._id) }}" class="space-y-2">
+                    <div class="flex justify-between items-start gap-2">
+                        <input type="text" name="title" value="{{ p.title }}" class="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="service" value="{{ p.get('service','') }}" placeholder="Service" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                        <input type="text" name="timeline" value="{{ p.get('timeline','') }}" placeholder="Timeline" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="number" name="progress" value="{{ p.get('progress',0) }}" min="0" max="100" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                        <select name="status" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200">
+                            {% for st in ['in_progress','review','completed','on_hold'] %}
+                            <option value="{{ st }}" {% if p.get('status')==st %}selected{% endif %}>{{ st|replace('_',' ')|upper }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" name="stage_label" value="{{ p.get('stage_label','') }}" placeholder="Stage" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-emeraldMint text-slate-950">UPDATE</button>
+                    </div>
+                </form>
+                <form method="POST" action="{{ url_for('lab_project_delete', project_id=p._id) }}" onsubmit="return confirm('Delete project?');" class="mt-2 text-right">
+                    <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i> Delete</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-center text-slate-400 text-xs font-mono py-6">No projects yet.</p>
+            {% endfor %}
+
+            <div class="pt-4 border-t border-slate-800">
+                <p class="text-xs font-mono text-cyan-400 mb-2">+ ADD NEW PROJECT</p>
+                <form method="POST" action="{{ url_for('lab_client_project_create', client_id=client._id) }}" class="space-y-2">
+                    <input type="text" name="title" required placeholder="Project Title" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="service" placeholder="Service (e.g. Web Dev)" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                        <input type="text" name="timeline" placeholder="Timeline (e.g. Oct 1 - Oct 15)" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="number" name="progress" value="0" min="0" max="100" placeholder="Progress %" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                        <select name="status" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200">
+                            <option value="in_progress">IN PROGRESS</option>
+                            <option value="review">REVIEW</option>
+                            <option value="completed">COMPLETED</option>
+                            <option value="on_hold">ON HOLD</option>
+                        </select>
+                        <input type="text" name="stage_label" placeholder="Stage" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                    </div>
+                    <button type="submit" class="w-full py-2 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400">CREATE PROJECT</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoices + Deliverables -->
+    <div class="space-y-6">
+        <!-- Invoices -->
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            <div class="p-5 border-b border-slate-800 bg-slate-900/50">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice text-emeraldMint"></i> Invoices ({{ invoices|length }})
+                </h3>
+            </div>
+            <div class="p-5 space-y-3">
+                {% for inv in invoices %}
+                <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800">
+                    <form method="POST" action="{{ url_for('lab_invoice_update', invoice_id=inv._id) }}" class="space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" name="number" value="{{ inv.number }}" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                            <input type="number" step="0.01" name="amount" value="{{ inv.amount }}" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                        </div>
+                        <input type="text" name="description" value="{{ inv.get('description','') }}" placeholder="Description" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" name="due_date" value="{{ inv.get('due_date','') }}" placeholder="Due date" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                            <select name="status" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200">
+                                {% for st in ['pending','paid','overdue'] %}
+                                <option value="{{ st }}" {% if inv.status==st %}selected{% endif %}>{{ st|upper }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-emeraldMint text-slate-950">UPDATE INVOICE</button>
+                    </form>
+                    <div class="mt-2 flex items-center justify-between">
+                        <a href="{{ url_for('client_invoice_pdf', invoice_id=inv._id) }}" target="_blank" class="text-[10px] font-mono text-cyan-400 hover:text-cyan-300">
+                            <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        </a>
+                        <form method="POST" action="{{ url_for('lab_invoice_delete', invoice_id=inv._id) }}" onsubmit="return confirm('Delete invoice?');">
+                            <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-center text-slate-400 text-xs font-mono py-6">No invoices yet.</p>
+                {% endfor %}
+
+                <div class="pt-4 border-t border-slate-800">
+                    <p class="text-xs font-mono text-emeraldMint mb-2">+ ADD NEW INVOICE</p>
+                    <form method="POST" action="{{ url_for('lab_invoice_create', client_id=client._id) }}" class="space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" name="number" required placeholder="INV-2026-001" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                            <input type="number" step="0.01" name="amount" required placeholder="Amount (GH₵)" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                        </div>
+                        <input type="text" name="description" placeholder="Description (e.g. Web design deposit)" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" name="due_date" placeholder="Due Date (e.g. Oct 15, 2026)" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                            <select name="status" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200">
+                                <option value="pending">PENDING</option>
+                                <option value="paid">PAID</option>
+                                <option value="overdue">OVERDUE</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full py-2 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400">CREATE INVOICE</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deliverables (FILE UPLOAD) -->
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            <div class="p-5 border-b border-slate-800 bg-slate-900/50">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-down text-purpleAccent"></i> Deliverables ({{ deliverables|length }})
+                </h3>
+            </div>
+            <div class="p-5 space-y-2">
+                {% for d in deliverables %}
+                <div class="p-3 rounded-lg bg-slate-900/70 border border-slate-800 flex items-center justify-between gap-3">
+                    <div class="flex-1 min-w-0 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-purple-300">
+                            <i class="{{ d.get('file_type','fa-regular fa-file') }} text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold text-white truncate">{{ d.name }}</p>
+                            <p class="text-[10px] font-mono text-slate-400">{{ d.get('size','—') }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        {% if d.get('stored_filename') %}
+                        <a href="{{ url_for('download_file', filename=d.stored_filename) }}" class="text-cyan-400 hover:text-cyan-300 text-xs" title="Download">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('lab_deliverable_delete', deliverable_id=d._id) }}" onsubmit="return confirm('Delete deliverable?');">
+                            <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-center text-slate-400 text-xs font-mono py-6">No deliverables yet.</p>
+                {% endfor %}
+
+                <div class="pt-4 border-t border-slate-800">
+                    <p class="text-xs font-mono text-purple-300 mb-2">+ UPLOAD NEW FILE</p>
+                    <form method="POST" action="{{ url_for('lab_deliverable_upload', client_id=client._id) }}" enctype="multipart/form-data" class="space-y-2">
+                        <input type="file" name="file" required
+                               class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-cyan-500 file:text-slate-950 file:font-bold file:text-[10px] hover:file:bg-cyan-400">
+                        <p class="text-[10px] font-mono text-slate-500">
+                            Max 100 MB. Images, PDFs, docs, videos, ZIPs allowed.
+                        </p>
+                        <button type="submit" class="w-full py-2 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400">
+                            <i class="fa-solid fa-upload"></i> UPLOAD FILE
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

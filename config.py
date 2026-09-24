@@ -3,6 +3,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret-change-me')
     MONGO_URI = os.getenv('MONGO_URI', 'mongodb://162.35.183.139:27017/media_scientist')
@@ -22,3 +25,16 @@ class Config:
     # Admin
     ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@gmail.com')
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+
+    # File uploads
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+    MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100 MB max per file
+    ALLOWED_EXTENSIONS = {
+        'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg',
+        'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+        'zip', 'rar', '7z',
+        'mp4', 'mov', 'avi', 'mkv', 'webm',
+        'mp3', 'wav',
+        'psd', 'ai', 'fig', 'sketch', 'xd',
+        'txt', 'csv'
+    }

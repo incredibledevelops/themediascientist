@@ -1,0 +1,46 @@
+{% extends 'client/base.html' %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+{% block page_subtitle %}Manage your account preferences and security.{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1 glass-card rounded-2xl p-6 border border-slate-800 text-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4">
+            {{ client.name[0]|upper if client.name else 'C' }}
+        </div>
+        <h3 class="font-bold text-white">{{ client.name }}</h3>
+        <p class="text-xs text-slate-400 font-mono mt-1">{{ client.email }}</p>
+        <div class="mt-4 inline-block px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 text-[10px] font-mono">
+            {{ client.client_code or '—' }}
+        </div>
+    </div>
+
+    <div class="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-800">
+        <h3 class="font-mono-heading font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-key text-cyan-400"></i> Change Password
+        </h3>
+        <form method="POST" action="{{ url_for('client_settings') }}" class="space-y-4">
+            <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1.5">NEW PASSWORD</label>
+                <input type="password" name="new_password" required minlength="6" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1.5">CONFIRM NEW PASSWORD</label>
+                <input type="password" name="confirm_password" required minlength="6" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+            </div>
+            <button type="submit" class="px-6 py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">
+                <i class="fa-solid fa-save"></i> UPDATE PASSWORD
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-800">
+            <h4 class="font-mono-heading font-bold text-white mb-2 text-sm">Need Help?</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Forgot your current password or having trouble logging in?
+                <a href="{{ url_for('contact') }}" class="text-cyan-400 hover:text-white">Contact support</a>.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

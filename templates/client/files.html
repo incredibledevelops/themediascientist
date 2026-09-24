@@ -1,0 +1,41 @@
+{% extends 'client/base.html' %}
+{% block title %}Files & Deliverables{% endblock %}
+{% block page_title %}Files & Deliverables{% endblock %}
+{% block page_subtitle %}All files shared with you by The Media Scientist.{% endblock %}
+
+{% block content %}
+{% if deliverables %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for d in deliverables %}
+    <div class="glass-card rounded-2xl p-5 border border-slate-800 hover:border-purple-500/40 transition-colors">
+        <div class="flex items-start gap-4 mb-4">
+            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <i class="{{ d.get('file_type','fa-regular fa-file') }} text-xl"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-bold text-white truncate">{{ d.name }}</h3>
+                <p class="text-xs text-slate-400 font-mono mt-1">{{ d.get('size','—') }}</p>
+            </div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] font-mono">
+            <span class="text-slate-500">{{ d.created_at.strftime('%b %d, %Y') if d.created_at else '—' }}</span>
+            {% if d.get('stored_filename') %}
+            <a href="{{ url_for('download_file', filename=d.stored_filename) }}" class="px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition-colors">
+                <i class="fa-solid fa-download"></i> Download
+            </a>
+            {% elif d.get('url') %}
+            <a href="{{ d.get('url','#') }}" target="_blank" class="px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition-colors">
+                <i class="fa-solid fa-download"></i> Download
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-card rounded-2xl p-12 text-center border border-slate-800">
+    <i class="fa-solid fa-folder-open text-5xl text-slate-600 mb-4"></i>
+    <p class="text-slate-400 text-sm font-mono">No files yet.</p>
+</div>
+{% endif %}
+{% endblock %}

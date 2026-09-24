@@ -8,3 +8,4 @@ Werkzeug==3.0.3
 requests==2.32.3
 email-validator==2.1.1
 gunicorn==22.0.0
+reportlab==4.2.2

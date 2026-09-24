@@ -6,7 +6,7 @@ from config import Config
 PAYSTACK_BASE = "https://api.paystack.co"
 
 
-def initialize_transaction(email, amount_kobo, reference=None, callback_url=None):
+def initialize_transaction(email, amount_kobo, reference=None, callback_url=None, metadata=None):
     """Initialize a Paystack transaction. Amount is in kobo (1 GHS = 100 kobo)."""
     if not reference:
         reference = secrets.token_hex(8)
@@ -22,6 +22,8 @@ def initialize_transaction(email, amount_kobo, reference=None, callback_url=None
     }
     if callback_url:
         payload["callback_url"] = callback_url
+    if metadata:
+        payload["metadata"] = metadata
 
     try:
         r = requests.post(f"{PAYSTACK_BASE}/transaction/initialize",

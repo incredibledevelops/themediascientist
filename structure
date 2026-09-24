@@ -1,26 +1,41 @@
-app.py
-.env
-config.py
-requirements.txt
-models.py
-robots.txt
-paystack.py
-sitemap.xml
-.gitignore
-mailer.py
-templates/index.html
-templates/base.html
-templates/services.html
-templates/about.html
-templates/contact.html
-templates/portfolio.html
-templates/lab/dashboard.html
-templates/lab/services.html
-templates/lab/login.html
-templates/lab/about.html
-templates/lab/portfolio.html
-templates/lab/contact.html
-templates/lab/base.html
-templates/lab/settings.html
-templates/lab/inquiries.html
-templates/lab/users.html
+themediascientist/
+├── app.py
+├── config.py
+├── models.py
+├── mailer.py
+├── paystack.py
+├── .env
+├── requirements.txt
+├── robots.txt
+├── sitemap.xml
+└── templates/
+    ├── base.html
+    ├── index.html
+    ├── about.html
+    ├── services.html
+    ├── portfolio.html
+    ├── contact.html
+    │
+    ├── client/                    ← CREATE THIS FOLDER
+    │   ├── base.html
+    │   ├── login.html             ← move your pasted file HERE
+    │   ├── dashboard.html
+    │   ├── projects.html
+    │   ├── invoices.html
+    │   ├── files.html
+    │   ├── messages.html
+    │   └── settings.html
+    │
+    └── lab/
+        ├── base.html
+        ├── login.html
+        ├── dashboard.html
+        ├── inquiries.html
+        ├── portfolio.html
+        ├── services.html
+        ├── about.html
+        ├── contact.html
+        ├── users.html
+        ├── settings.html
+        ├── clients.html
+        └── client_projects.html

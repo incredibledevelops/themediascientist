@@ -1,0 +1,203 @@
+{% extends 'client/base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Client Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ client.name }}.{% endblock %}
+
+{% block content %}
+
+<!-- Metric Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="glass-card p-5 relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl"></div>
+        <div class="flex justify-between items-start mb-4 relative z-10">
+            <div>
+                <p class="text-slate-400 text-sm font-medium mb-1">Active Projects</p>
+                <h3 class="font-mono-heading text-3xl font-bold text-white">{{ stats.active_projects }}</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <i class="fa-solid fa-bolt text-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card p-5 relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl"></div>
+        <div class="flex justify-between items-start mb-4 relative z-10">
+            <div>
+                <p class="text-slate-400 text-sm font-medium mb-1">Pending Invoices</p>
+                <h3 class="font-mono-heading text-3xl font-bold text-white">GH₵ {{ '%.2f' % stats.pending_total }}</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <i class="fa-solid fa-wallet text-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card p-5 relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
+        <div class="flex justify-between items-start mb-4 relative z-10">
+            <div>
+                <p class="text-slate-400 text-sm font-medium mb-1">Files for Review</p>
+                <h3 class="font-mono-heading text-3xl font-bold text-white">{{ stats.unreviewed_files }}</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <i class="fa-solid fa-file-circle-check text-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card p-5 relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl"></div>
+        <div class="flex justify-between items-start mb-4 relative z-10">
+            <div>
+                <p class="text-slate-400 text-sm font-medium mb-1">Next Deadline</p>
+                <h3 class="font-mono-heading text-2xl font-bold text-white mt-1">{{ stats.next_deadline or '—' }}</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                <i class="fa-solid fa-calendar-day text-lg"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Projects Table -->
+<div class="glass-card mb-8 overflow-hidden">
+    <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
+        <h3 class="font-mono-heading text-lg font-semibold text-white">Active & Recent Projects</h3>
+        <a href="{{ url_for('client_projects') }}" class="text-sm text-cyan-400 hover:text-white transition-colors">View All Projects &rarr;</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-black/30 text-slate-400 text-xs uppercase tracking-wider">
+                    <th class="p-4 pl-6 font-medium">Project Name</th>
+                    <th class="p-4 font-medium">Service</th>
+                    <th class="p-4 font-medium">Timeline</th>
+                    <th class="p-4 font-medium">Progress</th>
+                    <th class="p-4 pr-6 font-medium text-right">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80 text-sm">
+                {% for p in stats.projects[:3] %}
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="p-4 pl-6">
+                        <p class="font-semibold text-white">{{ p.title }}</p>
+                        <p class="text-xs text-slate-400">ID: {{ str(p._id)[:8] }}</p>
+                    </td>
+                    <td class="p-4 text-slate-300">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-code text-cyan-400 w-4"></i> {{ p.get('service','—') }}
+                        </div>
+                    </td>
+                    <td class="p-4 text-slate-400">{{ p.get('timeline','—') }}</td>
+                    <td class="p-4 min-w-[150px]">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300">{{ p.get('stage_label','Progress') }}</span>
+                            <span class="text-cyan-400">{{ p.get('progress',0) }}%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 border border-slate-700">
+                            <div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-1.5 rounded-full" style="width: {{ p.get('progress',0) }}%"></div>
+                        </div>
+                    </td>
+                    <td class="p-4 pr-6 text-right">
+                        {% if p.get('status') == 'in_progress' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> In Progress
+                        </span>
+                        {% elif p.get('status') == 'review' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                            <i class="fa-solid fa-clock"></i> Review
+                        </span>
+                        {% elif p.get('status') == 'completed' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <i class="fa-solid fa-check"></i> Completed
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">On Hold</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs font-mono">No projects assigned yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Side by side: Deliverables & Invoices -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+    <div class="glass-card flex flex-col h-full">
+        <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-down text-purple-400"></i>
+                <h3 class="font-mono-heading text-lg font-semibold text-white">Recent Deliverables</h3>
+            </div>
+            {% if stats.unreviewed_files > 0 %}
+            <span class="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-md font-medium">{{ stats.unreviewed_files }} New</span>
+            {% endif %}
+        </div>
+        <div class="p-4 flex-1">
+            <ul class="space-y-3">
+                {% for d in stats.deliverables[:3] %}
+                <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-purple-500/30 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded bg-slate-800 flex items-center justify-center text-slate-300">
+                            <i class="{{ d.get('file_type','fa-regular fa-file') }} text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-white">{{ d.name }}</p>
+                            <p class="text-xs text-slate-400">{{ d.get('size','—') }}</p>
+                        </div>
+                    </div>
+                    <a href="{{ d.get('url','#') }}" class="w-8 h-8 rounded-full bg-white/5 hover:bg-purple-500/20 text-slate-300 hover:text-purple-400 flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-download"></i>
+                    </a>
+                </li>
+                {% else %}
+                <p class="text-center text-slate-400 text-xs font-mono py-6">No deliverables yet.</p>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="p-4 border-t border-slate-800/80 text-center">
+            <a href="{{ url_for('client_files') }}" class="text-xs text-slate-400 hover:text-white transition-colors">View All Files</a>
+        </div>
+    </div>
+
+    <div class="glass-card flex flex-col h-full">
+        <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice text-emerald-400"></i>
+                <h3 class="font-mono-heading text-lg font-semibold text-white">Recent Invoices</h3>
+            </div>
+            <a href="{{ url_for('client_invoices') }}" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
+                View All
+            </a>
+        </div>
+        <div class="p-4 flex-1">
+            <ul class="space-y-3">
+                {% for inv in stats.invoices[:3] %}
+                <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-emerald-500/30 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full {% if inv.status=='paid' %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% else %}bg-orange-500/10 border border-orange-500/20 text-orange-400{% endif %} flex items-center justify-center">
+                            <i class="fa-solid {% if inv.status=='paid' %}fa-check{% else %}fa-hourglass-half{% endif %}"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-white">{{ inv.number }}</p>
+                            <p class="text-xs text-slate-400">{% if inv.status=='paid' %}Paid{% else %}Due: {{ inv.get('due_date','—') }}{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-mono-heading font-bold {% if inv.status=='paid' %}text-slate-400{% else %}text-white{% endif %}">GH₵ {{ '%.2f' % inv.amount }}</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wide {% if inv.status=='paid' %}text-emerald-400{% else %}text-orange-400{% endif %}">{{ inv.status }}</p>
+                    </div>
+                </li>
+                {% else %}
+                <p class="text-center text-slate-400 text-xs font-mono py-6">No invoices yet.</p>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="p-4 border-t border-slate-800/80 text-center">
+            <a href="{{ url_for('client_invoices') }}" class="text-xs text-slate-400 hover:text-white transition-colors">View Billing History</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
