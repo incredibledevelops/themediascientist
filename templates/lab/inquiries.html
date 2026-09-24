@@ -1,0 +1,61 @@
+{% extends 'lab/base.html' %}
+{% block title %}Inquiries{% endblock %}
+{% block page_title %}Project Inquiries{% endblock %}
+{% block page_subtitle %}Manage all incoming client inquiries.{% endblock %}
+
+{% block content %}
+<div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+    <div class="p-5 border-b border-slate-800 bg-slate-900/50">
+        <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-inbox text-cyan-400"></i> All Inquiries ({{ inquiries|length }})
+        </h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
+                    <th class="py-3 px-5">Client</th>
+                    <th class="py-3 px-5">Services</th>
+                    <th class="py-3 px-5">Budget</th>
+                    <th class="py-3 px-5">Message</th>
+                    <th class="py-3 px-5">Status</th>
+                    <th class="py-3 px-5 text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm">
+                {% for inq in inquiries %}
+                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
+                    <td class="py-4 px-5">
+                        <div class="font-semibold text-white text-xs">{{ inq.name }}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">{{ inq.email }}</div>
+                    </td>
+                    <td class="py-4 px-5 max-w-xs">
+                        {% for svc in inq.services %}
+                        <span class="inline-block px-2 py-1 rounded bg-cyan-950/60 border border-cyan-500/30 text-[10px] font-mono text-cyan-300 mr-1 mb-1">{{ svc }}</span>
+                        {% endfor %}
+                    </td>
+                    <td class="py-4 px-5 text-xs text-emeraldMint font-mono">{{ inq.budget }}</td>
+                    <td class="py-4 px-5 text-xs text-slate-400 max-w-sm">{{ inq.message[:120] }}{% if inq.message|length > 120 %}...{% endif %}</td>
+                    <td class="py-4 px-5">
+                        <form method="POST" action="{{ url_for('lab_inquiry_status', inquiry_id=inq._id) }}">
+                            <select name="status" onchange="this.form.submit()" class="bg-slate-900 border border-slate-700 text-[10px] font-mono rounded px-2 py-1 text-slate-200">
+                                {% for st in ['new','read','replied','closed'] %}
+                                <option value="{{ st }}" {% if inq.status==st %}selected{% endif %}>{{ st|upper }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    <td class="py-4 px-5 text-right">
+                        <form method="POST" action="{{ url_for('lab_inquiry_delete', inquiry_id=inq._id) }}" onsubmit="return confirm('Delete this inquiry?');">
+                            <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="py-8 text-center text-slate-400 text-xs font-mono">No inquiries yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

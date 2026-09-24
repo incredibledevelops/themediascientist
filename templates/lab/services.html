@@ -1,0 +1,59 @@
+{% extends 'lab/base.html' %}
+{% block title %}Services{% endblock %}
+{% block page_title %}Services & Pricing{% endblock %}
+{% block page_subtitle %}Manage your service offerings and pricing plans.{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1">
+        <div class="glass-card rounded-2xl border border-slate-800 p-6">
+            <h3 class="font-mono-heading font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-plus text-cyan-400"></i> Add Service
+            </h3>
+            <form method="POST" action="{{ url_for('lab_service_create') }}" class="space-y-3">
+                <input type="text" name="title" required placeholder="Service Title" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <input type="text" name="slug" placeholder="slug-like-this" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <input type="text" name="icon" placeholder="fa-video" value="fa-cog" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <select name="color" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                    <option value="cyan">Cyan</option><option value="purple">Purple</option>
+                    <option value="emerald">Emerald</option><option value="orange">Orange</option>
+                </select>
+                <input type="number" name="order" placeholder="Order" value="99" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <textarea name="description" placeholder="Short description" rows="3" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"></textarea>
+                <button type="submit" class="w-full py-2.5 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">CREATE SERVICE</button>
+            </form>
+        </div>
+    </div>
+    <div class="lg:col-span-2 space-y-4">
+        {% for svc in services %}
+        <div class="glass-card rounded-2xl border border-slate-800 p-5">
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-{{ svc.color }}-500/10 border border-{{ svc.color }}-500/30 flex items-center justify-center text-{{ svc.color }}-400">
+                        <i class="fa-solid {{ svc.icon }}"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-sm">{{ svc.title }}</h3>
+                        <p class="text-[10px] text-slate-500 font-mono">Order: {{ svc.order }}</p>
+                    </div>
+                </div>
+                <form method="POST" action="{{ url_for('lab_service_delete', service_id=svc._id) }}" onsubmit="return confirm('Delete service?');">
+                    <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                </form>
+            </div>
+            <form method="POST" action="{{ url_for('lab_service_update', service_id=svc._id) }}" class="space-y-2">
+                <input type="text" name="title" value="{{ svc.title }}" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                <input type="text" name="icon" value="{{ svc.icon }}" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                <input type="text" name="color" value="{{ svc.color }}" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                <input type="number" name="order" value="{{ svc.order }}" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">
+                <textarea name="description" rows="2" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white">{{ svc.description }}</textarea>
+                <div class="text-[10px] font-mono text-slate-500">Plans: {{ svc.plans|length }}</div>
+                <button type="submit" class="px-4 py-2 rounded-lg font-mono text-xs font-bold text-slate-950 bg-emeraldMint hover:brightness-110 transition">UPDATE</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-slate-400 text-xs font-mono glass-card rounded-2xl border border-slate-800">No services yet.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block title %}The Media Scientist | Opoku Kwadwo Incredible{% endblock %}
+
+{% block content %}
+<section class="relative pt-12 pb-20 md:pt-24 md:pb-32 px-4 max-w-7xl mx-auto z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div class="lg:col-span-7 space-y-6">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card border border-slate-700/60 text-xs font-mono text-cyan-400">
+                <i class="fa-solid fa-user text-purple-400"></i>
+                <span>{{ site_settings.owner_name|upper if site_settings else 'OPOKU KWADWO INCREDIBLE' }}</span>
+            </div>
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-mono-heading tracking-tight leading-tight">
+                Combining <span class="text-gradient-cyan">Media Production</span>, Visual Art & <span class="text-gradient-purple">Software Development</span>
+            </h1>
+            <div class="text-lg sm:text-xl text-slate-300 h-14 sm:h-10 flex items-center font-mono">
+                <span class="text-slate-500 mr-2">&gt;</span>
+                <span class="text-slate-400">My Expertise: </span>
+                <span id="typewriter" class="ml-2 text-cyan-300 font-semibold border-r-2 border-cyan-400 pr-1 animate-pulse"></span>
+            </div>
+            <p class="text-slate-400 text-base sm:text-lg max-w-2xl leading-relaxed">
+                {{ site_settings.hero_description if site_settings else 'Bringing together creativity and technical precision.' }}
+            </p>
+            <div class="flex flex-wrap items-center gap-4 pt-2">
+                <a href="{{ url_for('services') }}" class="px-6 py-3.5 rounded-xl font-mono text-sm font-semibold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02] transition flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-slate-900"></i> Explore Service Plans
+                </a>
+                <a href="{{ url_for('portfolio') }}" class="px-6 py-3.5 rounded-xl font-mono text-sm font-semibold glass-card text-slate-200 hover:text-white hover:border-slate-600 hover:bg-slate-800/60 transition flex items-center gap-2">
+                    <i class="fa-regular fa-folder-open text-cyan-400"></i> View Portfolio
+                </a>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8">
+                <div class="glass-card p-4 rounded-xl border border-slate-800"><div class="text-2xl font-bold font-mono text-cyan-400">50+</div><div class="text-xs text-slate-400 mt-1">Projects Completed</div></div>
+                <div class="glass-card p-4 rounded-xl border border-slate-800"><div class="text-2xl font-bold font-mono text-purple-400">100%</div><div class="text-xs text-slate-400 mt-1">Quality Color Grading</div></div>
+                <div class="glass-card p-4 rounded-xl border border-slate-800"><div class="text-2xl font-bold font-mono text-emeraldMint">Clean</div><div class="text-xs text-slate-400 mt-1">Code & Web Design</div></div>
+                <div class="glass-card p-4 rounded-xl border border-slate-800"><div class="text-2xl font-bold font-mono text-cyan-400">10-in-1</div><div class="text-xs text-slate-400 mt-1">Creative Skills</div></div>
+            </div>
+        </div>
+        <div class="lg:col-span-5 relative">
+            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-3xl blur-2xl opacity-20 animate-pulse"></div>
+            <div class="relative glass-card rounded-2xl p-6 border border-slate-800 space-y-6">
+                <div class="relative group rounded-xl overflow-hidden aspect-square bg-slate-900 border border-slate-800">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80" alt="Opoku Kwadwo Incredible" class="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 group-hover:scale-105 transition duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                    <div class="absolute bottom-4 left-4 right-4 p-3 glass-card rounded-lg border border-slate-700/80">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-mono text-xs font-bold text-white uppercase">{{ site_settings.owner_name if site_settings }}</h4>
+                                <p class="text-[11px] text-cyan-400 font-mono">Creative Media Professional & Developer</p>
+                            </div>
+                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">VERIFIED</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs font-mono">
+                    <span class="px-2.5 py-1 rounded-md bg-slate-800/80 text-cyan-300 border border-slate-700"><i class="fa-solid fa-camera mr-1"></i> Photo & Video</span>
+                    <span class="px-2.5 py-1 rounded-md bg-slate-800/80 text-purple-300 border border-slate-700"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Editing & Retouch</span>
+                    <span class="px-2.5 py-1 rounded-md bg-slate-800/80 text-emerald-300 border border-slate-700"><i class="fa-solid fa-code mr-1"></i> Web & Software</span>
+                    <span class="px-2.5 py-1 rounded-md bg-slate-800/80 text-cyan-300 border border-slate-700"><i class="fa-solid fa-bullhorn mr-1"></i> Digital Marketing</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Services -->
+<section class="py-20 px-4 max-w-7xl mx-auto relative z-10">
+    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-xs font-mono text-cyan-300">
+            <i class="fa-solid fa-tags"></i> SERVICES & PRICING PLANS
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Service Packages & <span class="text-gradient-cyan">Pricing Plans</span></h2>
+        <p class="text-slate-400 text-sm sm:text-base">Transparent packages in Ghana Cedis tailored to elevate your business, personal brand, or project.</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {% for svc in services[:4] %}
+        <div class="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800 flex flex-col justify-between space-y-6">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-{{ svc.color }}-500/10 border border-{{ svc.color }}-500/30 flex items-center justify-center text-{{ svc.color }}-400 text-xl">
+                        <i class="fa-solid {{ svc.icon }}"></i>
+                    </div>
+                    <span class="text-xs font-mono text-{{ svc.color }}-400 uppercase tracking-widest bg-{{ svc.color }}-950/60 px-3 py-1 rounded-full border border-{{ svc.color }}-500/30">SERVICE {{ '%02d' % loop.index }}</span>
+                </div>
+                <h3 class="font-mono-heading font-bold text-2xl text-white">{{ svc.title }}</h3>
+                <p class="text-xs text-slate-400 mt-2">{{ svc.description }}</p>
+                <div class="mt-6 space-y-4">
+                    {% for plan in svc.plans %}
+                    <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-mono font-bold text-sm text-{{ svc.color }}-300">{{ plan.name }}</span>
+                            <span class="font-mono text-xs font-bold text-emeraldMint">{{ plan.price }}</span>
+                        </div>
+                        <p class="text-xs text-slate-400">{{ plan.desc }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <a href="{{ url_for('contact') }}" class="w-full py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition flex items-center justify-center gap-2">
+                Book {{ svc.title }} Plan <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Portfolio Preview -->
+<section class="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-slate-800/60">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/50 border border-purple-500/30 text-xs font-mono text-purple-300 mb-2">
+                <i class="fa-solid fa-folder-open"></i> PORTFOLIO & RECENT WORK
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Featured <span class="text-gradient-purple">Projects</span></h2>
+        </div>
+        <a href="{{ url_for('portfolio') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">View All Projects &gt;</a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for item in portfolio[:6] %}
+        <div class="glass-card rounded-2xl overflow-hidden border border-slate-800 glass-card-hover group">
+            <div class="relative aspect-video overflow-hidden bg-slate-900">
+                <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute top-3 left-3 px-2.5 py-1 rounded bg-slate-950/80 text-[10px] font-mono text-cyan-300 border border-slate-700">{{ item.category }}</div>
+            </div>
+            <div class="p-5 space-y-2">
+                <h3 class="font-mono-heading font-bold text-lg text-white group-hover:text-cyan-300 transition">{{ item.title }}</h3>
+                <p class="text-xs text-slate-400 line-clamp-2">{{ item.description }}</p>
+                <div class="pt-2 flex justify-between items-center text-[11px] font-mono text-slate-500">
+                    <span>Tools: {{ item.tools }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Contact CTA -->
+<section class="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-slate-800/60">
+    <div class="glass-card rounded-2xl p-10 border border-slate-800 text-center">
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Let's Build Something <span class="text-gradient-mint">Incredible Together</span></h2>
+        <p class="text-slate-400 text-sm mt-4 max-w-2xl mx-auto">Have a project in mind? Fill out the form to get started with a project inquiry.</p>
+        <a href="{{ url_for('contact') }}" class="inline-block mt-8 px-8 py-4 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:brightness-110 transition">
+            <i class="fa-solid fa-paper-plane"></i> Send Project Inquiry
+        </a>
+    </div>
+</section>
+
+<script>
+const roles = ["Video & Photo Editor","Software & Web Developer","Photo Retoucher & Colorist","Motion Graphics Animator","Digital Marketer & Designer"];
+let roleIndex=0,charIndex=0,isDeleting=false;
+const tw = document.getElementById('typewriter');
+function typeEffect(){
+    const cur = roles[roleIndex];
+    if(isDeleting){ tw.textContent = cur.substring(0,charIndex-1); charIndex--; }
+    else { tw.textContent = cur.substring(0,charIndex+1); charIndex++; }
+    let speed = isDeleting?40:80;
+    if(!isDeleting && charIndex===cur.length){ speed=2000; isDeleting=true; }
+    else if(isDeleting && charIndex===0){ isDeleting=false; roleIndex=(roleIndex+1)%roles.length; speed=500; }
+    setTimeout(typeEffect,speed);
+}
+typeEffect();
+</script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'lab/base.html' %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Site Settings{% endblock %}
+{% block page_subtitle %}Global branding and site configuration.{% endblock %}
+
+{% block content %}
+<div class="glass-card rounded-2xl border border-slate-800 p-6 max-w-3xl">
+    <form method="POST" action="{{ url_for('lab_settings') }}" class="space-y-4">
+        <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">SITE TITLE</label>
+            <input type="text" name="site_title" value="{{ settings.site_title }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">OWNER NAME</label>
+            <input type="text" name="owner_name" value="{{ settings.owner_name }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">TAGLINE</label>
+            <input type="text" name="tagline" value="{{ settings.tagline }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">STATUS BADGE</label>
+            <input type="text" name="status" value="{{ settings.status }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">HERO DESCRIPTION</label>
+            <textarea name="hero_description" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">{{ settings.hero_description }}</textarea>
+        </div>
+        <button type="submit" class="px-6 py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">
+            <i class="fa-solid fa-save"></i> SAVE SETTINGS
+        </button>
+    </form>
+</div>
+{% endblock %}

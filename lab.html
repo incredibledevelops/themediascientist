@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Console | The Media Scientist</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0B0E17',
+                        slateCard: '#111827',
+                        neonCyan: '#00F2FE',
+                        electricPurple: '#7928CA',
+                        emeraldMint: '#00F5A0',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0E17;
+            color: #F9FAFB;
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono-heading {
+            font-family: 'Space Grotesk', monospace;
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tech-grid-bg {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00F2FE; }
+    </style>
+</head>
+<body class="tech-grid-bg min-h-screen relative text-slate-100 flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 glass-card border-r border-slate-800/80 hidden md:flex flex-col z-20 h-screen sticky top-0">
+        <!-- Brand -->
+        <div class="h-20 flex items-center px-6 border-b border-slate-800/80">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-purple-600 p-[1px]">
+                    <div class="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center">
+                        <i class="fa-solid fa-camera text-cyan-400 text-sm"></i>
+                    </div>
+                </div>
+                <div>
+                    <span class="font-mono-heading font-bold text-sm tracking-wider text-white block">LAB CONSOLE</span>
+                    <span class="text-[9px] text-cyan-400 font-mono tracking-widest uppercase">Admin System</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+            <p class="px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Main Menu</p>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 transition-all">
+                <i class="fa-solid fa-chart-line w-5 text-center"></i>
+                <span class="font-medium text-sm">Dashboard</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-inbox w-5 text-center"></i>
+                <span class="font-medium text-sm flex-1">Project Inquiries</span>
+                <span class="bg-cyan-500 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-folder-open w-5 text-center"></i>
+                <span class="font-medium text-sm">Portfolio Manager</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-tags w-5 text-center"></i>
+                <span class="font-medium text-sm">Services & Pricing</span>
+            </a>
+
+            <p class="px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-8 mb-2">Infrastructure</p>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-server w-5 text-center"></i>
+                <span class="font-medium text-sm">Deployments</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-database w-5 text-center"></i>
+                <span class="font-medium text-sm">Databases</span>
+            </a>
+        </nav>
+
+        <!-- User Profile Footer -->
+        <div class="p-4 border-t border-slate-800/80">
+            <div class="glass-card rounded-xl p-3 border border-slate-700/50 flex items-center gap-3 cursor-pointer hover:border-cyan-500/30 transition">
+                <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-300">
+                    <i class="fa-solid fa-user-astronaut text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-white truncate font-mono">Opoku Kwadwo I.</p>
+                    <p class="text-[10px] text-emeraldMint flex items-center gap-1 font-mono">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emeraldMint animate-pulse"></span> Online
+                    </p>
+                </div>
+                <i class="fa-solid fa-gear text-slate-500 text-xs"></i>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+        
+        <!-- Top Header -->
+        <header class="h-20 glass-card border-b border-slate-800/80 px-6 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-bars-staggered text-xl"></i>
+                </button>
+                <div>
+                    <h1 class="text-xl font-bold font-mono-heading text-white">System Dashboard</h1>
+                    <p class="text-xs text-slate-400 font-mono">Welcome back, The Media Scientist.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-xs font-mono">
+                    <i class="fa-solid fa-clock text-slate-400"></i>
+                    <span id="sys-time" class="text-slate-300">00:00:00</span>
+                </div>
+                <button class="w-10 h-10 rounded-full glass-card border border-slate-700 flex items-center justify-center text-slate-300 hover:text-cyan-400 hover:border-cyan-500/50 transition relative">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-cyan-500 rounded-full border-2 border-[#0B0E17]"></span>
+                </button>
+                <button class="px-4 py-2 rounded-xl text-xs font-mono font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:brightness-110 shadow-md shadow-cyan-500/20 transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> NEW ITEM
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Dashboard Content -->
+        <div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+            <div class="max-w-7xl mx-auto space-y-6">
+
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-card p-5 rounded-xl border border-slate-800 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/20 transition"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-mono text-slate-400 uppercase">Total Inquiries</p>
+                                <h3 class="text-2xl font-bold font-mono text-white mt-1">124</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-lg bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                                <i class="fa-solid fa-envelope-open-text text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-emeraldMint font-mono flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up"></i> +12% this week
+                        </p>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-xl border border-slate-800 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-mono text-slate-400 uppercase">Portfolio Views</p>
+                                <h3 class="text-2xl font-bold font-mono text-white mt-1">8,492</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-lg bg-purple-950/50 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                                <i class="fa-solid fa-eye text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-emeraldMint font-mono flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up"></i> +4.3% this week
+                        </p>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-xl border border-slate-800 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-mono text-slate-400 uppercase">Est. Pipeline</p>
+                                <h3 class="text-2xl font-bold font-mono text-white mt-1">GH₵ 42K</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center text-emeraldMint">
+                                <i class="fa-solid fa-wallet text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-emeraldMint font-mono flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up"></i> Based on leads
+                        </p>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-xl border border-slate-800 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-xl group-hover:bg-orange-500/20 transition"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-mono text-slate-400 uppercase">Active Services</p>
+                                <h3 class="text-2xl font-bold font-mono text-white mt-1">4/4</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-lg bg-orange-950/50 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                                <i class="fa-solid fa-layer-group text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                            All packages live
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Two Column Layout -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Recent Project Inquiries (Lab Intake) -->
+                    <div class="xl:col-span-2 glass-card rounded-2xl border border-slate-800 overflow-hidden flex flex-col">
+                        <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                            <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-inbox text-cyan-400"></i> Recent Lab Inquiries
+                            </h3>
+                            <button class="text-xs font-mono text-cyan-400 hover:text-cyan-300">View All &gt;</button>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
+                                        <th class="py-3 px-5">Client / Name</th>
+                                        <th class="py-3 px-5">Requested Services</th>
+                                        <th class="py-3 px-5">Est. Budget</th>
+                                        <th class="py-3 px-5">Date</th>
+                                        <th class="py-3 px-5 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm">
+                                    <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition cursor-pointer">
+                                        <td class="py-4 px-5">
+                                            <div class="font-semibold text-white text-xs">Kaya Storytellers Space</div>
+                                            <div class="text-[10px] text-slate-400 font-mono mt-0.5">Studio Photography Role</div>
+                                        </td>
+                                        <td class="py-4 px-5">
+                                            <span class="inline-block px-2 py-1 rounded bg-cyan-950/60 border border-cyan-500/30 text-[10px] font-mono text-cyan-300 mr-1 mb-1">Photo Retouch</span>
+                                            <span class="inline-block px-2 py-1 rounded bg-purple-950/60 border border-purple-500/30 text-[10px] font-mono text-purple-300">Video Edit</span>
+                                        </td>
+                                        <td class="py-4 px-5 text-xs text-emeraldMint font-mono">Standard Package</td>
+                                        <td class="py-4 px-5 text-xs text-slate-400">2 hrs ago</td>
+                                        <td class="py-4 px-5 text-right">
+                                            <button class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-xs font-mono transition">Review</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition cursor-pointer">
+                                        <td class="py-4 px-5">
+                                            <div class="font-semibold text-white text-xs">IncAcademy</div>
+                                            <div class="text-[10px] text-slate-400 font-mono mt-0.5">hello@incacademy.com</div>
+                                        </td>
+                                        <td class="py-4 px-5">
+                                            <span class="inline-block px-2 py-1 rounded bg-orange-950/60 border border-orange-500/30 text-[10px] font-mono text-orange-300">Brand Identity</span>
+                                        </td>
+                                        <td class="py-4 px-5 text-xs text-emeraldMint font-mono">Basic Project</td>
+                                        <td class="py-4 px-5 text-xs text-slate-400">Yesterday</td>
+                                        <td class="py-4 px-5 text-right">
+                                            <button class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-xs font-mono transition">Review</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-800/30 transition cursor-pointer">
+                                        <td class="py-4 px-5">
+                                            <div class="font-semibold text-white text-xs">Incredible Studios</div>
+                                            <div class="text-[10px] text-slate-400 font-mono mt-0.5">Internal Creative Team</div>
+                                        </td>
+                                        <td class="py-4 px-5">
+                                            <span class="inline-block px-2 py-1 rounded bg-emerald-950/60 border border-emerald-500/30 text-[10px] font-mono text-emerald-300 mr-1 mb-1">Web/App</span>
+                                            <span class="inline-block px-2 py-1 rounded bg-purple-950/60 border border-purple-500/30 text-[10px] font-mono text-purple-300">Motion FX</span>
+                                        </td>
+                                        <td class="py-4 px-5 text-xs text-emeraldMint font-mono">Enterprise</td>
+                                        <td class="py-4 px-5 text-xs text-slate-400">Oct 12</td>
+                                        <td class="py-4 px-5 text-right">
+                                            <button class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-xs font-mono transition">Review</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- System & App Deployments -->
+                    <div class="glass-card rounded-2xl border border-slate-800 flex flex-col h-full">
+                        <div class="p-5 border-b border-slate-800 bg-slate-900/50">
+                            <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-server text-emeraldMint"></i> Active Deployments
+                            </h3>
+                        </div>
+                        <div class="p-5 flex-1 space-y-4">
+                            
+                            <!-- Application 1: STBM -->
+                            <div class="p-4 rounded-xl bg-slate-900 border border-slate-700/50 relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-cart-shopping text-cyan-400 text-sm"></i>
+                                        <h4 class="font-bold text-sm text-white font-mono">STBM E-Commerce</h4>
+                                    </div>
+                                    <span class="flex items-center gap-1.5 text-[10px] font-mono text-emeraldMint bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-500/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emeraldMint"></span> ONLINE
+                                    </span>
+                                </div>
+                                <div class="text-[10px] font-mono text-slate-400 space-y-1 mt-3">
+                                    <div class="flex justify-between"><span>Stack:</span> <span class="text-slate-300">Flask / Next.js / Paystack</span></div>
+                                    <div class="flex justify-between"><span>Host:</span> <span class="text-slate-300">Render VPS</span></div>
+                                    <div class="flex justify-between"><span>Database:</span> <span class="text-slate-300">MySQL (SQLAlchemy)</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Application 2: Deboat's Favour -->
+                            <div class="p-4 rounded-xl bg-slate-900 border border-slate-700/50 relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-cash-register text-purple-400 text-sm"></i>
+                                        <h4 class="font-bold text-sm text-white font-mono">Deboat's Favour POS</h4>
+                                    </div>
+                                    <span class="flex items-center gap-1.5 text-[10px] font-mono text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-500/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> MAINT
+                                    </span>
+                                </div>
+                                <div class="text-[10px] font-mono text-slate-400 space-y-1 mt-3">
+                                    <div class="flex justify-between"><span>Stack:</span> <span class="text-slate-300">Flask / Tailwind / Chart.js</span></div>
+                                    <div class="flex justify-between"><span>Host:</span> <span class="text-slate-300">InterServer Linux VPS</span></div>
+                                    <div class="flex justify-between"><span>Manager:</span> <span class="text-slate-300">Gunicorn / systemd</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-slate-800 bg-slate-900/30 text-center">
+                            <button class="text-xs font-mono text-slate-400 hover:text-white transition flex items-center justify-center gap-2 w-full">
+                                <i class="fa-solid fa-terminal"></i> Open Web Terminal
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Real-time clock for the dashboard header
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('sys-time').textContent = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>

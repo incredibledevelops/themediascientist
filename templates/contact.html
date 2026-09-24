@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Contact | The Media Scientist{% endblock %}
+{% block content %}
+<section class="py-20 px-4 max-w-7xl mx-auto relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div class="lg:col-span-5 space-y-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-xs font-mono text-emerald-300">
+                <i class="fa-solid fa-paper-plane"></i> GET IN TOUCH
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Let's Build Something <br><span class="text-gradient-mint">Incredible Together</span></h2>
+            <p class="text-slate-400 text-sm leading-relaxed">Have a project in mind for video editing, photography, photo retouching, graphic design, web development, or marketing? Fill out the form to get started.</p>
+            <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-4 font-mono text-xs">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-cyan-950 border border-cyan-500/30 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-envelope"></i></div>
+                    <div>
+                        <div class="text-slate-400 text-[10px]">EMAIL ADDRESS</div>
+                        <div class="text-slate-200 font-semibold">{{ contact.email }}</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-purple-950 border border-purple-500/30 flex items-center justify-center text-purple-400"><i class="fa-solid fa-location-dot"></i></div>
+                    <div>
+                        <div class="text-slate-400 text-[10px]">LOCATION</div>
+                        <div class="text-slate-200 font-semibold">{{ contact.location }}</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-950 border border-emerald-500/30 flex items-center justify-center text-emerald-400"><i class="fa-solid fa-share-nodes"></i></div>
+                    <div>
+                        <div class="text-slate-400 text-[10px]">SOCIAL MEDIA</div>
+                        <div class="text-slate-200 font-semibold flex items-center gap-3 mt-1 text-sm">
+                            <a href="{{ contact.instagram }}" target="_blank" class="hover:text-cyan-400"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="{{ contact.tiktok }}" target="_blank" class="hover:text-cyan-400"><i class="fa-brands fa-tiktok"></i></a>
+                            <a href="{{ contact.youtube }}" target="_blank" class="hover:text-cyan-400"><i class="fa-brands fa-youtube"></i></a>
+                            <a href="{{ contact.github }}" target="_blank" class="hover:text-cyan-400"><i class="fa-brands fa-github"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="lg:col-span-7">
+            <div class="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800">
+                <form method="POST" action="{{ url_for('contact') }}" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono text-slate-300 mb-1.5">YOUR NAME / COMPANY *</label>
+                            <input type="text" name="name" required placeholder="e.g. Kwadwo Mensah" class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-slate-300 mb-1.5">EMAIL ADDRESS *</label>
+                            <input type="email" name="email" required placeholder="kwadwo@example.com" class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400 transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-slate-300 mb-1.5">REQUIRED SERVICES</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
+                            {% for label in ['Photo Retouch','Video Editing','Motion FX','Website/App','Digital Marketing','Graphic Design'] %}
+                            <label class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-2 cursor-pointer hover:border-slate-700">
+                                <input type="checkbox" name="services" value="{{ label }}" class="accent-cyan-400">
+                                <span>{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-slate-300 mb-1.5">ESTIMATED BUDGET</label>
+                        <select name="budget" class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-cyan-400">
+                            <option>Basic (GH₵ 800 - GH₵ 2,500)</option>
+                            <option>Standard (GH₵ 2,500 - GH₵ 7,000)</option>
+                            <option>Enterprise (GH₵ 7,000+)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-slate-300 mb-1.5">PROJECT DETAILS *</label>
+                        <textarea name="message" required rows="5" placeholder="Tell me about your project goals, deadlines, and vision..." class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:brightness-110 shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> SEND PROJECT INQUIRY
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

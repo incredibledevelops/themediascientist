@@ -1,0 +1,26 @@
+{% extends 'lab/base.html' %}
+{% block title %}About Page{% endblock %}
+{% block page_title %}About Page Editor{% endblock %}
+{% block page_subtitle %}Update your bio and story content.{% endblock %}
+
+{% block content %}
+<div class="glass-card rounded-2xl border border-slate-800 p-6 max-w-3xl">
+    <form method="POST" action="{{ url_for('lab_about') }}" class="space-y-4">
+        <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">HEADING</label>
+            <input type="text" name="heading" value="{{ about.heading }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">PRIMARY BIO</label>
+            <textarea name="bio" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">{{ about.bio }}</textarea>
+        </div>
+        <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">SECONDARY BIO</label>
+            <textarea name="bio2" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">{{ about.bio2 }}</textarea>
+        </div>
+        <button type="submit" class="px-6 py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">
+            <i class="fa-solid fa-save"></i> SAVE CHANGES
+        </button>
+    </form>
+</div>
+{% endblock %}

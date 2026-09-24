@@ -1,0 +1,48 @@
+{% extends 'lab/base.html' %}
+{% block title %}Portfolio{% endblock %}
+{% block page_title %}Portfolio Manager{% endblock %}
+{% block page_subtitle %}Add, edit, or remove portfolio items.{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1">
+        <div class="glass-card rounded-2xl border border-slate-800 p-6">
+            <h3 class="font-mono-heading font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-plus text-cyan-400"></i> Add Item
+            </h3>
+            <form method="POST" action="{{ url_for('lab_portfolio_create') }}" class="space-y-3">
+                <input type="text" name="title" required placeholder="Project Title" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <input type="text" name="category" required placeholder="Category Label (e.g. Video & Motion)" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <select name="category_key" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200">
+                    <option value="visual">Photo & Retouch</option>
+                    <option value="video">Video & Motion</option>
+                    <option value="code">Websites & Software</option>
+                    <option value="brand">Graphic Design</option>
+                </select>
+                <input type="text" name="tools" placeholder="Tools used" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <input type="url" name="image" required placeholder="Image URL" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <textarea name="description" placeholder="Short description" rows="3" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"></textarea>
+                <button type="submit" class="w-full py-2.5 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">ADD ITEM</button>
+            </form>
+        </div>
+    </div>
+    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% for item in portfolio %}
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            <div class="aspect-video bg-slate-900">
+                <img src="{{ item.image }}" class="w-full h-full object-cover" alt="{{ item.title }}">
+            </div>
+            <div class="p-4">
+                <h4 class="font-bold text-white text-xs">{{ item.title }}</h4>
+                <p class="text-[10px] font-mono text-cyan-400 mt-1">{{ item.category }}</p>
+                <form method="POST" action="{{ url_for('lab_portfolio_delete', item_id=item._id) }}" onsubmit="return confirm('Delete item?');" class="mt-3">
+                    <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i> Delete</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full text-center py-12 text-slate-400 text-xs font-mono glass-card rounded-2xl border border-slate-800">No portfolio items yet.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

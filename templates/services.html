@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Services | The Media Scientist{% endblock %}
+{% block content %}
+<section class="py-20 px-4 max-w-7xl mx-auto relative z-10">
+    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-xs font-mono text-cyan-300">
+            <i class="fa-solid fa-tags"></i> SERVICES & PRICING PLANS
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Service Packages & <span class="text-gradient-cyan">Pricing Plans</span></h2>
+        <p class="text-slate-400 text-sm sm:text-base">Transparent packages in Ghana Cedis tailored to elevate your business, personal brand, or project.</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {% for svc in services %}
+        <div class="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800 flex flex-col justify-between space-y-6">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-{{ svc.color }}-500/10 border border-{{ svc.color }}-500/30 flex items-center justify-center text-{{ svc.color }}-400 text-xl">
+                        <i class="fa-solid {{ svc.icon }}"></i>
+                    </div>
+                    <span class="text-xs font-mono text-{{ svc.color }}-400 uppercase tracking-widest bg-{{ svc.color }}-950/60 px-3 py-1 rounded-full border border-{{ svc.color }}-500/30">SERVICE {{ '%02d' % loop.index }}</span>
+                </div>
+                <h3 class="font-mono-heading font-bold text-2xl text-white">{{ svc.title }}</h3>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">{{ svc.description }}</p>
+                <div class="mt-6 space-y-4">
+                    {% for plan in svc.plans %}
+                    <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-mono font-bold text-sm text-{{ svc.color }}-300">{{ plan.name }}</span>
+                            <span class="font-mono text-xs font-bold text-emeraldMint">{{ plan.price }}</span>
+                        </div>
+                        <p class="text-xs text-slate-400">{{ plan.desc }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="pt-4 border-t border-slate-800">
+                <a href="{{ url_for('contact') }}" class="w-full py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition flex items-center justify-center gap-2">
+                    Book {{ svc.title }} Plan <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
