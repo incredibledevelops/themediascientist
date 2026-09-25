@@ -4,140 +4,520 @@
 {% block page_subtitle %}Welcome back, {{ current_user.name }}.{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="glass-card p-5 rounded-xl border border-slate-800 relative overflow-hidden group">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl"></div>
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <p class="text-xs font-mono text-slate-400 uppercase">Total Inquiries</p>
-                <h3 class="text-2xl font-bold font-mono text-white mt-1">{{ stats.total_inquiries }}</h3>
-            </div>
-            <div class="w-8 h-8 rounded-lg bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                <i class="fa-solid fa-envelope-open-text text-sm"></i>
-            </div>
+
+{# ============================================================
+   WELCOME / GETTING STARTED (shown if account is fresh)
+============================================================ #}
+{% if stats.total_inquiries == 0 and stats.clients_count == 0 and stats.projects_count == 0 and stats.portfolio_count == 0 %}
+<div class="glass-card rounded-2xl border border-cyan-500/30 bg-cyan-950/20 p-5 sm:p-6 mb-6 relative overflow-hidden">
+    <div class="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl"
+         aria-hidden="true"></div>
+
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-500
+                    flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-rocket text-white text-xl" aria-hidden="true"></i>
         </div>
+        <div class="flex-1">
+            <h2 class="font-mono-heading font-bold text-white text-base sm:text-lg">
+                Welcome to your Lab Console
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+                Set up your site in a few minutes. Add portfolio items, services, and your first client to get started.
+            </p>
+        </div>
+        <a href="{{ url_for('lab_portfolio') }}"
+           class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+                  text-xs font-mono font-bold text-slate-950
+                  bg-gradient-to-r from-cyan-400 to-emerald-400
+                  hover:brightness-110 transition active:scale-[0.98]">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Add Portfolio Item
+        </a>
     </div>
-    <div class="glass-card p-5 rounded-xl border border-slate-800 relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <p class="text-xs font-mono text-slate-400 uppercase">Clients</p>
-                <h3 class="text-2xl font-bold font-mono text-white mt-1">{{ stats.clients_count }}</h3>
+</div>
+{% endif %}
+
+{# ============================================================
+   KPI METRIC CARDS
+============================================================ #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+
+    {# --- Inquiries --- #}
+    <a href="{{ url_for('lab_inquiries') }}"
+       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+              hover:border-cyan-500/40 transition-colors group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl
+                    group-hover:bg-cyan-500/20 transition" aria-hidden="true"></div>
+        <div class="relative z-10 flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Inquiries
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-bold font-mono text-white mt-1 tabular-nums">
+                    {{ stats.total_inquiries }}
+                </h3>
             </div>
-            <div class="w-8 h-8 rounded-lg bg-purple-950/50 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                <i class="fa-solid fa-user-group text-sm"></i>
+            <div class="shrink-0 w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30
+                        flex items-center justify-center text-cyan-400
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-envelope-open-text text-sm" aria-hidden="true"></i>
             </div>
         </div>
+        <div class="relative z-10 flex items-center justify-between gap-2">
+            <span class="text-[10px] font-mono text-slate-500">
+                All time
+            </span>
+            <span class="text-[10px] font-mono text-cyan-400 flex items-center gap-1
+                         opacity-0 group-hover:opacity-100 transition-opacity">
+                View
+                <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+            </span>
+        </div>
+    </a>
+
+    {# --- Clients --- #}
+    <a href="{{ url_for('lab_clients') }}"
+       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+              hover:border-purple-500/40 transition-colors group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl
+                    group-hover:bg-purple-500/20 transition" aria-hidden="true"></div>
+        <div class="relative z-10 flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Clients
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-bold font-mono text-white mt-1 tabular-nums">
+                    {{ stats.clients_count }}
+                </h3>
+            </div>
+            <div class="shrink-0 w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/30
+                        flex items-center justify-center text-purple-400
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-user-group text-sm" aria-hidden="true"></i>
+            </div>
+        </div>
+        <div class="relative z-10 flex items-center justify-between gap-2">
+            <span class="text-[10px] font-mono text-slate-500">
+                Active accounts
+            </span>
+            <span class="text-[10px] font-mono text-purple-400 flex items-center gap-1
+                         opacity-0 group-hover:opacity-100 transition-opacity">
+                View
+                <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+            </span>
+        </div>
+    </a>
+
+    {# --- Projects --- #}
+    <a href="{{ url_for('lab_clients') }}"
+       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+              hover:border-emerald-500/40 transition-colors group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl
+                    group-hover:bg-emerald-500/20 transition" aria-hidden="true"></div>
+        <div class="relative z-10 flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Projects
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-bold font-mono text-white mt-1 tabular-nums">
+                    {{ stats.projects_count }}
+                </h3>
+            </div>
+            <div class="shrink-0 w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30
+                        flex items-center justify-center text-emeraldMint
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-bolt text-sm" aria-hidden="true"></i>
+            </div>
+        </div>
+        <div class="relative z-10 flex items-center justify-between gap-2">
+            <span class="text-[10px] font-mono text-slate-500">
+                Total managed
+            </span>
+            <span class="text-[10px] font-mono text-emerald-400 flex items-center gap-1
+                         opacity-0 group-hover:opacity-100 transition-opacity">
+                View
+                <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+            </span>
+        </div>
+    </a>
+
+    {# --- Portfolio --- #}
+    <a href="{{ url_for('lab_portfolio') }}"
+       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+              hover:border-orange-500/40 transition-colors group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl
+                    group-hover:bg-orange-500/20 transition" aria-hidden="true"></div>
+        <div class="relative z-10 flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Portfolio
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-bold font-mono text-white mt-1 tabular-nums">
+                    {{ stats.portfolio_count }}
+                </h3>
+            </div>
+            <div class="shrink-0 w-9 h-9 rounded-lg bg-orange-500/10 border border-orange-500/30
+                        flex items-center justify-center text-orange-400
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
+            </div>
+        </div>
+        <div class="relative z-10 flex items-center justify-between gap-2">
+            <span class="text-[10px] font-mono text-slate-500">
+                Public items
+            </span>
+            <span class="text-[10px] font-mono text-orange-400 flex items-center gap-1
+                         opacity-0 group-hover:opacity-100 transition-opacity">
+                View
+                <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+            </span>
+        </div>
+    </a>
+
+</div>
+
+{# ============================================================
+   QUICK ACTIONS
+============================================================ #}
+<div class="mt-4 glass-card rounded-2xl border border-slate-800 p-4 sm:p-5">
+    <div class="flex items-center justify-between gap-3 mb-3">
+        <h3 class="font-mono-heading font-bold text-white text-sm flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-yellow-400" aria-hidden="true"></i>
+            Quick Actions
+        </h3>
+        <span class="text-[10px] font-mono text-slate-500 hidden sm:block">
+            Jump to common tasks
+        </span>
     </div>
-    <div class="glass-card p-5 rounded-xl border border-slate-800 relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl"></div>
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <p class="text-xs font-mono text-slate-400 uppercase">Projects</p>
-                <h3 class="text-2xl font-bold font-mono text-white mt-1">{{ stats.projects_count }}</h3>
-            </div>
-            <div class="w-8 h-8 rounded-lg bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center text-emeraldMint">
-                <i class="fa-solid fa-bolt text-sm"></i>
-            </div>
-        </div>
-    </div>
-    <div class="glass-card p-5 rounded-xl border border-slate-800 relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-xl"></div>
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <p class="text-xs font-mono text-slate-400 uppercase">Portfolio Items</p>
-                <h3 class="text-2xl font-bold font-mono text-white mt-1">{{ stats.portfolio_count }}</h3>
-            </div>
-            <div class="w-8 h-8 rounded-lg bg-orange-950/50 border border-orange-500/30 flex items-center justify-center text-orange-400">
-                <i class="fa-solid fa-eye text-sm"></i>
-            </div>
-        </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+
+        <a href="{{ url_for('lab_client_create') if false else url_for('lab_clients') }}"
+           class="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                  bg-slate-900 border border-slate-800
+                  hover:border-cyan-500/40 hover:bg-cyan-500/5 transition
+                  text-xs font-mono text-slate-200 group">
+            <i class="fa-solid fa-user-plus text-cyan-400 group-hover:scale-110 transition-transform"
+               aria-hidden="true"></i>
+            <span class="truncate">New Client</span>
+        </a>
+
+        <a href="{{ url_for('lab_clients') }}"
+           class="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                  bg-slate-900 border border-slate-800
+                  hover:border-emerald-500/40 hover:bg-emerald-500/5 transition
+                  text-xs font-mono text-slate-200 group">
+            <i class="fa-solid fa-bolt text-emerald-400 group-hover:scale-110 transition-transform"
+               aria-hidden="true"></i>
+            <span class="truncate">New Project</span>
+        </a>
+
+        <a href="{{ url_for('lab_portfolio') }}"
+           class="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                  bg-slate-900 border border-slate-800
+                  hover:border-orange-500/40 hover:bg-orange-500/5 transition
+                  text-xs font-mono text-slate-200 group">
+            <i class="fa-solid fa-folder-plus text-orange-400 group-hover:scale-110 transition-transform"
+               aria-hidden="true"></i>
+            <span class="truncate">Portfolio</span>
+        </a>
+
+        <a href="{{ url_for('lab_services') }}"
+           class="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                  bg-slate-900 border border-slate-800
+                  hover:border-purple-500/40 hover:bg-purple-500/5 transition
+                  text-xs font-mono text-slate-200 group">
+            <i class="fa-solid fa-tags text-purple-400 group-hover:scale-110 transition-transform"
+               aria-hidden="true"></i>
+            <span class="truncate">Services</span>
+        </a>
+
+        <a href="{{ url_for('index') }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="col-span-2 sm:col-span-1 flex items-center gap-2 px-3 py-2.5 rounded-xl
+                  bg-slate-900 border border-slate-800
+                  hover:border-slate-600 transition
+                  text-xs font-mono text-slate-200 group">
+            <i class="fa-solid fa-arrow-up-right-from-square text-slate-400 group-hover:scale-110 transition-transform"
+               aria-hidden="true"></i>
+            <span class="truncate">View Site</span>
+        </a>
+
     </div>
 </div>
 
+{# ============================================================
+   RECENT INQUIRIES + TOP PROJECTS
+============================================================ #}
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
-    <div class="xl:col-span-2 glass-card rounded-2xl border border-slate-800 overflow-hidden flex flex-col">
-        <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-            <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-inbox text-cyan-400"></i> Recent Lab Inquiries
-            </h3>
-            <a href="{{ url_for('lab_inquiries') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">View All &gt;</a>
-        </div>
-        <div class="overflow-x-auto">
+
+    {# ---------- RECENT INQUIRIES ---------- #}
+    <section class="xl:col-span-2 glass-card rounded-2xl border border-slate-800 overflow-hidden flex flex-col">
+
+        <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+                       flex items-center justify-between gap-3 shrink-0">
+            <h2 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                <i class="fa-solid fa-inbox text-cyan-400" aria-hidden="true"></i>
+                Recent Inquiries
+                {% if stats.recent_inquiries|length > 0 %}
+                <span class="text-[10px] font-mono font-normal text-slate-500">
+                    ({{ stats.recent_inquiries|length }})
+                </span>
+                {% endif %}
+            </h2>
+            <a href="{{ url_for('lab_inquiries') }}"
+               class="text-[11px] font-mono text-cyan-400 hover:text-cyan-300
+                      inline-flex items-center gap-1 transition">
+                View All
+                <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+            </a>
+        </header>
+
+        {# ---------- DESKTOP TABLE (hidden below md) ---------- #}
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
+                    <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
+                               uppercase bg-slate-900/30">
                         <th class="py-3 px-5">Client</th>
                         <th class="py-3 px-5">Services</th>
                         <th class="py-3 px-5">Budget</th>
-                        <th class="py-3 px-5">Status</th>
+                        <th class="py-3 px-5 text-right">Status</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm">
                     {% for inq in stats.recent_inquiries %}
                     <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
-                        <td class="py-4 px-5">
-                            <div class="font-semibold text-white text-xs">{{ inq.name }}</div>
-                            <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ inq.email }}</div>
+                        <td class="py-4 px-5 max-w-xs">
+                            <div class="font-semibold text-white text-xs truncate">
+                                {{ inq.name }}
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
+                                {{ inq.email }}
+                            </div>
                         </td>
                         <td class="py-4 px-5">
                             {% for svc in inq.services[:2] %}
-                            <span class="inline-block px-2 py-1 rounded bg-cyan-950/60 border border-cyan-500/30 text-[10px] font-mono text-cyan-300 mr-1 mb-1">{{ svc }}</span>
+                            <span class="inline-block px-2 py-1 rounded
+                                         bg-cyan-950/60 border border-cyan-500/30
+                                         text-[10px] font-mono text-cyan-300
+                                         mr-1 mb-1 whitespace-nowrap">
+                                {{ svc }}
+                            </span>
                             {% endfor %}
+                            {% if inq.services|length > 2 %}
+                            <span class="text-[10px] font-mono text-slate-500">
+                                +{{ inq.services|length - 2 }}
+                            </span>
+                            {% endif %}
                         </td>
-                        <td class="py-4 px-5 text-xs text-emeraldMint font-mono">{{ inq.budget }}</td>
-                        <td class="py-4 px-5">
-                            <span class="text-[10px] font-mono px-2 py-1 rounded-full {% if inq.status=='new' %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/30{% else %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% endif %}">
-                                {{ inq.status|upper }}
+                        <td class="py-4 px-5 text-xs text-emeraldMint font-mono whitespace-nowrap">
+                            {{ inq.budget }}
+                        </td>
+                        <td class="py-4 px-5 text-right">
+                            {% set st = inq.status|default('new') %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full
+                                         text-[10px] font-mono uppercase whitespace-nowrap
+                                         {% if st == 'new' %}
+                                             bg-cyan-500/20 text-cyan-300 border border-cyan-500/30
+                                         {% elif st == 'replied' or st == 'read' %}
+                                             bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
+                                         {% elif st == 'closed' %}
+                                             bg-slate-500/20 text-slate-400 border border-slate-500/30
+                                         {% else %}
+                                             bg-amber-500/20 text-amber-300 border border-amber-500/30
+                                         {% endif %}">
+                                {% if st == 'new' %}
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                                          aria-hidden="true"></span>
+                                {% endif %}
+                                {{ st }}
                             </span>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="4" class="py-8 text-center text-slate-400 text-xs font-mono">No inquiries yet.</td></tr>
+                    <tr>
+                        <td colspan="4" class="py-12 text-center">
+                            <i class="fa-solid fa-inbox text-3xl text-slate-700 mb-3"
+                               aria-hidden="true"></i>
+                            <p class="text-slate-400 text-xs font-mono">No inquiries yet.</p>
+                            <p class="text-slate-500 text-[10px] font-mono mt-1">
+                                New project requests will appear here.
+                            </p>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <div class="glass-card rounded-2xl border border-slate-800 flex flex-col">
-        <div class="p-5 border-b border-slate-800 bg-slate-900/50">
-            <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-server text-emeraldMint"></i> Active Deployments
-            </h3>
-        </div>
-        <div class="p-5 flex-1 space-y-4">
-            <div class="p-4 rounded-xl bg-slate-900 border border-slate-700/50">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-cart-shopping text-cyan-400 text-sm"></i>
-                        <h4 class="font-bold text-sm text-white font-mono">STBM E-Commerce</h4>
+        {# ---------- MOBILE CARDS (hidden md and up) ---------- #}
+        <div class="md:hidden divide-y divide-slate-800/60">
+            {% for inq in stats.recent_inquiries %}
+            <div class="p-4 space-y-3">
+
+                {# Row 1: name + status #}
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold text-white text-sm truncate">{{ inq.name }}</p>
+                        <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5">
+                            {{ inq.email }}
+                        </p>
                     </div>
-                    <span class="flex items-center gap-1.5 text-[10px] font-mono text-emeraldMint bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-500/20">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emeraldMint"></span> ONLINE
+                    {% set st = inq.status|default('new') %}
+                    <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
+                                 text-[10px] font-mono uppercase
+                                 {% if st == 'new' %}
+                                     bg-cyan-500/20 text-cyan-300 border border-cyan-500/30
+                                 {% elif st == 'replied' or st == 'read' %}
+                                     bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
+                                 {% elif st == 'closed' %}
+                                     bg-slate-500/20 text-slate-400 border border-slate-500/30
+                                 {% else %}
+                                     bg-amber-500/20 text-amber-300 border border-amber-500/30
+                                 {% endif %}">
+                        {% if st == 'new' %}
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                                  aria-hidden="true"></span>
+                        {% endif %}
+                        {{ st }}
                     </span>
                 </div>
-                <div class="text-[10px] font-mono text-slate-400 space-y-1 mt-3">
-                    <div class="flex justify-between"><span>Stack:</span> <span class="text-slate-300">Flask / Next.js</span></div>
-                    <div class="flex justify-between"><span>Host:</span> <span class="text-slate-300">Render VPS</span></div>
-                </div>
-            </div>
-            <div class="p-4 rounded-xl bg-slate-900 border border-slate-700/50">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-cash-register text-purple-400 text-sm"></i>
-                        <h4 class="font-bold text-sm text-white font-mono">Deboat's Favour POS</h4>
-                    </div>
-                    <span class="flex items-center gap-1.5 text-[10px] font-mono text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-500/20">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> MAINT
+
+                {# Row 2: services #}
+                <div class="flex flex-wrap gap-1.5">
+                    {% for svc in inq.services %}
+                    <span class="px-2 py-0.5 rounded
+                                 bg-cyan-950/60 border border-cyan-500/30
+                                 text-[10px] font-mono text-cyan-300 whitespace-nowrap">
+                        {{ svc }}
                     </span>
+                    {% endfor %}
                 </div>
-                <div class="text-[10px] font-mono text-slate-400 space-y-1 mt-3">
-                    <div class="flex justify-between"><span>Stack:</span> <span class="text-slate-300">Flask / Tailwind</span></div>
-                    <div class="flex justify-between"><span>Host:</span> <span class="text-slate-300">InterServer VPS</span></div>
+
+                {# Row 3: budget #}
+                <div class="flex items-center justify-between gap-2 pt-1 text-[10px] font-mono">
+                    <span class="text-slate-500 uppercase tracking-wider">Budget</span>
+                    <span class="text-emeraldMint font-bold">{{ inq.budget }}</span>
+                </div>
+
+            </div>
+            {% else %}
+            <div class="p-12 text-center">
+                <i class="fa-solid fa-inbox text-3xl text-slate-700 mb-3" aria-hidden="true"></i>
+                <p class="text-slate-400 text-xs font-mono">No inquiries yet.</p>
+                <p class="text-slate-500 text-[10px] font-mono mt-1">
+                    New project requests will appear here.
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# ---------- RIGHT COLUMN ---------- #}
+    <aside class="space-y-6">
+
+        {# ---------- SYSTEM STATUS ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+                           flex items-center justify-between gap-3">
+                <h2 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-signal text-emeraldMint" aria-hidden="true"></i>
+                    System Status
+                </h2>
+                <span class="flex items-center gap-1.5 text-[10px] font-mono text-emeraldMint">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emeraldMint animate-pulse"
+                          aria-hidden="true"></span>
+                    Healthy
+                </span>
+            </header>
+
+            <div class="p-4 sm:p-5 space-y-3">
+                <div class="flex items-center justify-between p-3 rounded-xl
+                            bg-slate-900/70 border border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-database text-cyan-400 text-xs" aria-hidden="true"></i>
+                        <span class="text-xs font-mono text-slate-300">Database</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-emeraldMint">Connected</span>
+                </div>
+
+                <div class="flex items-center justify-between p-3 rounded-xl
+                            bg-slate-900/70 border border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-envelope text-purple-400 text-xs" aria-hidden="true"></i>
+                        <span class="text-xs font-mono text-slate-300">Mailer</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-emeraldMint">Ready</span>
+                </div>
+
+                <div class="flex items-center justify-between p-3 rounded-xl
+                            bg-slate-900/70 border border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-credit-card text-emerald-400 text-xs" aria-hidden="true"></i>
+                        <span class="text-xs font-mono text-slate-300">Paystack</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-emeraldMint">Live</span>
+                </div>
+
+                <div class="flex items-center justify-between p-3 rounded-xl
+                            bg-slate-900/70 border border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-orange-400 text-xs" aria-hidden="true"></i>
+                        <span class="text-xs font-mono text-slate-300">Uploads</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-emeraldMint">Online</span>
                 </div>
             </div>
+
+            <footer class="px-4 sm:px-5 py-3 border-t border-slate-800 bg-slate-900/30 text-center">
+                <p class="text-[10px] font-mono text-slate-500">
+                    Last checked <span class="text-slate-400">just now</span>
+                </p>
+            </footer>
         </div>
-    </div>
+
+        {# ---------- SITE LINKS ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50">
+                <h2 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-link text-purple-400" aria-hidden="true"></i>
+                    Public Pages
+                </h2>
+            </header>
+
+            <nav class="p-3 sm:p-4 space-y-1">
+                {% set public_pages = [
+                    ('index', 'Home', 'fa-house', 'cyan'),
+                    ('about', 'About', 'fa-user', 'purple'),
+                    ('services', 'Services', 'fa-tags', 'emerald'),
+                    ('portfolio', 'Portfolio', 'fa-folder-open', 'orange'),
+                    ('contact', 'Contact', 'fa-envelope', 'cyan')
+                ] %}
+                {% for endpoint, label, icon, color in public_pages %}
+                <a href="{{ url_for(endpoint) }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl
+                          text-xs font-mono text-slate-300
+                          hover:bg-{{ color }}-500/10 hover:text-white transition group">
+                    <span class="flex items-center gap-2.5">
+                        <i class="fa-solid {{ icon }} text-{{ color }}-400 w-4 text-center
+                                  group-hover:scale-110 transition-transform"
+                           aria-hidden="true"></i>
+                        {{ label }}
+                    </span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-600
+                              group-hover:text-slate-400 transition"
+                       aria-hidden="true"></i>
+                </a>
+                {% endfor %}
+            </nav>
+        </div>
+
+    </aside>
 </div>
+
 {% endblock %}

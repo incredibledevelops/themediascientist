@@ -5,66 +5,247 @@
 
 {% block content %}
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="glass-card p-5 relative overflow-hidden group">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl"></div>
-        <div class="flex justify-between items-start mb-4 relative z-10">
-            <div>
-                <p class="text-slate-400 text-sm font-medium mb-1">Active Projects</p>
-                <h3 class="font-mono-heading text-3xl font-bold text-white">{{ stats.active_projects }}</h3>
+{# ============================================================
+   SAFE STATS — defensive defaults if variables are missing
+============================================================ #}
+{% set active_projects    = stats.active_projects    if stats and stats.active_projects    is defined else 0 %}
+{% set pending_total      = stats.pending_total      if stats and stats.pending_total      is defined else 0 %}
+{% set unreviewed_files   = stats.unreviewed_files   if stats and stats.unreviewed_files   is defined else 0 %}
+{% set next_deadline      = stats.next_deadline      if stats and stats.next_deadline      is defined else none %}
+{% set projects_list      = stats.projects           if stats and stats.projects           is defined else [] %}
+{% set invoices_list      = stats.invoices           if stats and stats.invoices           is defined else [] %}
+{% set deliverables_list  = stats.deliverables       if stats and stats.deliverables       is defined else [] %}
+
+{# ============================================================
+   KPI CARDS
+============================================================ #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+
+    {# --- Active Projects --- #}
+    <a href="{{ url_for('client_projects') }}"
+       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+              hover:border-cyan-500/40 transition-colors
+              relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl
+                    group-hover:bg-cyan-500/20 transition"
+             aria-hidden="true"></div>
+
+        <div class="relative z-10 flex items-start justify-between gap-3 mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] sm:text-xs font-mono text-slate-400
+                          uppercase tracking-wider">
+                    Active Projects
+                </p>
+                <h3 class="font-mono-heading text-2xl sm:text-3xl font-bold text-white mt-1 tabular-nums">
+                    {{ active_projects }}
+                </h3>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                <i class="fa-solid fa-bolt text-lg"></i>
-            </div>
-        </div>
-    </div>
-    <div class="glass-card p-5 relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl"></div>
-        <div class="flex justify-between items-start mb-4 relative z-10">
-            <div>
-                <p class="text-slate-400 text-sm font-medium mb-1">Pending Invoices</p>
-                <h3 class="font-mono-heading text-3xl font-bold text-white">GH₵ {{ '%.2f' % stats.pending_total }}</h3>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                <i class="fa-solid fa-wallet text-lg"></i>
-            </div>
-        </div>
-    </div>
-    <div class="glass-card p-5 relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
-        <div class="flex justify-between items-start mb-4 relative z-10">
-            <div>
-                <p class="text-slate-400 text-sm font-medium mb-1">Files for Review</p>
-                <h3 class="font-mono-heading text-3xl font-bold text-white">{{ stats.unreviewed_files }}</h3>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <i class="fa-solid fa-file-circle-check text-lg"></i>
-            </div>
-        </div>
-    </div>
-    <div class="glass-card p-5 relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl"></div>
-        <div class="flex justify-between items-start mb-4 relative z-10">
-            <div>
-                <p class="text-slate-400 text-sm font-medium mb-1">Next Deadline</p>
-                <h3 class="font-mono-heading text-2xl font-bold text-white mt-1">{{ stats.next_deadline or '—' }}</h3>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
-                <i class="fa-solid fa-calendar-day text-lg"></i>
+            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
+                        bg-cyan-500/20 border border-cyan-500/30
+                        flex items-center justify-center text-cyan-400
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-bolt text-base sm:text-lg" aria-hidden="true"></i>
             </div>
         </div>
+
+        <p class="relative z-10 text-[10px] font-mono text-slate-500
+                  flex items-center gap-1">
+            {% if active_projects > 0 %}
+                <i class="fa-solid fa-circle text-[5px] text-cyan-400 animate-pulse"
+                   aria-hidden="true"></i>
+                Currently in progress
+            {% else %}
+                No active projects
+            {% endif %}
+        </p>
+    </a>
+
+    {# --- Pending Invoices --- #}
+    <a href="{{ url_for('client_invoices') }}"
+       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+              hover:border-purple-500/40 transition-colors
+              relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl
+                    group-hover:bg-purple-500/20 transition"
+             aria-hidden="true"></div>
+
+        <div class="relative z-10 flex items-start justify-between gap-3 mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] sm:text-xs font-mono text-slate-400
+                          uppercase tracking-wider">
+                    Pending
+                </p>
+                <h3 class="font-mono-heading text-lg sm:text-2xl font-bold text-white mt-1
+                           tabular-nums truncate">
+                    GH₵ {{ '%.2f' % pending_total }}
+                </h3>
+            </div>
+            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
+                        bg-purple-500/20 border border-purple-500/30
+                        flex items-center justify-center text-purple-400
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-wallet text-base sm:text-lg" aria-hidden="true"></i>
+            </div>
+        </div>
+
+        <p class="relative z-10 text-[10px] font-mono
+                  {% if pending_total > 0 %}text-orange-400{% else %}text-slate-500{% endif %}
+                  flex items-center gap-1">
+            {% if pending_total > 0 %}
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                Payment due
+            {% else %}
+                <i class="fa-solid fa-check text-emerald-400" aria-hidden="true"></i>
+                All settled
+            {% endif %}
+        </p>
+    </a>
+
+    {# --- Files for Review --- #}
+    <a href="{{ url_for('client_files') }}"
+       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+              hover:border-emerald-500/40 transition-colors
+              relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl
+                    group-hover:bg-emerald-500/20 transition"
+             aria-hidden="true"></div>
+
+        <div class="relative z-10 flex items-start justify-between gap-3 mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] sm:text-xs font-mono text-slate-400
+                          uppercase tracking-wider">
+                    Files for Review
+                </p>
+                <h3 class="font-mono-heading text-2xl sm:text-3xl font-bold text-white mt-1 tabular-nums">
+                    {{ unreviewed_files }}
+                </h3>
+            </div>
+            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
+                        bg-emerald-500/20 border border-emerald-500/30
+                        flex items-center justify-center text-emerald-400
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-file-circle-check text-base sm:text-lg" aria-hidden="true"></i>
+            </div>
+        </div>
+
+        <p class="relative z-10 text-[10px] font-mono text-slate-500
+                  flex items-center gap-1">
+            {% if unreviewed_files > 0 %}
+                <i class="fa-solid fa-eye text-emerald-400" aria-hidden="true"></i>
+                Awaiting your approval
+            {% else %}
+                All caught up
+            {% endif %}
+        </p>
+    </a>
+
+    {# --- Next Deadline --- #}
+    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+                relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl
+                    group-hover:bg-orange-500/20 transition"
+             aria-hidden="true"></div>
+
+        <div class="relative z-10 flex items-start justify-between gap-3 mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] sm:text-xs font-mono text-slate-400
+                          uppercase tracking-wider">
+                    Next Deadline
+                </p>
+                <h3 class="font-mono-heading text-base sm:text-xl font-bold text-white mt-1
+                           leading-tight line-clamp-2">
+                    {{ next_deadline or '—' }}
+                </h3>
+            </div>
+            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
+                        bg-orange-500/20 border border-orange-500/30
+                        flex items-center justify-center text-orange-400
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-calendar-day text-base sm:text-lg" aria-hidden="true"></i>
+            </div>
+        </div>
+
+        <p class="relative z-10 text-[10px] font-mono text-slate-500 truncate">
+            {% if next_deadline %}
+                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                {{ next_deadline }}
+            {% else %}
+                No pending deadlines
+            {% endif %}
+        </p>
     </div>
+
 </div>
 
-<div class="glass-card mb-8 overflow-hidden">
-    <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
-        <h3 class="font-mono-heading text-lg font-semibold text-white">Active & Recent Projects</h3>
-        <a href="{{ url_for('client_projects') }}" class="text-sm text-cyan-400 hover:text-white transition-colors">View All Projects &rarr;</a>
+{# ============================================================
+   QUICK ACTIONS (shown only when there's something to do)
+============================================================ #}
+{% if pending_total > 0 or unreviewed_files > 0 %}
+<div class="glass-card rounded-2xl border border-slate-800 p-4 sm:p-5 mb-6">
+    <div class="flex items-center justify-between gap-3 mb-3">
+        <h3 class="font-mono-heading font-bold text-white text-sm flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-yellow-400" aria-hidden="true"></i>
+            Quick Actions
+        </h3>
+        <span class="text-[10px] font-mono text-slate-500 hidden sm:block">
+            Needs your attention
+        </span>
     </div>
-    <div class="overflow-x-auto">
+
+    <div class="flex flex-wrap gap-2">
+        {% if pending_total > 0 %}
+        <a href="{{ url_for('client_invoices') }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl
+                  text-xs font-mono font-bold
+                  bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950
+                  hover:brightness-110 transition active:scale-[0.98]">
+            <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
+            Pay Pending Invoices
+        </a>
+        {% endif %}
+
+        {% if unreviewed_files > 0 %}
+        <a href="{{ url_for('client_files') }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl
+                  text-xs font-mono font-bold
+                  bg-purple-500/15 text-purple-300 border border-purple-500/30
+                  hover:bg-purple-500/25 transition active:scale-[0.98]">
+            <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
+            Review New Files ({{ unreviewed_files }})
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{# ============================================================
+   PROJECTS TABLE / CARDS
+============================================================ #}
+<section class="glass-card rounded-2xl border border-slate-800 overflow-hidden mb-6 sm:mb-8">
+
+    <header class="p-4 sm:p-6 border-b border-slate-800/80
+                   flex items-center justify-between gap-3
+                   bg-slate-900/40">
+        <h2 class="font-mono-heading text-sm sm:text-lg font-semibold text-white
+                   flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-cyan-400" aria-hidden="true"></i>
+            Active &amp; Recent Projects
+        </h2>
+        <a href="{{ url_for('client_projects') }}"
+           class="text-[11px] sm:text-sm text-cyan-400 hover:text-white transition-colors
+                  inline-flex items-center gap-1 whitespace-nowrap">
+            View All
+            <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+        </a>
+    </header>
+
+    {% if projects_list %}
+
+    {# ---------- DESKTOP TABLE (hidden below md) ---------- #}
+    <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-black/30 text-slate-400 text-xs uppercase tracking-wider">
+                <tr class="bg-black/30 text-slate-400 text-[10px] uppercase tracking-wider">
                     <th class="p-4 pl-6 font-medium">Project Name</th>
                     <th class="p-4 font-medium">Service</th>
                     <th class="p-4 font-medium">Timeline</th>
@@ -73,134 +254,382 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/80 text-sm">
-                {% for p in stats.projects[:3] %}
+                {% for p in projects_list[:3] %}
                 <tr class="hover:bg-white/5 transition-colors">
-                    <td class="p-4 pl-6">
-                        <p class="font-semibold text-white">{{ p.title }}</p>
-                        <p class="text-xs text-slate-400">ID: {{ p._id|string|truncate(8, True, '') }}</p>
+                    <td class="p-4 pl-6 max-w-xs">
+                        <p class="font-semibold text-white text-sm truncate">
+                            {{ p.title }}
+                        </p>
+                        <p class="text-[10px] text-slate-500 font-mono mt-0.5">
+                            #{{ p._id|string|truncate(8, True, '') }}
+                        </p>
                     </td>
-                    <td class="p-4 text-slate-300">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-code text-cyan-400 w-4"></i> {{ p.get('service','—') }}
+                    <td class="p-4 text-slate-300 text-xs">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <i class="fa-solid fa-code text-cyan-400 w-4 shrink-0"
+                               aria-hidden="true"></i>
+                            <span class="truncate">{{ p.get('service','—') }}</span>
                         </div>
                     </td>
-                    <td class="p-4 text-slate-400">{{ p.get('timeline','—') }}</td>
-                    <td class="p-4 min-w-[150px]">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-slate-300">{{ p.get('stage_label','Progress') }}</span>
-                            <span class="text-cyan-400">{{ p.get('progress',0) }}%</span>
+                    <td class="p-4 text-slate-400 text-xs whitespace-nowrap">
+                        {{ p.get('timeline','—') }}
+                    </td>
+                    <td class="p-4 min-w-[160px]">
+                        <div class="flex justify-between text-[10px] mb-1 gap-2">
+                            <span class="text-slate-300 truncate">
+                                {{ p.get('stage_label','Progress') }}
+                            </span>
+                            <span class="text-cyan-400 font-bold shrink-0">
+                                {{ p.get('progress',0) }}%
+                            </span>
                         </div>
-                        <div class="w-full bg-slate-800 rounded-full h-1.5 border border-slate-700">
-                            <div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-1.5 rounded-full" style="width: {{ p.get('progress',0) }}%"></div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 border border-slate-700 overflow-hidden"
+                             role="progressbar"
+                             aria-valuenow="{{ p.get('progress',0) }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100"
+                             aria-label="{{ p.title }} progress">
+                            <div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all"
+                                 style="width: {{ p.get('progress',0) }}%"></div>
                         </div>
                     </td>
                     <td class="p-4 pr-6 text-right">
-                        {% if p.get('status') == 'in_progress' %}
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> In Progress
+                        {% set p_status = p.get('status','on_hold') %}
+                        {% if p_status == 'in_progress' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-bold uppercase whitespace-nowrap
+                                     bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            <i class="fa-solid fa-bolt text-[8px]" aria-hidden="true"></i>
+                            In Progress
                         </span>
-                        {% elif p.get('status') == 'review' %}
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                            <i class="fa-solid fa-clock"></i> Review
+                        {% elif p_status == 'review' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-bold uppercase whitespace-nowrap
+                                     bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                            <i class="fa-solid fa-clock text-[8px]" aria-hidden="true"></i>
+                            Review
                         </span>
-                        {% elif p.get('status') == 'completed' %}
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <i class="fa-solid fa-check"></i> Completed
+                        {% elif p_status == 'completed' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-bold uppercase whitespace-nowrap
+                                     bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+                            Completed
                         </span>
                         {% else %}
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">On Hold</span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-bold uppercase whitespace-nowrap
+                                     bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                            <i class="fa-solid fa-pause text-[8px]" aria-hidden="true"></i>
+                            On Hold
+                        </span>
                         {% endif %}
                     </td>
                 </tr>
-                {% else %}
-                <tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs font-mono">No projects assigned yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
 
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-    <div class="glass-card flex flex-col h-full">
-        <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-cloud-arrow-down text-purple-400"></i>
-                <h3 class="font-mono-heading text-lg font-semibold text-white">Recent Deliverables</h3>
+    {# ---------- MOBILE CARDS (hidden md and up) ---------- #}
+    <div class="md:hidden divide-y divide-slate-800/60">
+        {% for p in projects_list[:3] %}
+        <div class="p-4 space-y-3">
+
+            {# Header: title + status #}
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-white text-sm leading-tight">
+                        {{ p.title }}
+                    </p>
+                    <p class="text-[10px] font-mono text-slate-500 mt-0.5">
+                        #{{ p._id|string|truncate(8, True, '') }}
+                    </p>
+                </div>
+                {% set p_status = p.get('status','on_hold') %}
+                {% if p_status == 'in_progress' %}
+                <span class="shrink-0 px-2 py-1 rounded-full
+                             text-[9px] font-bold uppercase
+                             bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    Active
+                </span>
+                {% elif p_status == 'review' %}
+                <span class="shrink-0 px-2 py-1 rounded-full
+                             text-[9px] font-bold uppercase
+                             bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                    Review
+                </span>
+                {% elif p_status == 'completed' %}
+                <span class="shrink-0 px-2 py-1 rounded-full
+                             text-[9px] font-bold uppercase
+                             bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Done
+                </span>
+                {% else %}
+                <span class="shrink-0 px-2 py-1 rounded-full
+                             text-[9px] font-bold uppercase
+                             bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                    Hold
+                </span>
+                {% endif %}
             </div>
-            {% if stats.unreviewed_files > 0 %}
-            <span class="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-md font-medium">{{ stats.unreviewed_files }} New</span>
-            {% endif %}
+
+            {# Meta grid: service + timeline #}
+            <div class="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800 min-w-0">
+                    <p class="text-slate-500 uppercase tracking-wider text-[8px] mb-0.5">
+                        Service
+                    </p>
+                    <p class="text-slate-300 truncate">{{ p.get('service','—') }}</p>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800 min-w-0">
+                    <p class="text-slate-500 uppercase tracking-wider text-[8px] mb-0.5">
+                        Timeline
+                    </p>
+                    <p class="text-slate-300 truncate">{{ p.get('timeline','—') }}</p>
+                </div>
+            </div>
+
+            {# Progress bar #}
+            <div>
+                <div class="flex justify-between text-[10px] mb-1">
+                    <span class="text-slate-400">
+                        {{ p.get('stage_label','Progress') }}
+                    </span>
+                    <span class="text-cyan-400 font-bold">
+                        {{ p.get('progress',0) }}%
+                    </span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-1.5 border border-slate-700 overflow-hidden"
+                     role="progressbar"
+                     aria-valuenow="{{ p.get('progress',0) }}"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    <div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full"
+                         style="width: {{ p.get('progress',0) }}%"></div>
+                </div>
+            </div>
+
         </div>
-        <div class="p-4 flex-1">
-            <ul class="space-y-3">
-                {% for d in stats.deliverables[:3] %}
-                <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-purple-500/30 transition-colors">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded bg-slate-800 flex items-center justify-center text-slate-300">
-                            <i class="{{ d.get('file_type','fa-regular fa-file') }} text-xl"></i>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    {# ---------- EMPTY STATE ---------- #}
+    <div class="p-12 sm:p-16 text-center">
+        <div class="w-16 h-16 rounded-full
+                    bg-gradient-to-br from-cyan-500/20 to-purple-500/20
+                    border border-cyan-500/30
+                    flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-folder-open text-2xl text-cyan-400"
+               aria-hidden="true"></i>
+        </div>
+        <h3 class="font-mono-heading font-bold text-white text-sm mb-1">
+            No Projects Yet
+        </h3>
+        <p class="text-slate-400 text-xs font-mono max-w-md mx-auto">
+            Your active projects will appear here once your project manager assigns them.
+        </p>
+    </div>
+    {% endif %}
+
+</section>
+
+{# ============================================================
+   DELIVERABLES + INVOICES (side-by-side on xl)
+============================================================ #}
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
+
+    {# ---------- RECENT DELIVERABLES ---------- #}
+    <section class="glass-card rounded-2xl border border-slate-800
+                    flex flex-col overflow-hidden">
+
+        <header class="p-4 sm:p-6 border-b border-slate-800/80
+                       flex items-center justify-between gap-3
+                       bg-slate-900/40">
+            <h2 class="font-mono-heading text-sm sm:text-lg font-semibold text-white
+                       flex items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-down text-purple-400" aria-hidden="true"></i>
+                Recent Deliverables
+            </h2>
+            {% if unreviewed_files > 0 %}
+            <span class="bg-purple-500/20 text-purple-300
+                         text-[10px] font-mono px-2 py-1 rounded-md">
+                {{ unreviewed_files }} New
+            </span>
+            {% endif %}
+        </header>
+
+        <div class="p-4 sm:p-5 flex-1">
+            <ul class="space-y-2.5">
+                {% for d in deliverables_list[:3] %}
+                <li class="flex items-center justify-between gap-3
+                           p-3 rounded-xl
+                           bg-black/30 border border-white/5
+                           hover:border-purple-500/30 transition-colors">
+
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="w-10 h-10 shrink-0 rounded-lg
+                                    bg-slate-800 border border-slate-700
+                                    flex items-center justify-center text-purple-300">
+                            <i class="{{ d.get('file_type','fa-regular fa-file') }} text-base"
+                               aria-hidden="true"></i>
                         </div>
-                        <div>
-                            <p class="text-sm font-semibold text-white">{{ d.name }}</p>
-                            <p class="text-xs text-slate-400">{{ d.get('size','—') }}</p>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm font-semibold text-white truncate">
+                                {{ d.name }}
+                            </p>
+                            <p class="text-[10px] font-mono text-slate-400 mt-0.5">
+                                {{ d.get('size','—') }}
+                                {% if d.get('reviewed') %}
+                                    · <span class="text-emerald-400">Reviewed</span>
+                                {% else %}
+                                    · <span class="text-amber-400">New</span>
+                                {% endif %}
+                            </p>
                         </div>
                     </div>
+
                     {% if d.get('stored_filename') %}
-                    <a href="{{ url_for('download_file', filename=d.stored_filename) }}" class="w-8 h-8 rounded-full bg-white/5 hover:bg-purple-500/20 text-slate-300 hover:text-purple-400 flex items-center justify-center transition-colors">
-                        <i class="fa-solid fa-download"></i>
+                    <a href="{{ url_for('download_file', filename=d.stored_filename) }}"
+                       class="shrink-0 w-9 h-9 rounded-lg
+                              bg-purple-500/10 hover:bg-purple-500/25
+                              text-purple-300 border border-purple-500/30
+                              flex items-center justify-center transition"
+                       title="Download {{ d.name }}"
+                       aria-label="Download {{ d.name }}">
+                        <i class="fa-solid fa-download text-xs" aria-hidden="true"></i>
                     </a>
                     {% elif d.get('url') %}
-                    <a href="{{ d.get('url') }}" target="_blank" class="w-8 h-8 rounded-full bg-white/5 hover:bg-purple-500/20 text-slate-300 hover:text-purple-400 flex items-center justify-center transition-colors">
-                        <i class="fa-solid fa-download"></i>
+                    <a href="{{ d.get('url') }}" target="_blank"
+                       rel="noopener noreferrer"
+                       class="shrink-0 w-9 h-9 rounded-lg
+                              bg-purple-500/10 hover:bg-purple-500/25
+                              text-purple-300 border border-purple-500/30
+                              flex items-center justify-center transition"
+                       aria-label="Open {{ d.name }}">
+                        <i class="fa-solid fa-download text-xs" aria-hidden="true"></i>
                     </a>
                     {% endif %}
                 </li>
                 {% else %}
-                <p class="text-center text-slate-400 text-xs font-mono py-6">No deliverables yet.</p>
+                <li class="py-10 text-center">
+                    <i class="fa-solid fa-folder-open text-3xl text-slate-700 mb-2"
+                       aria-hidden="true"></i>
+                    <p class="text-slate-400 text-xs font-mono">
+                        No deliverables yet.
+                    </p>
+                </li>
                 {% endfor %}
             </ul>
         </div>
-        <div class="p-4 border-t border-slate-800/80 text-center">
-            <a href="{{ url_for('client_files') }}" class="text-xs text-slate-400 hover:text-white transition-colors">View All Files</a>
-        </div>
-    </div>
 
-    <div class="glass-card flex flex-col h-full">
-        <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-file-invoice text-emerald-400"></i>
-                <h3 class="font-mono-heading text-lg font-semibold text-white">Recent Invoices</h3>
-            </div>
-            <a href="{{ url_for('client_invoices') }}" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
+        <footer class="p-4 border-t border-slate-800/80 text-center">
+            <a href="{{ url_for('client_files') }}"
+               class="text-xs text-slate-400 hover:text-white transition-colors
+                      inline-flex items-center gap-1">
+                View All Files
+                <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+            </a>
+        </footer>
+    </section>
+
+    {# ---------- RECENT INVOICES ---------- #}
+    <section class="glass-card rounded-2xl border border-slate-800
+                    flex flex-col overflow-hidden">
+
+        <header class="p-4 sm:p-6 border-b border-slate-800/80
+                       flex items-center justify-between gap-3
+                       bg-slate-900/40">
+            <h2 class="font-mono-heading text-sm sm:text-lg font-semibold text-white
+                       flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice text-emerald-400" aria-hidden="true"></i>
+                Recent Invoices
+            </h2>
+            <a href="{{ url_for('client_invoices') }}"
+               class="text-[10px] sm:text-xs font-mono
+                      bg-white/10 hover:bg-white/20 text-white
+                      px-3 py-1.5 rounded-lg border border-white/10
+                      transition-colors whitespace-nowrap">
                 View All
             </a>
-        </div>
-        <div class="p-4 flex-1">
-            <ul class="space-y-3">
-                {% for inv in stats.invoices[:3] %}
-                <li class="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:border-emerald-500/30 transition-colors">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full {% if inv.status=='paid' %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% else %}bg-orange-500/10 border border-orange-500/20 text-orange-400{% endif %} flex items-center justify-center">
-                            <i class="fa-solid {% if inv.status=='paid' %}fa-check{% else %}fa-hourglass-half{% endif %}"></i>
+        </header>
+
+        <div class="p-4 sm:p-5 flex-1">
+            <ul class="space-y-2.5">
+                {% for inv in invoices_list[:3] %}
+                {% set is_paid = inv.status == 'paid' %}
+                <li class="flex items-center justify-between gap-3
+                           p-3 rounded-xl
+                           bg-black/30 border border-white/5
+                           hover:border-emerald-500/30 transition-colors">
+
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="w-10 h-10 shrink-0 rounded-lg
+                                    {% if is_paid %}
+                                        bg-emerald-500/10 border border-emerald-500/20 text-emerald-400
+                                    {% else %}
+                                        bg-orange-500/10 border border-orange-500/20 text-orange-400
+                                    {% endif %}
+                                    flex items-center justify-center">
+                            <i class="fa-solid {% if is_paid %}fa-check{% else %}fa-hourglass-half{% endif %} text-base"
+                               aria-hidden="true"></i>
                         </div>
-                        <div>
-                            <p class="text-sm font-semibold text-white">{{ inv.number }}</p>
-                            <p class="text-xs text-slate-400">{% if inv.status=='paid' %}Paid{% else %}Due: {{ inv.get('due_date','—') }}{% endif %}</p>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm font-semibold text-white truncate">
+                                {{ inv.number }}
+                            </p>
+                            <p class="text-[10px] font-mono text-slate-400 mt-0.5 truncate">
+                                {% if is_paid %}
+                                    Paid{% if inv.paid_at %} · {{ inv.paid_at.strftime('%b %d') }}{% endif %}
+                                {% else %}
+                                    Due: {{ inv.get('due_date','—') }}
+                                {% endif %}
+                            </p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <p class="text-sm font-mono-heading font-bold {% if inv.status=='paid' %}text-slate-400{% else %}text-white{% endif %}">GH₵ {{ '%.2f' % inv.amount }}</p>
-                        <p class="text-[10px] font-bold uppercase tracking-wide {% if inv.status=='paid' %}text-emerald-400{% else %}text-orange-400{% endif %}">{{ inv.status }}</p>
+
+                    <div class="shrink-0 text-right">
+                        <p class="text-xs sm:text-sm font-mono font-bold
+                                  {% if is_paid %}text-slate-400{% else %}text-white{% endif %}">
+                            GH₵ {{ '%.2f' % inv.amount }}
+                        </p>
+                        {% if not is_paid %}
+                        <a href="{{ url_for('client_invoice_pay', invoice_id=inv._id) }}"
+                           class="text-[9px] font-mono font-bold text-orange-400
+                                  hover:text-orange-300 transition uppercase tracking-wide"
+                           onclick="return confirm('Proceed to Paystack checkout for GH₵ {{ '%.2f' % inv.amount }}?');">
+                            Pay Now →
+                        </a>
+                        {% else %}
+                        <p class="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-wide">
+                            Paid
+                        </p>
+                        {% endif %}
                     </div>
                 </li>
                 {% else %}
-                <p class="text-center text-slate-400 text-xs font-mono py-6">No invoices yet.</p>
+                <li class="py-10 text-center">
+                    <i class="fa-solid fa-file-invoice text-3xl text-slate-700 mb-2"
+                       aria-hidden="true"></i>
+                    <p class="text-slate-400 text-xs font-mono">
+                        No invoices yet.
+                    </p>
+                </li>
                 {% endfor %}
             </ul>
         </div>
-        <div class="p-4 border-t border-slate-800/80 text-center">
-            <a href="{{ url_for('client_invoices') }}" class="text-xs text-slate-400 hover:text-white transition-colors">View Billing History</a>
-        </div>
-    </div>
+
+        <footer class="p-4 border-t border-slate-800/80 text-center">
+            <a href="{{ url_for('client_invoices') }}"
+               class="text-xs text-slate-400 hover:text-white transition-colors
+                      inline-flex items-center gap-1">
+                View Billing History
+                <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+            </a>
+        </footer>
+    </section>
+
 </div>
 
 {% endblock %}

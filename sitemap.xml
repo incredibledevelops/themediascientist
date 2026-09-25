@@ -1,28 +1,144 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<!--
+    ============================================================
+    sitemap.xml — The Media Scientist
+    Served dynamically by Flask (app.py route: /sitemap.xml)
+
+    The hardcoded base URL is replaced at request time with the
+    value of Config.SITE_URL. Never edit the base URL manually —
+    change SITE_URL in your .env file instead.
+
+    Update <lastmod> dates when you publish new content:
+      - Home         : when hero/featured content changes
+      - About        : when bio/skills/timeline change
+      - Services     : when plans/pricing change
+      - Portfolio    : when portfolio items added/removed
+      - Contact      : when contact details change
+    ============================================================
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+    <!-- ==========================================================
+         HOME
+    ========================================================== -->
     <url>
         <loc>https://themediascientist.com/</loc>
+        <lastmod>2026-01-15</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
+
+        <!-- hreflang alternates -->
+        <xhtml:link rel="alternate" hreflang="en" href="https://themediascientist.com/"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="https://themediascientist.com/"/>
+
+        <!-- Primary hero image -->
+        <image:image>
+            <image:loc>https://themediascientist.com/static/og-home.jpg</image:loc>
+            <image:title>The Media Scientist — Opoku Kwadwo Incredible</image:title>
+            <image:caption>Creative Media Professional &amp; Software Developer based in Kumasi, Ghana</image:caption>
+        </image:image>
     </url>
+
+    <!-- ==========================================================
+         ABOUT
+    ========================================================== -->
     <url>
         <loc>https://themediascientist.com/about</loc>
+        <lastmod>2026-01-15</lastmod>
         <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
+        <priority>0.9</priority>
+
+        <xhtml:link rel="alternate" hreflang="en" href="https://themediascientist.com/about"/>
+
+        <image:image>
+            <image:loc>https://themediascientist.com/static/og-about.jpg</image:loc>
+            <image:title>About Opoku Kwadwo Incredible</image:title>
+            <image:caption>Creative media professional and software developer from Kumasi, Ghana</image:caption>
+        </image:image>
     </url>
+
+    <!-- ==========================================================
+         SERVICES
+    ========================================================== -->
     <url>
         <loc>https://themediascientist.com/services</loc>
+        <lastmod>2026-01-15</lastmod>
         <changefreq>weekly</changefreq>
-        <priority>0.9</priority>
+        <priority>0.95</priority>
+
+        <xhtml:link rel="alternate" hreflang="en" href="https://themediascientist.com/services"/>
+
+        <image:image>
+            <image:loc>https://themediascientist.com/static/og-services.jpg</image:loc>
+            <image:title>Services &amp; Pricing — The Media Scientist</image:title>
+            <image:caption>Transparent packages for video, photo, design, motion, web &amp; marketing</image:caption>
+        </image:image>
     </url>
+
+    <!-- ==========================================================
+         PORTFOLIO (main)
+    ========================================================== -->
     <url>
         <loc>https://themediascientist.com/portfolio</loc>
+        <lastmod>2026-01-15</lastmod>
         <changefreq>weekly</changefreq>
-        <priority>0.9</priority>
+        <priority>0.95</priority>
+
+        <xhtml:link rel="alternate" hreflang="en" href="https://themediascientist.com/portfolio"/>
+
+        <image:image>
+            <image:loc>https://themediascientist.com/static/og-portfolio.jpg</image:loc>
+            <image:title>Portfolio — The Media Scientist</image:title>
+            <image:caption>Featured photo, video, motion, design &amp; code projects</image:caption>
+        </image:image>
     </url>
+
+    <!-- ==========================================================
+         PORTFOLIO — CATEGORY FILTERS
+         Note: These are optional. Google may or may not index them.
+         Canonical tag on /portfolio should point to /portfolio,
+         so all category URLs are treated as alternate views.
+    ========================================================== -->
+    <url>
+        <loc>https://themediascientist.com/portfolio?category=visual</loc>
+        <lastmod>2026-01-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://themediascientist.com/portfolio?category=video</loc>
+        <lastmod>2026-01-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://themediascientist.com/portfolio?category=code</loc>
+        <lastmod>2026-01-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://themediascientist.com/portfolio?category=brand</loc>
+        <lastmod>2026-01-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- ==========================================================
+         CONTACT
+    ========================================================== -->
     <url>
         <loc>https://themediascientist.com/contact</loc>
+        <lastmod>2026-01-15</lastmod>
         <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
+        <priority>0.9</priority>
+
+        <xhtml:link rel="alternate" hreflang="en" href="https://themediascientist.com/contact"/>
     </url>
+
 </urlset>

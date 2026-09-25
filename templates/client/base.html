@@ -2,187 +2,565 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0B0E17">
     <title>{% block title %}Client Portal{% endblock %} | The Media Scientist</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2300F2FE'/%3E%3Cstop offset='100%25' stop-color='%237928CA'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='%230B0E17'/%3E%3Ctext x='50' y='68' font-family='Arial Black' font-size='52' fill='url(%23g)' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: { extend: {
-                colors: { obsidian:'#0B0E17', slateCard:'#111827', neonCyan:'#00F2FE', electricPurple:'#7928CA', emeraldMint:'#00F5A0' },
-                fontFamily: { sans:['Inter','sans-serif'], mono:['Space Grotesk','monospace'] }
+                colors: {
+                    obsidian: '#0B0E17',
+                    slateCard: '#111827',
+                    neonCyan: '#00F2FE',
+                    electricPurple: '#7928CA',
+                    emeraldMint: '#00F5A0'
+                },
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    mono: ['Space Grotesk', 'monospace']
+                }
             }}
         }
     </script>
+
     <style>
-        html, body {
-            height: 100%;
-        }
+        html, body { height: 100%; }
         body {
             background-color: #0B0E17;
             color: #F9FAFB;
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
         .font-mono-heading { font-family: 'Space Grotesk', monospace; }
-        .glass-card { background: rgba(17,24,39,.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.08); }
-        .tech-grid-bg { background-size: 40px 40px; background-image: linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px); }
+        .glass-card {
+            background: rgba(17,24,39,.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+        .tech-grid-bg {
+            background-size: 40px 40px;
+            background-image:
+                linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+        }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #00F2FE; }
+
+        /* Accessibility: skip-to-content */
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 999;
+            padding: 12px 20px;
+            background: #00F2FE;
+            color: #0B0E17;
+            font-weight: 700;
+            border-radius: 0 0 8px 0;
+        }
+        .skip-link:focus { left: 0; }
+
+        /* Focus ring for keyboard nav */
+        *:focus-visible {
+            outline: 2px solid rgba(0, 242, 254, 0.6);
+            outline-offset: 2px;
+        }
+
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
     </style>
 </head>
-<body class="tech-grid-bg text-slate-100">
 
-<!-- Desktop layout: flex row with sticky sidebar -->
+<body class="tech-grid-bg min-h-screen text-slate-100">
+
+<a href="#client-main-content" class="skip-link">Skip to main content</a>
+
+{# ============================================================
+   DESKTOP WRAPPER: flex row with locked height
+============================================================ #}
 <div class="lg:flex lg:h-screen lg:overflow-hidden">
 
-    <!-- Mobile Overlay -->
-    <div id="mobile-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+    {# ============================================================
+       MOBILE OVERLAY
+    ============================================================ #}
+    <div id="mobile-overlay"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40
+                hidden lg:hidden transition-opacity duration-200"
+         onclick="closeSidebar()"
+         aria-hidden="true"></div>
 
-    <!-- Sidebar -->
+    {# ============================================================
+       SIDEBAR
+    ============================================================ #}
     <aside id="sidebar"
-           class="fixed lg:static inset-y-0 left-0 z-50 w-72 flex flex-col glass-card !rounded-none !border-y-0 !border-l-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-screen lg:sticky lg:top-0">
-        <div class="p-6 border-b border-slate-800/80 flex items-center justify-between shrink-0">
-            <a href="{{ url_for('client_dashboard') }}" class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(0,242,254,0.3)]">
-                    <i class="fa-solid fa-user-astronaut text-lg"></i>
+           role="complementary"
+           aria-label="Client portal sidebar"
+           class="fixed lg:static inset-y-0 left-0 z-50 w-72
+                  shrink-0 flex flex-col glass-card
+                  !rounded-none !border-y-0 !border-l-0
+                  transform -translate-x-full lg:translate-x-0
+                  transition-transform duration-300 ease-in-out
+                  lg:h-screen lg:sticky lg:top-0">
+
+        {# ---------- Brand header ---------- #}
+        <div class="p-5 sm:p-6 border-b border-slate-800/80
+                    flex items-center justify-between gap-3 shrink-0">
+            <a href="{{ url_for('client_dashboard') }}"
+               class="flex items-center gap-3 min-w-0"
+               aria-label="Client Portal — Home">
+                <div class="w-10 h-10 shrink-0 rounded-lg
+                            bg-gradient-to-br from-cyan-400 to-purple-600
+                            flex items-center justify-center text-white
+                            shadow-[0_0_15px_rgba(0,242,254,0.3)]">
+                    <i class="fa-solid fa-user-astronaut text-lg" aria-hidden="true"></i>
                 </div>
-                <div>
-                    <h1 class="font-mono-heading font-bold text-sm tracking-wide text-white">CLIENT PORTAL</h1>
-                    <h2 class="font-mono-heading font-semibold text-[10px] tracking-[0.2em] text-cyan-400 uppercase">The Media Scientist</h2>
+                <div class="min-w-0">
+                    <h1 class="font-mono-heading font-bold text-sm tracking-wide
+                               text-white truncate">
+                        CLIENT PORTAL
+                    </h1>
+                    <h2 class="font-mono-heading font-semibold text-[10px]
+                               tracking-[0.2em] text-cyan-400 uppercase truncate">
+                        The Media Scientist
+                    </h2>
                 </div>
             </a>
-            <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-xl"></i>
+            <button type="button"
+                    onclick="closeSidebar()"
+                    class="lg:hidden shrink-0 w-9 h-9 rounded-lg
+                           flex items-center justify-center
+                           text-slate-400 hover:text-white
+                           hover:bg-slate-800/60 transition"
+                    aria-label="Close sidebar">
+                <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
             </button>
         </div>
 
-        <div class="p-4 px-6 text-xs font-semibold tracking-wider text-slate-500 uppercase mt-4 mb-2 shrink-0">
+        {# ---------- Section label ---------- #}
+        <div class="px-6 pt-5 pb-2 text-[10px] font-semibold tracking-widest
+                    text-slate-500 uppercase shrink-0">
             My Workspace
         </div>
 
-        <nav class="flex-1 px-4 space-y-2 overflow-y-auto pb-4">
-            <a href="{{ url_for('client_dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {% if request.endpoint == 'client_dashboard' %}bg-white/10 text-white border border-white/10{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %} transition-colors group">
-                <i class="fa-solid fa-border-all w-5 {% if request.endpoint == 'client_dashboard' %}text-cyan-400{% else %}group-hover:text-cyan-400{% endif %}"></i>
+        {# ---------- Navigation ---------- #}
+        <nav class="flex-1 px-3 sm:px-4 space-y-1.5 overflow-y-auto pb-4"
+             role="navigation"
+             aria-label="Client portal navigation">
+
+            {# Helper macro: current route match #}
+            {% set ep = request.endpoint or '' %}
+
+            <a href="{{ url_for('client_dashboard') }}"
+               class="sidebar-nav-link flex items-center gap-3 px-4 py-3 rounded-xl
+                      transition-colors group
+                      {% if ep == 'client_dashboard' %}
+                          bg-white/10 text-white border border-white/10
+                      {% else %}
+                          text-slate-400 hover:text-white hover:bg-white/5
+                          border border-transparent
+                      {% endif %}"
+               {% if ep == 'client_dashboard' %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-border-all w-5 text-center
+                          {% if ep == 'client_dashboard' %}text-cyan-400{% else %}group-hover:text-cyan-400{% endif %}"
+                   aria-hidden="true"></i>
                 <span class="font-medium text-sm">Dashboard</span>
             </a>
-            <a href="{{ url_for('client_projects') }}" class="flex items-center justify-between px-4 py-3 rounded-xl {% if request.endpoint == 'client_projects' %}bg-white/10 text-white border border-white/10{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %} transition-colors group">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-layer-group w-5 {% if request.endpoint == 'client_projects' %}text-cyan-400{% else %}group-hover:text-cyan-400{% endif %}"></i>
-                    <span class="font-medium text-sm">My Projects</span>
+
+            <a href="{{ url_for('client_projects') }}"
+               class="sidebar-nav-link flex items-center justify-between gap-3
+                      px-4 py-3 rounded-xl transition-colors group
+                      {% if ep == 'client_projects' %}
+                          bg-white/10 text-white border border-white/10
+                      {% else %}
+                          text-slate-400 hover:text-white hover:bg-white/5
+                          border border-transparent
+                      {% endif %}"
+               {% if ep == 'client_projects' %}aria-current="page"{% endif %}>
+                <div class="flex items-center gap-3 min-w-0">
+                    <i class="fa-solid fa-layer-group w-5 text-center shrink-0
+                              {% if ep == 'client_projects' %}text-cyan-400{% else %}group-hover:text-cyan-400{% endif %}"
+                       aria-hidden="true"></i>
+                    <span class="font-medium text-sm truncate">My Projects</span>
                 </div>
             </a>
-            <a href="{{ url_for('client_invoices') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {% if request.endpoint == 'client_invoices' %}bg-white/10 text-white border border-white/10{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %} transition-colors group">
-                <i class="fa-solid fa-file-invoice-dollar w-5 {% if request.endpoint == 'client_invoices' %}text-emerald-400{% else %}group-hover:text-emerald-400{% endif %}"></i>
-                <span class="font-medium text-sm">Invoices & Billing</span>
+
+            <a href="{{ url_for('client_invoices') }}"
+               class="sidebar-nav-link flex items-center justify-between gap-3
+                      px-4 py-3 rounded-xl transition-colors group
+                      {% if ep == 'client_invoices' %}
+                          bg-white/10 text-white border border-white/10
+                      {% else %}
+                          text-slate-400 hover:text-white hover:bg-white/5
+                          border border-transparent
+                      {% endif %}"
+               {% if ep == 'client_invoices' %}aria-current="page"{% endif %}>
+                <div class="flex items-center gap-3 min-w-0">
+                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center shrink-0
+                              {% if ep == 'client_invoices' %}text-emerald-400{% else %}group-hover:text-emerald-400{% endif %}"
+                       aria-hidden="true"></i>
+                    <span class="font-medium text-sm truncate">Invoices &amp; Billing</span>
+                </div>
+                {% if pending_invoice_count and pending_invoice_count > 0 %}
+                <span class="shrink-0 bg-orange-500/20 text-orange-300
+                             text-[10px] font-bold px-2 py-0.5 rounded-full
+                             border border-orange-500/30">
+                    {{ pending_invoice_count }}
+                </span>
+                {% endif %}
             </a>
-            <a href="{{ url_for('client_files') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {% if request.endpoint == 'client_files' %}bg-white/10 text-white border border-white/10{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %} transition-colors group">
-                <i class="fa-solid fa-cloud-arrow-down w-5 {% if request.endpoint == 'client_files' %}text-purple-400{% else %}group-hover:text-purple-400{% endif %}"></i>
-                <span class="font-medium text-sm">Files & Deliverables</span>
+
+            <a href="{{ url_for('client_files') }}"
+               class="sidebar-nav-link flex items-center justify-between gap-3
+                      px-4 py-3 rounded-xl transition-colors group
+                      {% if ep == 'client_files' %}
+                          bg-white/10 text-white border border-white/10
+                      {% else %}
+                          text-slate-400 hover:text-white hover:bg-white/5
+                          border border-transparent
+                      {% endif %}"
+               {% if ep == 'client_files' %}aria-current="page"{% endif %}>
+                <div class="flex items-center gap-3 min-w-0">
+                    <i class="fa-solid fa-cloud-arrow-down w-5 text-center shrink-0
+                              {% if ep == 'client_files' %}text-purple-400{% else %}group-hover:text-purple-400{% endif %}"
+                       aria-hidden="true"></i>
+                    <span class="font-medium text-sm truncate">Files &amp; Deliverables</span>
+                </div>
+                {% if unreviewed_file_count and unreviewed_file_count > 0 %}
+                <span class="shrink-0 bg-purple-500/20 text-purple-300
+                             text-[10px] font-bold px-2 py-0.5 rounded-full
+                             border border-purple-500/30">
+                    {{ unreviewed_file_count }}
+                </span>
+                {% endif %}
             </a>
-            <a href="{{ url_for('client_messages') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {% if request.endpoint == 'client_messages' %}bg-white/10 text-white border border-white/10{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %} transition-colors group">
-                <i class="fa-solid fa-comments w-5 {% if request.endpoint == 'client_messages' %}text-cyan-400{% else %}group-hover:text-cyan-400{% endif %}"></i>
-                <span class="font-medium text-sm">Support Messages</span>
+
+            <a href="{{ url_for('client_messages') }}"
+               class="sidebar-nav-link flex items-center justify-between gap-3
+                      px-4 py-3 rounded-xl transition-colors group
+                      {% if ep == 'client_messages' %}
+                          bg-white/10 text-white border border-white/10
+                      {% else %}
+                          text-slate-400 hover:text-white hover:bg-white/5
+                          border border-transparent
+                      {% endif %}"
+               {% if ep == 'client_messages' %}aria-current="page"{% endif %}>
+                <div class="flex items-center gap-3 min-w-0">
+                    <i class="fa-solid fa-comments w-5 text-center shrink-0
+                              {% if ep == 'client_messages' %}text-cyan-400{% else %}group-hover:text-cyan-400{% endif %}"
+                       aria-hidden="true"></i>
+                    <span class="font-medium text-sm truncate">Support Messages</span>
+                </div>
+                {% if unread_message_count and unread_message_count > 0 %}
+                <span class="shrink-0 bg-cyan-500 text-slate-950
+                             text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {{ unread_message_count }}
+                </span>
+                {% endif %}
             </a>
-            <a href="{{ url_for('client_settings') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {% if request.endpoint == 'client_settings' %}bg-white/10 text-white border border-white/10{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %} transition-colors group">
-                <i class="fa-solid fa-gear w-5 {% if request.endpoint == 'client_settings' %}text-slate-300{% else %}group-hover:text-slate-300{% endif %}"></i>
+
+            <a href="{{ url_for('client_settings') }}"
+               class="sidebar-nav-link flex items-center gap-3 px-4 py-3 rounded-xl
+                      transition-colors group
+                      {% if ep == 'client_settings' %}
+                          bg-white/10 text-white border border-white/10
+                      {% else %}
+                          text-slate-400 hover:text-white hover:bg-white/5
+                          border border-transparent
+                      {% endif %}"
+               {% if ep == 'client_settings' %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-gear w-5 text-center
+                          {% if ep == 'client_settings' %}text-slate-300{% else %}group-hover:text-slate-300{% endif %}"
+                   aria-hidden="true"></i>
                 <span class="font-medium text-sm">Settings</span>
             </a>
         </nav>
 
-        <div class="p-5 border-t border-slate-800/80 m-4 rounded-xl bg-black/30 backdrop-blur-md shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                    {{ current_user.name[0]|upper if current_user.name else 'C' }}
+        {# ---------- User footer ---------- #}
+        <div class="shrink-0 p-4 border-t border-slate-800/80">
+            <div class="rounded-xl bg-black/30 backdrop-blur-md p-4 space-y-3">
+
+                <div class="flex items-center gap-3">
+                    {# Avatar with robust initials #}
+                    <div class="w-10 h-10 shrink-0 rounded-full
+                                bg-gradient-to-br from-cyan-400 to-purple-600
+                                flex items-center justify-center
+                                text-white font-bold text-sm">
+                        {% if current_user.name and current_user.name|length > 0 %}
+                            {{ current_user.name[0]|upper }}
+                        {% else %}
+                            {{ current_user.email[0]|upper if current_user.email else 'C' }}
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate">
+                            {{ current_user.name or 'Client' }}
+                        </p>
+                        <p class="text-xs text-slate-400 truncate">
+                            {{ current_user.email }}
+                        </p>
+                    </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-white truncate">{{ current_user.name }}</p>
-                    <p class="text-xs text-slate-400 truncate">{{ current_user.email }}</p>
-                </div>
+
+                <a href="{{ url_for('client_logout') }}"
+                   class="w-full py-2.5 text-xs font-semibold
+                          text-slate-300 hover:text-white
+                          border border-slate-800 rounded-lg
+                          hover:bg-white/5 transition-colors
+                          flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                    Sign Out
+                </a>
             </div>
-            <a href="{{ url_for('client_logout') }}" class="w-full mt-4 py-2 text-xs font-semibold text-slate-300 hover:text-white border border-slate-800 rounded-lg hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
-            </a>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0 lg:h-screen lg:overflow-hidden">
-        <header class="h-20 flex items-center justify-between px-6 lg:px-10 border-b border-slate-800/80 bg-[#0B0E17]/60 backdrop-blur-xl z-30 shrink-0">
-            <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="lg:hidden text-slate-300 hover:text-white bg-white/5 p-2 rounded-lg border border-white/10">
-                    <i class="fa-solid fa-bars"></i>
+    {# ============================================================
+       MAIN
+    ============================================================ #}
+    <main class="flex-1 flex flex-col min-w-0 min-h-0
+                 lg:h-screen lg:overflow-hidden">
+
+        {# ---------- Header ---------- #}
+        <header class="h-16 sm:h-20 shrink-0
+                       flex items-center justify-between gap-3
+                       px-4 sm:px-6 lg:px-10
+                       border-b border-slate-800/80
+                       bg-[#0B0E17]/70 backdrop-blur-xl
+                       z-30 sticky top-0 lg:static">
+
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+                {# Mobile menu button #}
+                <button type="button"
+                        id="sidebar-toggle"
+                        onclick="openSidebar()"
+                        class="lg:hidden shrink-0
+                               w-10 h-10 rounded-xl
+                               bg-slate-900 border border-slate-700
+                               flex items-center justify-center
+                               text-slate-300 hover:text-white hover:border-slate-600
+                               transition"
+                        aria-label="Open menu"
+                        aria-controls="sidebar"
+                        aria-expanded="false">
+                    <i class="fa-solid fa-bars-staggered text-base" aria-hidden="true"></i>
                 </button>
-                <div>
-                    <h2 class="font-mono-heading font-semibold text-xl lg:text-2xl text-white tracking-tight">{% block page_title %}Dashboard{% endblock %}</h2>
-                    <p class="text-xs lg:text-sm text-slate-400 mt-0.5">{% block page_subtitle %}Welcome back.{% endblock %}</p>
+
+                <div class="min-w-0">
+                    <h2 class="font-mono-heading font-semibold
+                               text-base sm:text-lg lg:text-2xl
+                               text-white tracking-tight truncate">
+                        {% block page_title %}Dashboard{% endblock %}
+                    </h2>
+                    <p class="text-[11px] sm:text-xs lg:text-sm
+                              text-slate-400 mt-0.5 truncate">
+                        {% block page_subtitle %}Welcome back.{% endblock %}
+                    </p>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="hidden md:flex items-center gap-2 text-sm text-slate-300 font-mono-heading bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
-                    <i class="fa-regular fa-clock text-cyan-400"></i>
-                    <span id="sys-clock">--:--:--</span>
+
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+
+                {# Clock — short on mobile, full on desktop #}
+                <div class="hidden md:flex items-center gap-2
+                            text-xs lg:text-sm text-slate-300 font-mono-heading
+                            bg-black/40 px-3 py-1.5 rounded-lg
+                            border border-white/5">
+                    <i class="fa-regular fa-clock text-cyan-400" aria-hidden="true"></i>
+                    <span id="sys-clock-full" class="tabular-nums">--:--:--</span>
                 </div>
-                <a href="{{ url_for('client_messages') }}" class="relative text-slate-300 hover:text-white transition-colors">
-                    <i class="fa-regular fa-bell text-xl"></i>
-                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-[#0B0E17] shadow-[0_0_8px_#00F5A0]"></span>
+
+                {# Notifications bell #}
+                <a href="{{ url_for('client_messages') }}"
+                   class="relative w-10 h-10 rounded-xl
+                          flex items-center justify-center
+                          text-slate-300 hover:text-white
+                          hover:bg-white/5 transition"
+                   aria-label="Notifications">
+                    <i class="fa-regular fa-bell text-xl" aria-hidden="true"></i>
+                    {% if unread_message_count and unread_message_count > 0 %}
+                    <span class="absolute -top-0.5 -right-0.5
+                                 min-w-[18px] h-[18px] px-1
+                                 rounded-full bg-cyan-500 text-slate-950
+                                 text-[10px] font-bold
+                                 flex items-center justify-center
+                                 border-2 border-[#0B0E17]">
+                        {{ unread_message_count if unread_message_count < 10 else '9+' }}
+                    </span>
+                    {% else %}
+                    <span class="absolute top-1 right-1 w-2 h-2
+                                 bg-emerald-400 rounded-full
+                                 border border-[#0B0E17]
+                                 shadow-[0_0_6px_#00F5A0]"
+                          aria-hidden="true"></span>
+                    {% endif %}
                 </a>
             </div>
         </header>
 
+        {# ---------- Flash messages ---------- #}
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-          <div class="px-6 lg:px-10 pt-4 shrink-0">
+          <div class="shrink-0 px-4 sm:px-6 lg:px-10 pt-4"
+               role="alert"
+               aria-live="polite">
               {% for category, msg in messages %}
-              <div class="mb-2 p-3 rounded-xl font-mono text-xs {% if category == 'error' %}bg-red-950/60 border border-red-500/40 text-red-200{% else %}bg-emerald-950/60 border border-emerald-500/40 text-emerald-200{% endif %}">
-                  <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} mr-2"></i>{{ msg }}
+              <div class="mb-2 p-3 sm:p-3.5 rounded-xl
+                          font-mono text-xs
+                          flex items-start gap-2.5
+                          {% if category == 'error' %}
+                              bg-red-950/60 border border-red-500/40 text-red-200
+                          {% else %}
+                              bg-emerald-950/60 border border-emerald-500/40 text-emerald-200
+                          {% endif %}">
+                  <i class="fa-solid
+                            {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}
+                            mt-0.5 shrink-0"
+                     aria-hidden="true"></i>
+                  <span>{{ msg }}</span>
               </div>
               {% endfor %}
           </div>
           {% endif %}
         {% endwith %}
 
-        <!-- THE SCROLLABLE AREA — flex-1 + min-h-0 + overflow-y-auto is the magic combo -->
-        <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-            <div class="p-6 lg:p-10 pb-24">
+        {# ---------- SCROLLABLE CONTENT ---------- #}
+        <div id="client-main-content"
+             class="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+             tabindex="-1">
+            <div class="p-4 sm:p-6 lg:p-10 pb-24">
                 <div class="max-w-7xl mx-auto">
                     {% block content %}{% endblock %}
                 </div>
-                <div class="mt-12 text-center text-xs text-slate-500 font-mono-heading">
-                    &copy; {{ current_year }} The Media Scientist. Client Portal v2.4.
-                </div>
+
+                <footer class="mt-12 text-center text-[10px] sm:text-xs
+                               text-slate-500 font-mono-heading">
+                    &copy; {{ current_year if current_year else 2026 }}
+                    The Media Scientist · Client Portal v2.4
+                </footer>
             </div>
         </div>
     </main>
 </div>
 
 <script>
+// ============================================================
+// LIVE CLOCK
+// ============================================================
 function updateClock() {
-    const el = document.getElementById('sys-clock');
+    const el = document.getElementById('sys-clock-full');
     if (!el) return;
     const now = new Date();
-    el.textContent = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true }).replace(',', ' •');
+    el.textContent = now.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    }).replace(',', ' •');
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('mobile-overlay');
-    sidebar.classList.toggle('-translate-x-full');
-    if (overlay.classList.contains('hidden')) {
-        overlay.classList.remove('hidden');
-        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-    } else {
-        overlay.classList.add('opacity-0');
-        setTimeout(() => overlay.classList.add('hidden'), 300);
+// ============================================================
+// SIDEBAR CONTROLS
+// ============================================================
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('mobile-overlay');
+const toggleBtn = document.getElementById('sidebar-toggle');
+
+function isMobile() {
+    return window.innerWidth < 1024;
+}
+
+function openSidebar() {
+    if (!sidebar || !overlay) return;
+    sidebar.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+    // Animate opacity in
+    requestAnimationFrame(() => overlay.classList.remove('opacity-0'));
+    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
+    // Prevent body scroll behind overlay
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+    if (!sidebar || !overlay) return;
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('opacity-0');
+    setTimeout(() => overlay.classList.add('hidden'), 220);
+    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+}
+
+// Close on ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar && !sidebar.classList.contains('-translate-x-full')) {
+        closeSidebar();
     }
+});
+
+// Auto-close when a nav link is clicked on mobile
+document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+        if (isMobile()) {
+            // Small delay so the user sees the tap register before the drawer closes
+            setTimeout(closeSidebar, 120);
+        }
+    });
+});
+
+// Reset state on resize from mobile → desktop
+let wasMobile = isMobile();
+window.addEventListener('resize', () => {
+    const nowMobile = isMobile();
+    if (wasMobile !== nowMobile) {
+        if (!nowMobile) {
+            // Switched to desktop: ensure drawer is closed, overlay hidden
+            closeSidebar();
+        } else {
+            // Switched to mobile: ensure sidebar is hidden by default
+            sidebar?.classList.add('-translate-x-full');
+            overlay?.classList.add('hidden');
+        }
+        wasMobile = nowMobile;
+    }
+});
+
+// On initial load: ensure the sidebar state matches the viewport
+if (!isMobile()) {
+    sidebar?.classList.remove('-translate-x-full');
+    overlay?.classList.add('hidden');
 }
 </script>
+
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

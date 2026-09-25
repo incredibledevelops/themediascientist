@@ -4,31 +4,538 @@
 {% block page_subtitle %}Global branding and site configuration.{% endblock %}
 
 {% block content %}
-<div class="glass-card rounded-2xl border border-slate-800 p-6 max-w-3xl">
-    <form method="POST" action="{{ url_for('lab_settings') }}" class="space-y-4">
-        <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">SITE TITLE</label>
-            <input type="text" name="site_title" value="{{ settings.site_title }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    {# ============================================================
+       FORM (2 columns on xl)
+    ============================================================ #}
+    <form method="POST"
+          action="{{ url_for('lab_settings') }}"
+          id="settings-form"
+          class="xl:col-span-2 space-y-6">
+
+        {# ---------- SECTION: BRAND IDENTITY ---------- #}
+        <section class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+
+            <header class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30
+                                flex items-center justify-center text-cyan-400">
+                        <i class="fa-solid fa-fingerprint text-xs" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
+                        Brand Identity
+                    </h3>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 01
+                </span>
+            </header>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                {# Site title #}
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                        <label for="set-site-title"
+                               class="block text-[10px] font-mono text-slate-400
+                                      uppercase tracking-wider">
+                            Site Title <span class="text-cyan-400">*</span>
+                        </label>
+                        <span class="text-[9px] font-mono text-slate-600"
+                              id="title-counter">0/60</span>
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-heading absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                        <input type="text"
+                               id="set-site-title"
+                               name="site_title"
+                               value="{{ settings.site_title or '' }}"
+                               required
+                               maxlength="60"
+                               data-counter="title-counter"
+                               placeholder="The Media Scientist"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                    </div>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1.5">
+                        Appears in the header logo and browser tab.
+                    </p>
+                </div>
+
+                {# Owner name #}
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                        <label for="set-owner-name"
+                               class="block text-[10px] font-mono text-slate-400
+                                      uppercase tracking-wider">
+                            Owner Name <span class="text-cyan-400">*</span>
+                        </label>
+                        <span class="text-[9px] font-mono text-slate-600"
+                              id="owner-counter">0/60</span>
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                        <input type="text"
+                               id="set-owner-name"
+                               name="owner_name"
+                               value="{{ settings.owner_name or '' }}"
+                               required
+                               maxlength="60"
+                               data-counter="owner-counter"
+                               placeholder="Opoku Kwadwo Incredible"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                    </div>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1.5">
+                        Shown under the logo and in the footer.
+                    </p>
+                </div>
+
+            </div>
+
+            {# Tagline #}
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <label for="set-tagline"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider">
+                        Tagline
+                    </label>
+                    <span class="text-[9px] font-mono text-slate-600"
+                          id="tagline-counter">0/120</span>
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-quote-left absolute left-3.5 top-1/2 -translate-y-1/2
+                              text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                    <input type="text"
+                           id="set-tagline"
+                           name="tagline"
+                           value="{{ settings.tagline or '' }}"
+                           maxlength="120"
+                           data-counter="tagline-counter"
+                           placeholder="Combining Media Production, Visual Art & Software Development"
+                           class="w-full pl-10 pr-4 py-3 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                  transition">
+                </div>
+                <p class="text-[10px] font-mono text-slate-500 mt-1.5">
+                    A short phrase describing what you do. Appears in SEO meta tags.
+                </p>
+            </div>
+
+        </section>
+
+        {# ---------- SECTION: HOMEPAGE HERO ---------- #}
+        <section class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+
+            <header class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30
+                                flex items-center justify-center text-purple-400">
+                        <i class="fa-solid fa-rocket text-xs" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
+                        Homepage Hero
+                    </h3>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 02
+                </span>
+            </header>
+
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <label for="set-hero-description"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider">
+                        Hero Description
+                    </label>
+                    <span class="text-[9px] font-mono text-slate-600"
+                          id="hero-counter">0/300</span>
+                </div>
+                <textarea id="set-hero-description"
+                          name="hero_description"
+                          rows="4"
+                          maxlength="300"
+                          data-counter="hero-counter"
+                          placeholder="Bringing together creativity and technical precision. I build high-impact websites, shoot high-quality videos..."
+                          class="w-full px-4 py-3 rounded-xl
+                                 bg-slate-900 border border-slate-800
+                                 text-sm text-white placeholder-slate-500
+                                 resize-y min-h-[100px]
+                                 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30
+                                 transition">{{ settings.hero_description or '' }}</textarea>
+                <p class="text-[10px] font-mono text-slate-500 mt-1.5">
+                    The intro paragraph shown on the homepage under the main heading.
+                </p>
+            </div>
+
+        </section>
+
+        {# ---------- SECTION: STATUS BADGE ---------- #}
+        <section class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+
+            <header class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30
+                                flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-signal text-xs" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
+                        Availability Status
+                    </h3>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 03
+                </span>
+            </header>
+
+            <div>
+                <label for="set-status"
+                       class="block text-[10px] font-mono text-slate-400
+                              uppercase tracking-wider mb-1.5">
+                    Status Badge Text
+                </label>
+
+                <div class="relative">
+                    <i class="fa-solid fa-circle-dot absolute left-3.5 top-1/2 -translate-y-1/2
+                              text-emerald-400 text-xs pointer-events-none" aria-hidden="true"></i>
+                    <input type="text"
+                           id="set-status"
+                           name="status"
+                           value="{{ settings.status or '' }}"
+                           maxlength="40"
+                           placeholder="AVAILABLE FOR HIRE"
+                           class="w-full pl-10 pr-4 py-3 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500 font-mono
+                                  focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30
+                                  transition">
+                </div>
+
+                <p class="text-[10px] font-mono text-slate-500 mt-1.5">
+                    Shown as a badge in the header, footer, and preview panel. Keep it short (uppercase recommended).
+                </p>
+
+                {# Quick-pick suggestions #}
+                <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-mono">
+                    <span class="text-slate-500 py-1">Quick pick:</span>
+                    {% for suggestion in ['AVAILABLE FOR HIRE', 'BOOKING NOW', 'AVAILABLE', 'ON BREAK', 'BUSY'] %}
+                    <button type="button"
+                            onclick="setStatus('{{ suggestion }}')"
+                            class="px-2.5 py-1 rounded-md
+                                   bg-slate-900 border border-slate-800
+                                   text-slate-300 hover:border-emerald-500/40 hover:text-emerald-300
+                                   transition">
+                        {{ suggestion }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </section>
+
+        {# ---------- STICKY ACTION BAR (mobile) / INLINE (desktop) ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 p-4 sm:p-5
+                    sticky bottom-4 sm:static bg-slate-900/95 backdrop-blur-md z-30">
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+
+                <div class="flex items-center gap-2 text-[10px] font-mono text-slate-500
+                            w-full sm:w-auto">
+                    <i class="fa-solid fa-circle-info text-cyan-400" aria-hidden="true"></i>
+                    <span>Changes go live immediately after saving.</span>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="reset"
+                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-mono
+                                   bg-slate-800 text-slate-300 border border-slate-700
+                                   hover:bg-slate-700 transition active:scale-[0.98]">
+                        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset
+                    </button>
+                    <button type="submit"
+                            id="settings-save-btn"
+                            class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-mono font-bold
+                                   text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
+                                   hover:brightness-110 transition active:scale-[0.98]
+                                   inline-flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-save" aria-hidden="true"></i>
+                        <span id="settings-save-label">Save Settings</span>
+                    </button>
+                </div>
+
+            </div>
+
         </div>
-        <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">OWNER NAME</label>
-            <input type="text" name="owner_name" value="{{ settings.owner_name }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-        </div>
-        <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">TAGLINE</label>
-            <input type="text" name="tagline" value="{{ settings.tagline }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-        </div>
-        <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">STATUS BADGE</label>
-            <input type="text" name="status" value="{{ settings.status }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-        </div>
-        <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">HERO DESCRIPTION</label>
-            <textarea name="hero_description" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">{{ settings.hero_description }}</textarea>
-        </div>
-        <button type="submit" class="px-6 py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">
-            <i class="fa-solid fa-save"></i> SAVE SETTINGS
-        </button>
+
     </form>
+
+    {# ============================================================
+       LIVE PREVIEW (hidden below xl)
+    ============================================================ #}
+    <aside class="hidden xl:block xl:col-span-1">
+        <div class="sticky top-24 space-y-4">
+
+            <div class="flex items-center gap-2 px-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
+                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Live Preview
+                </span>
+            </div>
+
+            {# Header mock #}
+            <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+                <div class="p-4 border-b border-slate-800">
+                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-2">
+                        Header
+                    </p>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                        <div class="w-8 h-8 shrink-0 rounded-lg
+                                    bg-gradient-to-tr from-cyan-500 to-purple-600 p-[1px]">
+                            <div class="w-full h-full bg-slate-950 rounded-[7px]
+                                        flex items-center justify-center">
+                                <i class="fa-solid fa-camera text-cyan-400 text-xs"
+                                   aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p id="preview-site-title"
+                               class="text-xs font-mono font-bold text-white truncate uppercase">
+                                {{ settings.site_title|upper if settings.site_title else 'THE MEDIA SCIENTIST' }}
+                            </p>
+                            <p id="preview-owner-name"
+                               class="text-[9px] font-mono text-slate-500 truncate uppercase">
+                                {{ settings.owner_name if settings.owner_name else 'Opoku Kwadwo Incredible' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {# Status badge preview #}
+                    <div class="mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                bg-cyan-950/50 border border-cyan-500/30
+                                w-fit">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                              aria-hidden="true"></span>
+                        <span id="preview-status"
+                              class="text-[9px] font-mono text-cyan-300 uppercase tracking-wider">
+                            {{ settings.status if settings.status else 'AVAILABLE FOR HIRE' }}
+                        </span>
+                    </div>
+                </div>
+
+                {# Hero preview #}
+                <div class="p-4">
+                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-2">
+                        Homepage Hero
+                    </p>
+                    <div class="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                        <p id="preview-tagline"
+                           class="text-[10px] font-mono text-cyan-400 leading-tight mb-1.5">
+                            {{ settings.tagline if settings.tagline else 'Combining Media Production, Visual Art & Software Development' }}
+                        </p>
+                        <p id="preview-hero-description"
+                           class="text-[10px] text-slate-400 leading-relaxed line-clamp-3">
+                            {{ settings.hero_description if settings.hero_description else 'Bringing together creativity and technical precision.' }}
+                        </p>
+                    </div>
+                </div>
+
+                {# Footer preview #}
+                <div class="p-3 border-t border-slate-800 bg-slate-900/40">
+                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+                        Footer
+                    </p>
+                    <p class="text-[9px] font-mono text-slate-500 truncate">
+                        <span id="preview-footer-title" class="text-slate-300 font-bold">
+                            {{ settings.site_title|upper if settings.site_title else 'THE MEDIA SCIENTIST' }}
+                        </span>
+                        ·
+                        <span id="preview-footer-owner">
+                            {{ settings.owner_name if settings.owner_name else 'Opoku Kwadwo Incredible' }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            {# Open public site link #}
+            <a href="{{ url_for('index') }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="block text-center px-4 py-2.5 rounded-xl text-xs font-mono
+                      bg-slate-800 text-slate-200 border border-slate-700
+                      hover:bg-slate-700 transition">
+                <i class="fa-solid fa-external-link-alt" aria-hidden="true"></i>
+                Open Public Site
+            </a>
+
+        </div>
+    </aside>
+
 </div>
+
+<script>
+// ============================================================
+// LIVE PREVIEW SYNC (no-op on mobile — panel is hidden)
+// ============================================================
+const fieldMap = [
+    { input: 'set-site-title',       targets: ['preview-site-title', 'preview-footer-title'], upper: true, fallback: 'THE MEDIA SCIENTIST' },
+    { input: 'set-owner-name',       targets: ['preview-owner-name', 'preview-footer-owner'], upper: false, fallback: 'Opoku Kwadwo Incredible' },
+    { input: 'set-tagline',          targets: ['preview-tagline'], upper: false, fallback: 'Combining Media Production, Visual Art & Software Development' },
+    { input: 'set-hero-description', targets: ['preview-hero-description'], upper: false, fallback: 'Bringing together creativity and technical precision.' },
+    { input: 'set-status',           targets: ['preview-status'], upper: true, fallback: 'AVAILABLE FOR HIRE' }
+];
+
+fieldMap.forEach(({ input, targets, upper, fallback }) => {
+    const el = document.getElementById(input);
+    if (!el) return;
+
+    el.addEventListener('input', () => {
+        const raw = el.value.trim();
+        const value = raw || fallback;
+        const display = upper ? value.toUpperCase() : value;
+
+        targets.forEach(t => {
+            const target = document.getElementById(t);
+            if (target) target.textContent = display;
+        });
+    });
+});
+
+// ============================================================
+// CHARACTER COUNTERS
+// ============================================================
+document.querySelectorAll('[data-counter]').forEach(input => {
+    const counterId = input.dataset.counter;
+    const counter = document.getElementById(counterId);
+    if (!counter) return;
+
+    const max = input.maxLength > 0 ? input.maxLength : 200;
+
+    function update() {
+        const len = input.value.length;
+        counter.textContent = `${len}/${max}`;
+        counter.classList.remove('text-slate-600', 'text-amber-400', 'text-red-400');
+
+        if (len > max * 0.9) {
+            counter.classList.add('text-red-400');
+        } else if (len > max * 0.7) {
+            counter.classList.add('text-amber-400');
+        } else {
+            counter.classList.add('text-slate-600');
+        }
+    }
+
+    input.addEventListener('input', update);
+    update();
+});
+
+// ============================================================
+// QUICK PICK STATUS
+// ============================================================
+function setStatus(value) {
+    const input = document.getElementById('set-status');
+    if (!input) return;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+}
+
+// ============================================================
+// UNSAVED CHANGES WARNING
+// ============================================================
+const form = document.getElementById('settings-form');
+let formDirty = false;
+let isSubmitting = false;
+
+if (form) {
+    form.addEventListener('input', () => { formDirty = true; });
+    form.addEventListener('change', () => { formDirty = true; });
+    form.addEventListener('submit', () => { isSubmitting = true; });
+
+    window.addEventListener('beforeunload', (e) => {
+        if (formDirty && !isSubmitting) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+}
+
+// ============================================================
+// SUBMIT FEEDBACK
+// ============================================================
+const saveBtn = document.getElementById('settings-save-btn');
+const saveLabel = document.getElementById('settings-save-label');
+
+if (form && saveBtn && saveLabel) {
+    form.addEventListener('submit', () => {
+        if (!form.checkValidity()) return;
+        saveBtn.disabled = true;
+        saveBtn.classList.add('opacity-70', 'cursor-not-allowed');
+        saveLabel.textContent = 'Saving...';
+        saveBtn.innerHTML = `
+            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+            <span>Saving...</span>
+        `;
+    });
+}
+
+// ============================================================
+// RESET CLEARS DIRTY FLAG
+// ============================================================
+document.querySelectorAll('button[type="reset"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        setTimeout(() => {
+            formDirty = false;
+            // Refresh preview values after reset (native reset reverts DOM)
+            document.querySelectorAll('[data-counter]').forEach(input => {
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            fieldMap.forEach(({ input }) => {
+                const el = document.getElementById(input);
+                if (el) el.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        }, 0);
+    });
+});
+</script>
+
+<style>
+    /* Sticky bar edge-to-edge on mobile */
+    @media (max-width: 640px) {
+        #settings-form .sticky {
+            margin-left: -1rem;
+            margin-right: -1rem;
+            border-radius: 0;
+            border-left: 0;
+            border-right: 0;
+        }
+    }
+
+    /* Line clamp for preview hero */
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Smooth transitions */
+    input, textarea, button {
+        transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+    }
+</style>
+
 {% endblock %}

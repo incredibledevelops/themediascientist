@@ -2,82 +2,419 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Login | The Media Scientist</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0B0E17">
+    <title>Lab Console Login | The Media Scientist</title>
+
+    <!-- Favicon (inline SVG) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2300F2FE'/%3E%3Cstop offset='100%25' stop-color='%237928CA'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='%230B0E17'/%3E%3Ctext x='50' y='68' font-family='Arial Black' font-size='52' fill='url(%23g)' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <script>
-        tailwind.config = { theme:{ extend:{ fontFamily:{ sans:['Inter','sans-serif'], mono:['Space Grotesk','monospace'] } } } }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0B0E17',
+                        neonCyan: '#00F2FE',
+                        electricPurple: '#7928CA',
+                        emeraldMint: '#00F5A0'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace']
+                    }
+                }
+            }
+        }
     </script>
+
     <style>
-        body { background-color:#0B0E17; color:#F9FAFB; font-family:'Inter',sans-serif; }
-        .glass-card { background: rgba(17,24,39,.75); backdrop-filter: blur(16px); border:1px solid rgba(255,255,255,.08); }
-        .tech-grid-bg { background-size:40px 40px; background-image: linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px); }
-        .font-mono-heading { font-family:'Space Grotesk',monospace; }
+        html, body { height: 100%; }
+        body {
+            background-color: #0B0E17;
+            color: #F9FAFB;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card {
+            background: rgba(17,24,39,.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+        .tech-grid-bg {
+            background-size: 40px 40px;
+            background-image:
+                linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+        }
+        .font-mono-heading { font-family: 'Space Grotesk', monospace; }
+
+        /* Dark scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00F2FE; }
+
+        /* Subtle animation on card */
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .card-animate {
+            animation: cardFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Caps lock warning slide-down */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .slide-down {
+            animation: slideDown 0.2s ease-out;
+        }
+
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
-<body class="tech-grid-bg min-h-screen flex items-center justify-center p-4">
 
-<div class="w-full max-w-md">
-    <div class="text-center mb-8">
-        <a href="{{ url_for('index') }}" class="inline-flex items-center space-x-3">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 p-[1px]">
-                <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
-                    <i class="fa-solid fa-camera text-cyan-400"></i>
+<body class="tech-grid-bg min-h-screen flex items-center justify-center p-4 sm:p-6">
+
+<main class="w-full max-w-md">
+
+    {# ============================================================
+       BRAND HEADER
+    ============================================================ #}
+    <header class="text-center mb-6 sm:mb-8">
+        <a href="{{ url_for('index') }}"
+           class="inline-flex items-center justify-center group"
+           aria-label="The Media Scientist — Home">
+
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl
+                        bg-gradient-to-tr from-cyan-500 to-purple-600 p-[1.5px]
+                        shadow-lg shadow-cyan-500/20
+                        group-hover:shadow-cyan-500/40 transition-shadow">
+                <div class="w-full h-full bg-slate-950 rounded-[15px]
+                            flex items-center justify-center">
+                    <i class="fa-solid fa-camera text-cyan-400 text-xl sm:text-2xl"
+                       aria-hidden="true"></i>
                 </div>
             </div>
         </a>
-        <h1 class="font-mono-heading font-bold text-2xl text-white mt-4">LAB CONSOLE</h1>
-        <p class="text-xs text-cyan-400 font-mono tracking-widest uppercase mt-1">Admin Login Required</p>
-    </div>
 
+        <h1 class="font-mono-heading font-bold text-2xl sm:text-3xl text-white mt-4 sm:mt-5 tracking-tight">
+            LAB CONSOLE
+        </h1>
+        <p class="text-[11px] sm:text-xs text-cyan-400 font-mono tracking-[0.2em] uppercase mt-1.5">
+            Admin Authentication
+        </p>
+    </header>
+
+    {# ============================================================
+       FLASH MESSAGES
+    ============================================================ #}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
+        <div class="mb-4 space-y-2" role="alert" aria-live="polite">
         {% for category, msg in messages %}
-        <div class="mb-4 p-3 rounded-xl font-mono text-xs {% if category == 'error' %}bg-red-950/60 border border-red-500/40 text-red-200{% else %}bg-emerald-950/60 border border-emerald-500/40 text-emerald-200{% endif %}">
-            <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} mr-2"></i>{{ msg }}
-        </div>
+            <div class="p-3.5 rounded-xl font-mono text-xs
+                        flex items-start gap-2.5
+                        slide-down
+                        {% if category == 'error' %}
+                            bg-red-950/60 border border-red-500/40 text-red-200
+                        {% else %}
+                            bg-emerald-950/60 border border-emerald-500/40 text-emerald-200
+                        {% endif %}">
+                <i class="fa-solid
+                          {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}
+                          mt-0.5 shrink-0"
+                   aria-hidden="true"></i>
+                <span>{{ msg }}</span>
+            </div>
         {% endfor %}
+        </div>
       {% endif %}
     {% endwith %}
 
-    <div class="glass-card rounded-2xl p-8 border border-slate-800">
-        <form method="POST" action="{{ url_for('lab_login') }}" class="space-y-5">
-            <div>
-                <label class="block text-xs font-mono text-slate-300 mb-1.5">EMAIL ADDRESS</label>
-                <div class="relative">
-                    <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-                    <input type="email" name="email" required placeholder="admin@gmail.com" value="admin@gmail.com"
-                           class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400 transition">
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-mono text-slate-300 mb-1.5">PASSWORD</label>
-                <div class="relative">
-                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-                    <input type="password" name="password" required placeholder="••••••••" value="admin123"
-                           class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400 transition">
-                </div>
-            </div>
-            <button type="submit" class="w-full py-3.5 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:brightness-110 shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-right-to-bracket"></i> ACCESS LAB CONSOLE
-            </button>
-        </form>
+    {# ============================================================
+       LOGIN CARD
+    ============================================================ #}
+    <div class="glass-card rounded-2xl p-5 sm:p-7 lg:p-8 border border-slate-800 card-animate">
 
-        <div class="mt-6 pt-6 border-t border-slate-800 text-center">
-            <p class="text-[10px] font-mono text-slate-500">
-                <i class="fa-solid fa-shield-halved text-cyan-400"></i> Authorized personnel only. All access is logged.
+        {# Header inside card #}
+        <div class="mb-6">
+            <h2 class="font-mono-heading font-bold text-white text-base sm:text-lg">
+                Welcome back
+            </h2>
+            <p class="text-[11px] sm:text-xs text-slate-400 font-mono mt-1">
+                Sign in to manage your site.
             </p>
         </div>
+
+        {# ---------- LOGIN FORM ---------- #}
+        <form method="POST"
+              action="{{ url_for('lab_login') }}"
+              id="lab-login-form"
+              class="space-y-4 sm:space-y-5"
+              novalidate>
+
+            {# Email field #}
+            <div>
+                <label for="lab-email"
+                       class="block text-[10px] sm:text-xs font-mono text-slate-400
+                              uppercase tracking-wider mb-1.5">
+                    Email Address
+                </label>
+                <div class="relative">
+                    <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2
+                              text-slate-500 text-sm pointer-events-none"
+                       aria-hidden="true"></i>
+                    <input type="email"
+                           id="lab-email"
+                           name="email"
+                           required
+                           autofocus
+                           autocomplete="username email"
+                           inputmode="email"
+                           spellcheck="false"
+                           placeholder="you@example.com"
+                           class="w-full pl-10 pr-4 py-3 sm:py-3.5 rounded-xl
+                                  bg-slate-900/90 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400
+                                  focus:ring-2 focus:ring-cyan-400/20
+                                  transition">
+                </div>
+            </div>
+
+            {# Password field #}
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <label for="lab-password"
+                           class="block text-[10px] sm:text-xs font-mono text-slate-400
+                                  uppercase tracking-wider">
+                        Password
+                    </label>
+                    <span class="text-[10px] font-mono text-slate-500">
+                        Required
+                    </span>
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2
+                              text-slate-500 text-sm pointer-events-none"
+                       aria-hidden="true"></i>
+                    <input type="password"
+                           id="lab-password"
+                           name="password"
+                           required
+                           autocomplete="current-password"
+                           placeholder="••••••••"
+                           class="w-full pl-10 pr-12 py-3 sm:py-3.5 rounded-xl
+                                  bg-slate-900/90 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400
+                                  focus:ring-2 focus:ring-cyan-400/20
+                                  transition">
+
+                    {# Password visibility toggle #}
+                    <button type="button"
+                            id="password-toggle"
+                            onclick="togglePassword()"
+                            class="absolute right-2 top-1/2 -translate-y-1/2
+                                   w-9 h-9 rounded-lg
+                                   flex items-center justify-center
+                                   text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10
+                                   transition"
+                            aria-label="Show password"
+                            aria-pressed="false"
+                            title="Show / hide password">
+                        <i class="fa-solid fa-eye text-sm" id="password-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                {# Caps Lock warning (hidden by default) #}
+                <div id="caps-warning"
+                     class="hidden mt-2 p-2.5 rounded-lg
+                            bg-amber-950/40 border border-amber-500/30
+                            text-[10px] font-mono text-amber-300
+                            flex items-center gap-2 slide-down"
+                     role="alert">
+                    <i class="fa-solid fa-triangle-exclamation text-xs shrink-0"
+                       aria-hidden="true"></i>
+                    <span>Caps Lock is on</span>
+                </div>
+            </div>
+
+            {# Remember me + Forgot password #}
+            <div class="flex items-center justify-between gap-3 pt-1">
+                <label for="lab-remember"
+                       class="inline-flex items-center gap-2 cursor-pointer
+                              text-[11px] sm:text-xs font-mono text-slate-400
+                              hover:text-slate-200 transition select-none">
+                    <input type="checkbox"
+                           id="lab-remember"
+                           name="remember"
+                           checked
+                           class="w-4 h-4 rounded
+                                  accent-cyan-400 cursor-pointer">
+                    <span>Remember me</span>
+                </label>
+
+                <span class="text-[10px] font-mono text-slate-500" title="Contact an administrator to reset">
+                    <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+                    Need help?
+                </span>
+            </div>
+
+            {# Submit #}
+            <button type="submit"
+                    id="lab-submit-btn"
+                    class="w-full py-3.5 rounded-xl
+                           font-mono text-xs sm:text-sm font-bold
+                           text-slate-950
+                           bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400
+                           hover:brightness-110 active:scale-[0.98]
+                           shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40
+                           transition-all
+                           flex items-center justify-center gap-2
+                           disabled:opacity-70 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                <span id="lab-submit-label">Access Lab Console</span>
+            </button>
+
+        </form>
+
+        {# ---------- SECURITY NOTE ---------- #}
+        <div class="mt-6 pt-5 border-t border-slate-800 text-center">
+            <p class="text-[10px] font-mono text-slate-500 leading-relaxed
+                      flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-shield-halved text-cyan-400 shrink-0"
+                   aria-hidden="true"></i>
+                <span>Authorized personnel only · All access is logged</span>
+            </p>
+        </div>
+
     </div>
 
-    <div class="mt-6 text-center">
-        <a href="{{ url_for('index') }}" class="text-xs font-mono text-slate-400 hover:text-cyan-400">
-            <i class="fa-solid fa-arrow-left"></i> Back to public site
+    {# ============================================================
+       FOOTER LINKS
+    ============================================================ #}
+    <div class="mt-6 space-y-3 text-center">
+
+        <div class="flex items-center justify-center gap-2 text-[11px] font-mono">
+            <span class="text-slate-600">Not an admin?</span>
+            <a href="{{ url_for('client_login') }}"
+               class="text-cyan-400 hover:text-cyan-300 transition inline-flex items-center gap-1">
+                Client Portal
+                <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <a href="{{ url_for('index') }}"
+           class="inline-flex items-center gap-1.5 text-xs font-mono
+                  text-slate-500 hover:text-cyan-400 transition">
+            <i class="fa-solid fa-arrow-left text-[10px]" aria-hidden="true"></i>
+            Back to public site
         </a>
+
     </div>
-</div>
+
+    {# ============================================================
+       COPYRIGHT
+    ============================================================ #}
+    <p class="mt-8 text-center text-[10px] font-mono text-slate-600">
+        &copy; {{ current_year if current_year else 2026 }} The Media Scientist
+    </p>
+
+</main>
+
+<script>
+// ============================================================
+// PASSWORD VISIBILITY TOGGLE
+// ============================================================
+function togglePassword() {
+    const input = document.getElementById('lab-password');
+    const eye = document.getElementById('password-eye');
+    const btn = document.getElementById('password-toggle');
+    if (!input || !eye || !btn) return;
+
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    eye.className = isPassword ? 'fa-solid fa-eye-slash text-sm' : 'fa-solid fa-eye text-sm';
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    btn.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
+    input.focus();
+}
+
+// ============================================================
+// CAPS LOCK WARNING
+// ============================================================
+const passwordInput = document.getElementById('lab-password');
+const capsWarning = document.getElementById('caps-warning');
+
+function checkCapsLock(e) {
+    if (!capsWarning) return;
+    const isOn = e.getModifierState && e.getModifierState('CapsLock');
+    capsWarning.classList.toggle('hidden', !isOn);
+}
+
+if (passwordInput) {
+    passwordInput.addEventListener('keydown', checkCapsLock);
+    passwordInput.addEventListener('keyup', checkCapsLock);
+    passwordInput.addEventListener('blur', () => {
+        capsWarning?.classList.add('hidden');
+    });
+}
+
+// ============================================================
+// SUBMIT FEEDBACK (disable button + spinner)
+// ============================================================
+const form = document.getElementById('lab-login-form');
+const submitBtn = document.getElementById('lab-submit-btn');
+const submitLabel = document.getElementById('lab-submit-label');
+
+if (form && submitBtn && submitLabel) {
+    form.addEventListener('submit', () => {
+        // Basic browser-side validation — let native validation run if invalid
+        if (!form.checkValidity()) return;
+
+        submitBtn.disabled = true;
+        submitLabel.textContent = 'Signing in...';
+        submitBtn.innerHTML = `
+            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+            <span>Signing in...</span>
+        `;
+    });
+}
+
+// ============================================================
+// AUTOFOCUS on email if page was loaded fresh (no hash)
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+    const emailInput = document.getElementById('lab-email');
+    if (emailInput && !window.location.hash) {
+        // Use setTimeout to let browser autofill finish before focusing
+        setTimeout(() => emailInput.focus(), 50);
+    }
+});
+</script>
 
 </body>
 </html>

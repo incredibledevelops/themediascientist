@@ -1,45 +1,68 @@
-from flask import (
-    Flask, render_template, request, redirect,
-    url_for, session, flash, jsonify, send_from_directory,
-    abort, send_file
-)
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from bson.objectid import ObjectId
-from datetime import datetime
-from functools import wraps
-from werkzeug.utils import secure_filename
+# =============================================================
+#  The Media Scientist — Flask Application
+#  Opoku Kwadwo Incredible
+# =============================================================
+
 import os
 import secrets
-import io
+from datetime import datetime, timezone
+from functools import wraps
+
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, flash, jsonify, send_from_directory,
+    abort, send_file, Response,
+)
+from flask_login import (
+    LoginManager, UserMixin, login_user, login_required,
+    logout_user, current_user,
+)
+from werkzeug.utils import secure_filename
 
 from config import Config
 from models import (
     User, Inquiry, Service, PortfolioItem, SiteContent, seed_database,
-    Project, Invoice, Deliverable, ClientMessage, Payment, gen_temp_password
+    Project, Invoice, Deliverable, ClientMessage, Payment,
+    gen_temp_password, deliverables_col, to_oid,
 )
 import mailer
 import paystack
 from pdf_generator import generate_invoice_pdf
 
 
+# =============================================================
+#  APP INITIALIZATION
+# =============================================================
 app = Flask(__name__)
 app.config.from_object(Config)
 
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Flask-Login
 login_manager = LoginManager(app)
 login_manager.login_view = 'lab_login'
 login_manager.login_message = "Please log in to access the Lab Console."
+login_manager.login_message_category = "error"
 
 
-# ---------- Helpers ----------
+# =============================================================
+#  HELPERS
+# =============================================================
+
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+    """Check if uploaded file has an allowed extension."""
+    if not filename or '.' not in filename:
+        return False
+    return filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 
 def human_filesize(num_bytes):
+    """Convert bytes to human-readable format (KB, MB, GB)."""
+    try:
+        num_bytes = float(num_bytes)
+    except (ValueError, TypeError):
+        return '—'
     for unit in ['B', 'KB', 'MB', 'GB']:
         if num_bytes < 1024:
             return f"{num_bytes:.1f} {unit}"
@@ -48,7 +71,8 @@ def human_filesize(num_bytes):
 
 
 def icon_for_filename(filename):
-    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    """Return a Font Awesome icon class based on file extension."""
+    ext = filename.rsplit('.', 1)[-1].lower() if filename and '.' in filename else ''
     if ext in ('png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'):
         return 'fa-regular fa-image'
     if ext == 'pdf':
@@ -70,7 +94,24 @@ def icon_for_filename(filename):
     return 'fa-regular fa-file'
 
 
-# ---------- User Loader ----------
+def safe_str(obj):
+    """Safely convert any object to a string for template use."""
+    if obj is None:
+        return ''
+    return str(obj)
+
+
+def client_safe_filename(number):
+    """Sanitize an invoice number for use as a download filename."""
+    if not number:
+        return 'invoice'
+    return str(number).replace('/', '-').replace('\\', '-')
+
+
+# =============================================================
+#  USER MODEL (Flask-Login wrapper)
+# =============================================================
+
 class LoginUser(UserMixin):
     def __init__(self, user_doc):
         self.id = str(user_doc['_id'])
@@ -97,6 +138,10 @@ def load_user(user_id):
     return None
 
 
+# =============================================================
+#  DECORATORS
+# =============================================================
+
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -117,18 +162,69 @@ def client_required(f):
     return decorated
 
 
-# ---------- Context Processors ----------
+# =============================================================
+#  CONTEXT PROCESSORS
+# =============================================================
+
 @app.context_processor
 def inject_globals():
-    return {
+    ctx = {
         'site_settings': SiteContent.get_settings(),
-        'current_year': datetime.utcnow().year,
+        'current_year': datetime.now(timezone.utc).year,
+        'pending_invoice_count': 0,
+        'unreviewed_file_count': 0,
+        'unread_message_count': 0,
     }
+    if current_user.is_authenticated and getattr(current_user, 'role', None) == 'client':
+        try:
+            ctx['pending_invoice_count'] = len([
+                i for i in Invoice.get_for_client(current_user.id)
+                if i.get('status') == 'pending'
+            ])
+            ctx['unreviewed_file_count'] = Deliverable.count_for_client(current_user.id)
+            ctx['unread_message_count'] = ClientMessage.count_unread_for_client(current_user.id)
+        except Exception:
+            pass
+    return ctx
 
 
-# ==========================================================
+# =============================================================
+#  SEO: robots.txt & sitemap.xml (dynamic host replacement)
+# =============================================================
+
+@app.route('/robots.txt')
+def robots():
+    """Serve robots.txt with the base URL replaced by the current SITE_URL."""
+    path = os.path.join(app.root_path, 'robots.txt')
+    with open(path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    for placeholder in (
+        'https://themediascientist.com',
+        'http://162.35.183.139:5004',
+        'http://localhost:5004',
+    ):
+        content = content.replace(placeholder, Config.SITE_URL)
+    return Response(content, mimetype='text/plain')
+
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """Serve sitemap.xml with the base URL replaced by the current SITE_URL."""
+    path = os.path.join(app.root_path, 'sitemap.xml')
+    with open(path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    for placeholder in (
+        'https://themediascientist.com',
+        'http://162.35.183.139:5004',
+        'http://localhost:5004',
+    ):
+        content = content.replace(placeholder, Config.SITE_URL)
+    return Response(content, mimetype='application/xml')
+
+
+# =============================================================
 #  PUBLIC SITE ROUTES
-# ==========================================================
+# =============================================================
 
 @app.route('/')
 def index():
@@ -185,54 +281,35 @@ def contact():
     return render_template('contact.html', contact=contact_data)
 
 
-@app.route('/robots.txt')
-def robots():
-    return send_from_directory(app.root_path, 'robots.txt')
-
-
-@app.route('/sitemap.xml')
-def sitemap():
-    return send_from_directory(app.root_path, 'sitemap.xml')
-
-
-# ==========================================================
+# =============================================================
 #  FILE DOWNLOADS (protected — client must own the file)
-# ==========================================================
+# =============================================================
 
 @app.route('/uploads/<filename>')
 @login_required
 def download_file(filename):
     """Serve an uploaded file. Only admin or the owning client can download."""
-    deliverable = Deliverable.get_by_id(filename.split('_')[0]) if '_' in filename else None
-
-    # Try find deliverable by stored_filename field
-    from models import deliverables_col
     target = deliverables_col.find_one({"stored_filename": filename})
 
     if not target:
         abort(404)
 
-    # Access check
     if current_user.role == 'client':
         if str(target.get('client_id')) != current_user.id:
             abort(403)
-    # Admin can download anything
-
-    # Mark as reviewed if client downloads
-    if current_user.role == 'client':
         Deliverable.mark_reviewed(str(target['_id']))
 
     return send_from_directory(
         app.config['UPLOAD_FOLDER'],
         filename,
         as_attachment=True,
-        download_name=target.get('name', filename)
+        download_name=target.get('name', filename),
     )
 
 
-# ==========================================================
+# =============================================================
 #  ADMIN / LAB CONSOLE ROUTES
-# ==========================================================
+# =============================================================
 
 @app.route('/lab/login', methods=['GET', 'POST'])
 def lab_login():
@@ -285,6 +362,7 @@ def lab_dashboard():
 
 
 # ---------- Lab: Inquiries ----------
+
 @app.route('/lab/inquiries')
 @login_required
 @admin_required
@@ -313,6 +391,7 @@ def lab_inquiry_delete(inquiry_id):
 
 
 # ---------- Lab: Services ----------
+
 @app.route('/lab/services')
 @login_required
 @admin_required
@@ -325,14 +404,19 @@ def lab_services():
 @login_required
 @admin_required
 def lab_service_create():
+    try:
+        order = int(request.form.get('order', 99))
+    except (ValueError, TypeError):
+        order = 99
+
     data = {
         'title': request.form.get('title', ''),
         'slug': request.form.get('slug', ''),
         'icon': request.form.get('icon', 'fa-cog'),
         'color': request.form.get('color', 'cyan'),
         'description': request.form.get('description', ''),
-        'order': int(request.form.get('order', 99)),
-        'plans': []
+        'order': order,
+        'plans': [],
     }
     Service.create(data)
     flash("Service created.", "success")
@@ -343,15 +427,47 @@ def lab_service_create():
 @login_required
 @admin_required
 def lab_service_update(service_id):
+    try:
+        order = int(request.form.get('order', 99))
+    except (ValueError, TypeError):
+        order = 99
+
     data = {
         'title': request.form.get('title', ''),
         'description': request.form.get('description', ''),
         'icon': request.form.get('icon', 'fa-cog'),
         'color': request.form.get('color', 'cyan'),
-        'order': int(request.form.get('order', 99)),
+        'order': order,
     }
     Service.update(service_id, data)
     flash("Service updated.", "success")
+    return redirect(url_for('lab_services'))
+
+
+@app.route('/lab/services/<service_id>/update-plans', methods=['POST'])
+@login_required
+@admin_required
+def lab_service_update_plans(service_id):
+    """Replace the entire plans array for a service."""
+    names = request.form.getlist('plan_name[]')
+    prices = request.form.getlist('plan_price[]')
+    descs = request.form.getlist('plan_desc[]')
+
+    plans = []
+    for i in range(len(names)):
+        name = (names[i] or '').strip()
+        price = (prices[i] if i < len(prices) else '').strip()
+        desc = (descs[i] if i < len(descs) else '').strip()
+        if not name:
+            continue
+        plans.append({
+            'name': name,
+            'price': price or 'Contact for quote',
+            'desc': desc,
+        })
+
+    Service.update_plans(service_id, plans)
+    flash(f"Saved {len(plans)} plan{'s' if len(plans) != 1 else ''}.", "success")
     return redirect(url_for('lab_services'))
 
 
@@ -365,6 +481,7 @@ def lab_service_delete(service_id):
 
 
 # ---------- Lab: Portfolio ----------
+
 @app.route('/lab/portfolio')
 @login_required
 @admin_required
@@ -417,15 +534,45 @@ def lab_portfolio_delete(item_id):
 
 
 # ---------- Lab: About ----------
+
 @app.route('/lab/about', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def lab_about():
     if request.method == 'POST':
+        # Parse skills from parallel arrays
+        skill_names = request.form.getlist('skill_name[]')
+        skill_levels = request.form.getlist('skill_level[]')
+        skills = []
+        for name, level in zip(skill_names, skill_levels):
+            name = (name or '').strip()
+            if not name:
+                continue
+            try:
+                lvl = max(0, min(100, int(level)))
+            except (ValueError, TypeError):
+                lvl = 50
+            skills.append({'name': name, 'level': lvl})
+
+        # Tools from comma-separated string
+        tools_raw = request.form.get('tools', '') or ''
+        tools = [t.strip() for t in tools_raw.split(',') if t.strip()]
+
+        # Stats
+        stats = [
+            {'key': 'years',    'label': 'Years',    'value': (request.form.get('stat_years')    or '0').strip(), 'color': 'cyan'},
+            {'key': 'projects', 'label': 'Projects', 'value': (request.form.get('stat_projects') or '0').strip(), 'color': 'purple'},
+            {'key': 'happy',    'label': 'Happy',    'value': (request.form.get('stat_happy')    or '0').strip(), 'color': 'emerald'},
+        ]
+
         data = {
-            'heading': request.form.get('heading', ''),
-            'bio': request.form.get('bio', ''),
-            'bio2': request.form.get('bio2', ''),
+            'heading': request.form.get('heading', '').strip(),
+            'bio':     request.form.get('bio', '').strip(),
+            'bio2':    request.form.get('bio2', '').strip(),
+            'quote':   request.form.get('quote', '').strip(),
+            'skills':  skills,
+            'tools':   tools,
+            'stats':   stats,
         }
         SiteContent.update_about(data)
         flash("About page updated.", "success")
@@ -436,19 +583,20 @@ def lab_about():
 
 
 # ---------- Lab: Contact ----------
+
 @app.route('/lab/contact', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def lab_contact():
     if request.method == 'POST':
         data = {
-            'email': request.form.get('email', ''),
-            'phone': request.form.get('phone', ''),
-            'location': request.form.get('location', ''),
+            'email':     request.form.get('email', ''),
+            'phone':     request.form.get('phone', ''),
+            'location':  request.form.get('location', ''),
             'instagram': request.form.get('instagram', ''),
-            'tiktok': request.form.get('tiktok', ''),
-            'youtube': request.form.get('youtube', ''),
-            'github': request.form.get('github', ''),
+            'tiktok':    request.form.get('tiktok', ''),
+            'youtube':   request.form.get('youtube', ''),
+            'github':    request.form.get('github', ''),
         }
         SiteContent.update_contact(data)
         flash("Contact information updated.", "success")
@@ -459,6 +607,7 @@ def lab_contact():
 
 
 # ---------- Lab: Users ----------
+
 @app.route('/lab/users')
 @login_required
 @admin_required
@@ -496,17 +645,18 @@ def lab_user_delete(user_id):
 
 
 # ---------- Lab: Settings ----------
+
 @app.route('/lab/settings', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def lab_settings():
     if request.method == 'POST':
         data = {
-            'site_title': request.form.get('site_title', ''),
-            'owner_name': request.form.get('owner_name', ''),
-            'tagline': request.form.get('tagline', ''),
-            'status': request.form.get('status', ''),
-            'hero_description': request.form.get('hero_description', ''),
+            'site_title':        request.form.get('site_title', ''),
+            'owner_name':        request.form.get('owner_name', ''),
+            'tagline':           request.form.get('tagline', ''),
+            'status':            request.form.get('status', ''),
+            'hero_description':  request.form.get('hero_description', ''),
         }
         SiteContent.update_settings(data)
         flash("Settings updated.", "success")
@@ -516,9 +666,9 @@ def lab_settings():
     return render_template('lab/settings.html', settings=settings)
 
 
-# ==========================================================
+# =============================================================
 #  LAB: CLIENT MANAGEMENT
-# ==========================================================
+# =============================================================
 
 @app.route('/lab/clients')
 @login_required
@@ -584,7 +734,7 @@ def lab_client_reset_password(client_id):
                 user_doc['email'],
                 user_doc['name'],
                 new_password,
-                url_for('client_login', _external=True)
+                url_for('client_login', _external=True),
             )
             flash(f"Password reset. New password emailed to {user_doc['email']}.", "success")
         except Exception as e:
@@ -641,7 +791,7 @@ def lab_client_projects(client_id):
         client=user_doc,
         projects=projects,
         invoices=invoices,
-        deliverables=deliverables
+        deliverables=deliverables,
     )
 
 
@@ -649,12 +799,22 @@ def lab_client_projects(client_id):
 @login_required
 @admin_required
 def lab_client_project_create(client_id):
+    oid = to_oid(client_id)
+    if not oid:
+        flash("Invalid client.", "error")
+        return redirect(url_for('lab_clients'))
+
+    try:
+        progress = max(0, min(100, int(request.form.get('progress', 0))))
+    except (ValueError, TypeError):
+        progress = 0
+
     data = {
-        "client_id": ObjectId(client_id),
+        "client_id": oid,
         "title": request.form.get('title', 'Untitled Project'),
         "service": request.form.get('service', ''),
         "timeline": request.form.get('timeline', ''),
-        "progress": int(request.form.get('progress', 0)),
+        "progress": progress,
         "status": request.form.get('status', 'in_progress'),
         "stage_label": request.form.get('stage_label', 'Kickoff'),
     }
@@ -672,12 +832,17 @@ def lab_project_update(project_id):
         flash("Project not found.", "error")
         return redirect(url_for('lab_clients'))
 
+    try:
+        progress = max(0, min(100, int(request.form.get('progress', project.get('progress', 0)))))
+    except (ValueError, TypeError):
+        progress = project.get('progress', 0)
+
     data = {
-        "title": request.form.get('title', project['title']),
-        "service": request.form.get('service', project.get('service', '')),
-        "timeline": request.form.get('timeline', project.get('timeline', '')),
-        "progress": int(request.form.get('progress', project.get('progress', 0))),
-        "status": request.form.get('status', project.get('status', 'in_progress')),
+        "title":       request.form.get('title', project.get('title', '')),
+        "service":     request.form.get('service', project.get('service', '')),
+        "timeline":    request.form.get('timeline', project.get('timeline', '')),
+        "progress":    progress,
+        "status":      request.form.get('status', project.get('status', 'in_progress')),
         "stage_label": request.form.get('stage_label', project.get('stage_label', '')),
     }
     Project.update(project_id, data)
@@ -700,17 +865,28 @@ def lab_project_delete(project_id):
 
 
 # ---------- Lab: Invoices ----------
+
 @app.route('/lab/clients/<client_id>/invoices/create', methods=['POST'])
 @login_required
 @admin_required
 def lab_invoice_create(client_id):
+    oid = to_oid(client_id)
+    if not oid:
+        flash("Invalid client.", "error")
+        return redirect(url_for('lab_clients'))
+
+    try:
+        amount = float(request.form.get('amount', 0) or 0)
+    except (ValueError, TypeError):
+        amount = 0.0
+
     data = {
-        "client_id": ObjectId(client_id),
-        "number": request.form.get('number', 'INV-' + datetime.utcnow().strftime('%Y%m%d%H%M%S')),
-        "amount": float(request.form.get('amount', 0)),
-        "due_date": request.form.get('due_date', ''),
+        "client_id": oid,
+        "number":    request.form.get('number') or ('INV-' + datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')),
+        "amount":    amount,
+        "due_date":  request.form.get('due_date', ''),
         "description": request.form.get('description', 'Professional services rendered'),
-        "status": request.form.get('status', 'pending'),
+        "status":    request.form.get('status', 'pending'),
     }
     Invoice.create(data)
     flash("Invoice created.", "success")
@@ -725,12 +901,18 @@ def lab_invoice_update(invoice_id):
     if not inv:
         flash("Invoice not found.", "error")
         return redirect(url_for('lab_clients'))
+
+    try:
+        amount = float(request.form.get('amount', inv.get('amount', 0)) or 0)
+    except (ValueError, TypeError):
+        amount = inv.get('amount', 0)
+
     data = {
-        "number": request.form.get('number', inv.get('number')),
-        "amount": float(request.form.get('amount', inv.get('amount', 0))),
-        "due_date": request.form.get('due_date', inv.get('due_date', '')),
+        "number":      request.form.get('number', inv.get('number')),
+        "amount":      amount,
+        "due_date":    request.form.get('due_date', inv.get('due_date', '')),
         "description": request.form.get('description', inv.get('description', '')),
-        "status": request.form.get('status', inv.get('status', 'pending')),
+        "status":      request.form.get('status', inv.get('status', 'pending')),
     }
     Invoice.update(invoice_id, data)
     flash("Invoice updated.", "success")
@@ -752,6 +934,7 @@ def lab_invoice_delete(invoice_id):
 
 
 # ---------- Lab: Deliverables (FILE UPLOAD) ----------
+
 @app.route('/lab/clients/<client_id>/deliverables/upload', methods=['POST'])
 @login_required
 @admin_required
@@ -769,6 +952,11 @@ def lab_deliverable_upload(client_id):
         flash("File type not allowed.", "error")
         return redirect(url_for('lab_client_projects', client_id=client_id))
 
+    oid = to_oid(client_id)
+    if not oid:
+        flash("Invalid client.", "error")
+        return redirect(url_for('lab_clients'))
+
     original_name = secure_filename(file.filename)
     ext = original_name.rsplit('.', 1)[-1].lower() if '.' in original_name else 'bin'
     stored_filename = f"{secrets.token_hex(12)}.{ext}"
@@ -779,12 +967,12 @@ def lab_deliverable_upload(client_id):
     size_bytes = os.path.getsize(save_path)
 
     data = {
-        "client_id": ObjectId(client_id),
-        "name": original_name,
+        "client_id":       oid,
+        "name":            original_name,
         "stored_filename": stored_filename,
-        "size": human_filesize(size_bytes),
-        "size_bytes": size_bytes,
-        "file_type": icon_for_filename(original_name),
+        "size":            human_filesize(size_bytes),
+        "size_bytes":      size_bytes,
+        "file_type":       icon_for_filename(original_name),
     }
     Deliverable.create(data)
     flash(f"File '{original_name}' uploaded successfully.", "success")
@@ -816,9 +1004,9 @@ def lab_deliverable_delete(deliverable_id):
     return redirect(url_for('lab_client_projects', client_id=cid))
 
 
-# ==========================================================
+# =============================================================
 #  CLIENT PORTAL ROUTES
-# ==========================================================
+# =============================================================
 
 @app.route('/client/login', methods=['GET', 'POST'])
 def client_login():
@@ -839,8 +1027,9 @@ def client_login():
             if not user_doc.get("is_active", True):
                 flash("Your account has been deactivated. Please contact support.", "error")
                 return redirect(url_for('client_login'))
+            remember = request.form.get('remember') == 'on'
             user = LoginUser(user_doc)
-            login_user(user, remember=True)
+            login_user(user, remember=remember)
             flash(f"Welcome back, {user.name}!", "success")
             return redirect(url_for('client_dashboard'))
         flash("Invalid credentials. Please try again.", "error")
@@ -867,7 +1056,6 @@ def client_dashboard():
     deliverables = Deliverable.get_for_client(cid)
 
     active_projects = [p for p in projects if p.get('status') in ('in_progress', 'review')]
-    pending_invoices = [i for i in invoices if i.get('status') == 'pending']
     pending_total = Invoice.pending_total_for_client(cid)
     unreviewed_files = [d for d in deliverables if not d.get('reviewed', False)]
 
@@ -904,7 +1092,12 @@ def client_projects():
 def client_invoices():
     invoices = Invoice.get_for_client(current_user.id)
     pending_total = Invoice.pending_total_for_client(current_user.id)
-    return render_template('client/invoices.html', invoices=invoices, pending_total=pending_total, client=current_user)
+    return render_template(
+        'client/invoices.html',
+        invoices=invoices,
+        pending_total=pending_total,
+        client=current_user,
+    )
 
 
 @app.route('/client/files')
@@ -923,7 +1116,7 @@ def client_messages():
         body = request.form.get('message', '').strip()
         if body:
             ClientMessage.create({
-                "client_id": ObjectId(current_user.id),
+                "client_id": to_oid(current_user.id),
                 "from_role": "client",
                 "from_name": current_user.name,
                 "body": body,
@@ -936,19 +1129,32 @@ def client_messages():
     return render_template('client/messages.html', messages=messages, client=current_user)
 
 
+# ---------- Client: Settings ----------
+
 @app.route('/client/settings', methods=['GET', 'POST'])
 @login_required
 @client_required
 def client_settings():
     if request.method == 'POST':
+        current_password = request.form.get('current_password', '')
         new_password = request.form.get('new_password', '')
         confirm_password = request.form.get('confirm_password', '')
+
+        user_doc = User.find_by_id(current_user.id)
+        if not user_doc:
+            flash("Account not found.", "error")
+            return redirect(url_for('client_login'))
+
+        if not User.verify_password(user_doc, current_password):
+            flash("Current password is incorrect.", "error")
+            return redirect(url_for('client_settings'))
         if not new_password or len(new_password) < 6:
-            flash("Password must be at least 6 characters.", "error")
+            flash("New password must be at least 6 characters.", "error")
             return redirect(url_for('client_settings'))
         if new_password != confirm_password:
             flash("Passwords do not match.", "error")
             return redirect(url_for('client_settings'))
+
         User.update_password(current_user.id, new_password)
         flash("Password updated successfully.", "success")
         return redirect(url_for('client_settings'))
@@ -956,9 +1162,58 @@ def client_settings():
     return render_template('client/settings.html', client=current_user)
 
 
-# ==========================================================
+@app.route('/client/settings/preferences', methods=['POST'])
+@login_required
+@client_required
+def client_settings_preferences():
+    prefs = {
+        'email_on_files':    request.form.get('email_on_files')    == 'on',
+        'email_on_invoices': request.form.get('email_on_invoices') == 'on',
+        'email_on_messages': request.form.get('email_on_messages') == 'on',
+    }
+    User.update_preferences(current_user.id, prefs)
+    flash("Notification preferences updated.", "success")
+    return redirect(url_for('client_settings'))
+
+
+@app.route('/client/logout-all', methods=['POST'])
+@login_required
+@client_required
+def client_logout_all():
+    """Sign out from all devices (best-effort)."""
+    logout_user()
+    flash("You've been signed out of all devices.", "success")
+    return redirect(url_for('client_login'))
+
+
+@app.route('/client/delete-account', methods=['POST'])
+@login_required
+@client_required
+def client_delete_account():
+    """Delete the client's own account after they type DELETE to confirm."""
+    confirm = request.form.get('confirm', '').strip().upper()
+    if confirm != 'DELETE':
+        flash("Please type DELETE to confirm account deletion.", "error")
+        return redirect(url_for('client_settings'))
+
+    user_doc = User.find_by_id(current_user.id)
+    if not user_doc:
+        flash("Account not found.", "error")
+        return redirect(url_for('client_login'))
+
+    if user_doc.get('role') != 'client':
+        flash("This action is only available for client accounts.", "error")
+        return redirect(url_for('client_settings'))
+
+    User.delete(current_user.id)
+    logout_user()
+    flash("Your account has been deleted. We're sorry to see you go.", "success")
+    return redirect(url_for('index'))
+
+
+# =============================================================
 #  PDF INVOICE DOWNLOAD
-# ==========================================================
+# =============================================================
 
 @app.route('/client/invoices/<invoice_id>/pdf')
 @login_required
@@ -968,30 +1223,29 @@ def client_invoice_pdf(invoice_id):
     if not invoice:
         abort(404)
 
-    # Access check
     if current_user.role == 'client':
-        if str(invoice['client_id']) != current_user.id:
+        if str(invoice.get('client_id')) != current_user.id:
             abort(403)
 
-    client_doc = User.find_by_id(str(invoice['client_id']))
+    client_doc = User.find_by_id(str(invoice.get('client_id')))
     if not client_doc:
         abort(404)
 
     settings = SiteContent.get_settings()
     buffer = generate_invoice_pdf(invoice, client_doc, settings)
 
-    filename = f"{invoice.get('number', 'invoice').replace('/', '-')}.pdf"
+    filename = f"{client_safe_filename(invoice.get('number', 'invoice'))}.pdf"
     return send_file(
         buffer,
         mimetype='application/pdf',
         as_attachment=True,
-        download_name=filename
+        download_name=filename,
     )
 
 
-# ==========================================================
+# =============================================================
 #  PAYSTACK PAYMENT FLOW
-# ==========================================================
+# =============================================================
 
 @app.route('/client/invoices/<invoice_id>/pay')
 @login_required
@@ -1003,7 +1257,7 @@ def client_invoice_pay(invoice_id):
         flash("Invoice not found.", "error")
         return redirect(url_for('client_invoices'))
 
-    if str(invoice['client_id']) != current_user.id:
+    if str(invoice.get('client_id')) != current_user.id:
         flash("Access denied.", "error")
         return redirect(url_for('client_invoices'))
 
@@ -1011,11 +1265,14 @@ def client_invoice_pay(invoice_id):
         flash("This invoice is already paid.", "success")
         return redirect(url_for('client_invoices'))
 
-    amount_ghs = float(invoice.get('amount', 0))
-    amount_kobo = int(amount_ghs * 100)  # 1 GHS = 100 kobo
+    try:
+        amount_ghs = float(invoice.get('amount', 0) or 0)
+    except (ValueError, TypeError):
+        amount_ghs = 0.0
+
+    amount_kobo = int(amount_ghs * 100)
 
     reference = f"INV-{str(invoice['_id'])[:8]}-{secrets.token_hex(4)}"
-
     callback_url = url_for('client_invoice_verify', invoice_id=invoice_id, _external=True)
 
     result = paystack.initialize_transaction(
@@ -1024,25 +1281,22 @@ def client_invoice_pay(invoice_id):
         reference=reference,
         callback_url=callback_url,
         metadata={
-            "invoice_id": str(invoice['_id']),
+            "invoice_id":     str(invoice['_id']),
             "invoice_number": invoice.get('number'),
-            "client_id": current_user.id,
+            "client_id":      current_user.id,
             "custom_fields": [
                 {"display_name": "Invoice", "variable_name": "invoice_number", "value": invoice.get('number', '')},
-                {"display_name": "Client", "variable_name": "client_name", "value": current_user.name},
-            ]
-        }
+                {"display_name": "Client",  "variable_name": "client_name",    "value": current_user.name},
+            ],
+        },
     )
 
     if not result.get('status'):
         flash(f"Payment initialization failed: {result.get('message', 'Unknown error')}", "error")
         return redirect(url_for('client_invoices'))
 
-    # Save reference on invoice
     Invoice.update(invoice_id, {"payment_reference": reference})
-
-    auth_url = result['data']['authorization_url']
-    return redirect(auth_url)
+    return redirect(result['data']['authorization_url'])
 
 
 @app.route('/client/invoices/<invoice_id>/verify')
@@ -1055,7 +1309,7 @@ def client_invoice_verify(invoice_id):
         flash("Invoice not found.", "error")
         return redirect(url_for('client_invoices'))
 
-    if str(invoice['client_id']) != current_user.id:
+    if str(invoice.get('client_id')) != current_user.id:
         flash("Access denied.", "error")
         return redirect(url_for('client_invoices'))
 
@@ -1065,25 +1319,24 @@ def client_invoice_verify(invoice_id):
         return redirect(url_for('client_invoices'))
 
     result = paystack.verify_transaction(reference)
-
     if not result.get('status'):
         flash(f"Payment verification failed: {result.get('message', 'Unknown error')}", "error")
         return redirect(url_for('client_invoices'))
 
     data = result.get('data', {})
     pay_status = data.get('status')
-    amount_paid = data.get('amount', 0) / 100.0  # kobo → GHS
+    amount_paid = data.get('amount', 0) / 100.0
 
     if pay_status == 'success':
         Invoice.mark_paid(invoice_id, reference=reference)
         Payment.create({
-            "client_id": ObjectId(current_user.id),
-            "invoice_id": ObjectId(invoice_id),
-            "amount": amount_paid,
-            "reference": reference,
-            "status": "success",
-            "channel": data.get('channel', 'card'),
-            "currency": data.get('currency', 'GHS'),
+            "client_id":  to_oid(current_user.id),
+            "invoice_id": to_oid(invoice_id),
+            "amount":     amount_paid,
+            "reference":  reference,
+            "status":     "success",
+            "channel":    data.get('channel', 'card'),
+            "currency":   data.get('currency', 'GHS'),
         })
         flash(f"Payment successful! GH₵ {amount_paid:,.2f} received for {invoice.get('number')}.", "success")
     else:
@@ -1092,18 +1345,14 @@ def client_invoice_verify(invoice_id):
     return redirect(url_for('client_invoices'))
 
 
-# ---------- API: Paystack webhook (optional, for server-side confirmation) ----------
+# ---------- API: Paystack webhook ----------
+
 @app.route('/api/paystack/webhook', methods=['POST'])
 def paystack_webhook():
-    import hmac
-    import hashlib
     import json as _json
 
-    secret = Config.PAYSTACK_SECRET_KEY.encode('utf-8')
     signature = request.headers.get('x-paystack-signature', '')
-
-    computed = hmac.new(secret, request.data, hashlib.sha512).hexdigest()
-    if not hmac.compare_digest(computed, signature):
+    if not paystack.verify_webhook_signature(request.data, signature):
         return jsonify({'status': False, 'message': 'Invalid signature'}), 400
 
     try:
@@ -1121,7 +1370,8 @@ def paystack_webhook():
     return jsonify({'status': True}), 200
 
 
-# ---------- API: generic Paystack init (kept for compatibility) ----------
+# ---------- API: generic Paystack init ----------
+
 @app.route('/api/paystack/initialize', methods=['POST'])
 def api_paystack_init():
     data = request.get_json() or {}
@@ -1131,12 +1381,15 @@ def api_paystack_init():
         return jsonify({'status': False, 'message': 'Email required'}), 400
     result = paystack.initialize_transaction(
         email, amount,
-        callback_url=url_for('index', _external=True)
+        callback_url=url_for('index', _external=True),
     )
     return jsonify(result)
 
 
-# ---------- Error Handlers ----------
+# =============================================================
+#  ERROR HANDLERS
+# =============================================================
+
 @app.errorhandler(404)
 def not_found(e):
     return render_template('base.html', error_code=404, error_msg="Page not found"), 404
@@ -1147,10 +1400,14 @@ def server_error(e):
     return render_template('base.html', error_code=500, error_msg="Server error"), 500
 
 
-# ---------- App Bootstrap ----------
+# =============================================================
+#  APP BOOTSTRAP
+# =============================================================
+
 with app.app_context():
     seed_database()
 
 
 if __name__ == '__main__':
+    # In production, use: gunicorn --workers 3 --bind 0.0.0.0:5004 app:app
     app.run(debug=True, host='0.0.0.0', port=5004)

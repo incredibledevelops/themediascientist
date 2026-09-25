@@ -4,73 +4,644 @@
 {% block page_subtitle %}View, download, and pay your invoices securely.{% endblock %}
 
 {% block content %}
-<div class="mb-6 p-6 glass-card rounded-2xl border border-slate-800 flex justify-between items-center">
-    <div>
-        <p class="text-xs font-mono text-slate-400 uppercase">Total Outstanding</p>
-        <p class="text-3xl font-mono-heading font-bold text-white mt-1">GH₵ {{ '%.2f' % pending_total }}</p>
+
+{# ============================================================
+   SAFE STATS — defensive access
+============================================================ #}
+{% set safe_pending_total = pending_total if pending_total is defined and pending_total else 0 %}
+
+{# Compute counts and totals from the invoices list #}
+{% set ns = namespace(
+    paid_count=0, paid_total=0,
+    pending_count=0, pending_total=0,
+    overdue_count=0, overdue_total=0
+) %}
+
+{% for inv in invoices %}
+    {% set st = inv.get('status', 'pending') %}
+    {% set amt = inv.get('amount', 0) or 0 %}
+    {% if st == 'paid' %}
+        {% set ns.paid_count = ns.paid_count + 1 %}
+        {% set ns.paid_total = ns.paid_total + amt %}
+    {% elif st == 'overdue' %}
+        {% set ns.overdue_count = ns.overdue_count + 1 %}
+        {% set ns.overdue_total = ns.overdue_total + amt %}
+    {% else %}
+        {% set ns.pending_count = ns.pending_count + 1 %}
+        {% set ns.pending_total = ns.pending_total + amt %}
+    {% endif %}
+{% endfor %}
+
+{# ============================================================
+   OVERDUE ALERT
+============================================================ #}
+{% if ns.overdue_count > 0 %}
+<div class="mb-6 p-4 sm:p-5 rounded-2xl
+            bg-red-950/40 border border-red-500/40
+            flex items-start gap-3">
+    <div class="w-10 h-10 shrink-0 rounded-lg
+                bg-red-500/20 border border-red-500/40
+                flex items-center justify-center text-red-300">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+        <p class="text-sm font-bold text-red-200">
+            {{ ns.overdue_count }} overdue invoice{% if ns.overdue_count != 1 %}s{% endif %}
+        </p>
+        <p class="text-xs text-red-300/80 mt-0.5 font-mono">
+            Total overdue: GH₵ {{ '%.2f' % ns.overdue_total }} — settle to avoid service interruptions.
+        </p>
     </div>
 </div>
+{% endif %}
 
-<div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-    <div class="p-5 border-b border-slate-800 bg-slate-900/50">
-        <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-file-invoice text-emerald-400"></i> All Invoices
-        </h3>
+{# ============================================================
+   SUMMARY CARDS
+============================================================ #}
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+
+    {# Outstanding #}
+    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+                relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl"
+             aria-hidden="true"></div>
+        <div class="relative z-10 flex justify-between items-start gap-3 mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Total Outstanding
+                </p>
+                <p class="text-2xl sm:text-3xl font-mono-heading font-bold text-white mt-1
+                           tabular-nums truncate">
+                    GH₵ {{ '%.2f' % safe_pending_total }}
+                </p>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    {{ ns.pending_count }} pending
+                    {% if ns.overdue_count > 0 %}· {{ ns.overdue_count }} overdue{% endif %}
+                </p>
+            </div>
+            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
+                        bg-orange-500/20 border border-orange-500/30
+                        flex items-center justify-center text-orange-400">
+                <i class="fa-solid fa-hourglass-half text-base" aria-hidden="true"></i>
+            </div>
+        </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
+
+    {# Total Paid #}
+    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+                relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"
+             aria-hidden="true"></div>
+        <div class="relative z-10 flex justify-between items-start gap-3 mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Total Paid
+                </p>
+                <p class="text-2xl sm:text-3xl font-mono-heading font-bold text-white mt-1
+                           tabular-nums truncate">
+                    GH₵ {{ '%.2f' % ns.paid_total }}
+                </p>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    {{ ns.paid_count }} settled invoice{% if ns.paid_count != 1 %}s{% endif %}
+                </p>
+            </div>
+            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
+                        bg-emerald-500/20 border border-emerald-500/30
+                        flex items-center justify-center text-emerald-400">
+                <i class="fa-solid fa-circle-check text-base" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+
+    {# Overdue #}
+    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
+                relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-500/10 rounded-full blur-2xl"
+             aria-hidden="true"></div>
+        <div class="relative z-10 flex justify-between items-start gap-3 mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Overdue
+                </p>
+                <p class="text-2xl sm:text-3xl font-mono-heading font-bold text-white mt-1
+                           tabular-nums truncate">
+                    GH₵ {{ '%.2f' % ns.overdue_total }}
+                </p>
+                <p class="text-[10px] font-mono mt-1
+                          {% if ns.overdue_count > 0 %}text-red-400{% else %}text-slate-500{% endif %}">
+                    {{ ns.overdue_count }} past due
+                </p>
+            </div>
+            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
+                        bg-red-500/20 border border-red-500/30
+                        flex items-center justify-center text-red-400">
+                <i class="fa-solid fa-triangle-exclamation text-base" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# ============================================================
+   TOOLBAR: SEARCH + FILTER + SORT
+============================================================ #}
+{% if invoices %}
+<div class="glass-card rounded-2xl border border-slate-800 p-3 sm:p-4 mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
+
+        {# Search #}
+        <div class="relative flex-1 lg:max-w-md">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
+                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+            <input type="text"
+                   id="invoice-search"
+                   placeholder="Search by invoice number or description..."
+                   autocomplete="off"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
+                          bg-slate-900 border border-slate-800
+                          text-sm text-white placeholder-slate-500
+                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                          transition">
+        </div>
+
+        {# Filter tabs #}
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
+                    overflow-x-auto pb-1 lg:pb-0
+                    -mx-3 px-3 lg:mx-0 lg:px-0 lg:flex-1">
+            {% set filters = [
+                ('all',      'All',      invoices|length),
+                ('pending',  'Pending',  ns.pending_count),
+                ('paid',     'Paid',     ns.paid_count),
+                ('overdue',  'Overdue',  ns.overdue_count)
+            ] %}
+            {% for key, label, count in filters %}
+            <button type="button"
+                    onclick="filterInvoices('{{ key }}')"
+                    data-filter="{{ key }}"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg whitespace-nowrap
+                           transition
+                           {% if key == 'all' %}
+                               bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                           {% else %}
+                               bg-slate-900 text-slate-400 border border-slate-800
+                               hover:text-white
+                           {% endif %}">
+                {{ label }}
+                <span class="opacity-60 ml-0.5">({{ count }})</span>
+            </button>
+            {% endfor %}
+        </div>
+
+        {# Sort #}
+        <div class="shrink-0">
+            <label for="invoice-sort" class="sr-only">Sort invoices</label>
+            <div class="relative">
+                <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
+                          text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                <select id="invoice-sort"
+                        class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
+                               bg-slate-900 border border-slate-800
+                               text-xs font-mono text-slate-200 cursor-pointer
+                               focus:outline-none focus:border-cyan-400 transition">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="amount">Largest amount</option>
+                    <option value="number">Invoice #</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
+                          text-slate-500 text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endif %}
+
+{# ============================================================
+   INVOICES CARD
+============================================================ #}
+<div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+
+    <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+                   flex items-center justify-between gap-3">
+        <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+            <i class="fa-solid fa-file-invoice text-emerald-400" aria-hidden="true"></i>
+            All Invoices
+            <span class="text-[10px] font-mono font-normal text-slate-500"
+                  id="invoice-count">
+                ({{ invoices|length }})
+            </span>
+        </h3>
+    </header>
+
+    {% if invoices %}
+
+    {# ============================================================
+       DESKTOP TABLE (hidden below lg)
+    ============================================================ #}
+    <div class="hidden lg:block overflow-x-auto">
+        <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
+                <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
+                           uppercase bg-slate-900/30">
                     <th class="py-3 px-5">Invoice #</th>
                     <th class="py-3 px-5">Description</th>
                     <th class="py-3 px-5">Due Date</th>
-                    <th class="py-3 px-5">Amount</th>
+                    <th class="py-3 px-5 text-right">Amount</th>
                     <th class="py-3 px-5">Status</th>
                     <th class="py-3 px-5 text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="text-sm">
                 {% for inv in invoices %}
-                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
-                    <td class="py-4 px-5 text-xs font-mono text-white">{{ inv.number }}</td>
-                    <td class="py-4 px-5 text-xs text-slate-400 max-w-xs truncate">{{ inv.get('description','—') }}</td>
-                    <td class="py-4 px-5 text-xs text-slate-400">{{ inv.get('due_date','—') }}</td>
-                    <td class="py-4 px-5 text-xs font-mono text-white font-bold">GH₵ {{ '%.2f' % inv.amount }}</td>
-                    <td class="py-4 px-5">
-                        {% if inv.status == 'paid' %}
-                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Paid</span>
-                        {% elif inv.status == 'pending' %}
-                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-500/20 text-orange-300 border border-orange-500/30">Pending</span>
+                {% set st = inv.get('status', 'pending') %}
+                {% set amt = inv.get('amount', 0) or 0 %}
+                {% set created_ts = inv.created_at.timestamp() if inv.created_at and inv.created_at.strftime is defined else 0 %}
+                <tr class="invoice-row border-b border-slate-800/50
+                           hover:bg-slate-800/30 transition"
+                    data-status="{{ st }}"
+                    data-search="{{ (inv.get('number','') ~ ' ' ~ (inv.get('description','') or ''))|lower }}"
+                    data-timestamp="{{ created_ts }}"
+                    data-amount="{{ amt }}">
+
+                    {# Number #}
+                    <td class="py-4 px-5 text-xs font-mono text-white font-semibold
+                               whitespace-nowrap max-w-[140px] truncate">
+                        {{ inv.get('number', '—') }}
+                    </td>
+
+                    {# Description #}
+                    <td class="py-4 px-5 text-xs text-slate-400
+                               max-w-xs truncate"
+                        title="{{ inv.get('description', '') }}">
+                        {{ inv.get('description', '—') or '—' }}
+                    </td>
+
+                    {# Due date with relative hint #}
+                    <td class="py-4 px-5 text-xs whitespace-nowrap">
+                        {% if inv.get('due_date') %}
+                            <div class="text-slate-300">
+                                {{ inv.get('due_date') }}
+                            </div>
                         {% else %}
-                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-red-500/20 text-red-300 border border-red-500/30">Overdue</span>
+                            <span class="text-slate-500">—</span>
                         {% endif %}
                     </td>
+
+                    {# Amount #}
+                    <td class="py-4 px-5 text-xs font-mono font-bold
+                               text-white text-right whitespace-nowrap">
+                        GH₵ {{ '%.2f' % amt }}
+                    </td>
+
+                    {# Status #}
+                    <td class="py-4 px-5">
+                        {% if st == 'paid' %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                     text-[10px] font-bold uppercase whitespace-nowrap
+                                     bg-emerald-500/20 text-emerald-300
+                                     border border-emerald-500/30">
+                            <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+                            Paid
+                        </span>
+                        {% elif st == 'overdue' %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                     text-[10px] font-bold uppercase whitespace-nowrap
+                                     bg-red-500/20 text-red-300
+                                     border border-red-500/30">
+                            <i class="fa-solid fa-triangle-exclamation text-[8px]" aria-hidden="true"></i>
+                            Overdue
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                     text-[10px] font-bold uppercase whitespace-nowrap
+                                     bg-orange-500/20 text-orange-300
+                                     border border-orange-500/30">
+                            <i class="fa-solid fa-hourglass-half text-[8px]" aria-hidden="true"></i>
+                            Pending
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    {# Actions #}
                     <td class="py-4 px-5">
                         <div class="flex items-center justify-end gap-2">
                             <a href="{{ url_for('client_invoice_pdf', invoice_id=inv._id) }}"
-                               class="px-3 py-1.5 rounded-lg text-[10px] font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
-                               title="Download PDF">
-                                <i class="fa-solid fa-file-pdf"></i> PDF
+                               class="inline-flex items-center gap-1 px-3 py-2 rounded-lg
+                                      text-[10px] font-mono
+                                      bg-slate-800 hover:bg-slate-700
+                                      text-slate-200 border border-slate-700
+                                      transition whitespace-nowrap"
+                               title="Download PDF"
+                               aria-label="Download PDF for invoice {{ inv.get('number','') }}">
+                                <i class="fa-solid fa-file-pdf text-cyan-400" aria-hidden="true"></i>
+                                PDF
                             </a>
-                            {% if inv.status != 'paid' %}
+                            {% if st != 'paid' %}
                             <a href="{{ url_for('client_invoice_pay', invoice_id=inv._id) }}"
-                               class="px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 hover:brightness-110 transition"
-                               onclick="return confirm('Proceed to Paystack checkout for GH₵ {{ '%.2f' % inv.amount }}?');">
-                                <i class="fa-solid fa-credit-card"></i> Pay Now
+                               class="inline-flex items-center gap-1 px-3 py-2 rounded-lg
+                                      text-[10px] font-mono font-bold
+                                      bg-gradient-to-r from-cyan-400 to-emerald-400
+                                      text-slate-950 hover:brightness-110
+                                      transition active:scale-[0.98] whitespace-nowrap"
+                               onclick="return confirm('Proceed to Paystack checkout for GH₵ {{ '%.2f' % amt }}?');"
+                               aria-label="Pay invoice {{ inv.get('number','') }} now">
+                                <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
+                                Pay Now
                             </a>
-                            {% else %}
-                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-                                <i class="fa-solid fa-check"></i> Paid
-                            </span>
                             {% endif %}
                         </div>
                     </td>
                 </tr>
-                {% else %}
-                <tr><td colspan="6" class="py-12 text-center text-slate-400 text-xs font-mono">No invoices yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    {# ============================================================
+       MOBILE CARDS (hidden lg and up)
+    ============================================================ #}
+    <div class="lg:hidden divide-y divide-slate-800/60">
+        {% for inv in invoices %}
+        {% set st = inv.get('status', 'pending') %}
+        {% set amt = inv.get('amount', 0) or 0 %}
+        {% set created_ts = inv.created_at.timestamp() if inv.created_at and inv.created_at.strftime is defined else 0 %}
+        <div class="invoice-row p-4 space-y-3"
+             data-status="{{ st }}"
+             data-search="{{ (inv.get('number','') ~ ' ' ~ (inv.get('description','') or ''))|lower }}"
+             data-timestamp="{{ created_ts }}"
+             data-amount="{{ amt }}">
+
+            {# Row 1: number + status #}
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <p class="font-mono text-sm font-bold text-white truncate">
+                        {{ inv.get('number', '—') }}
+                    </p>
+                    <p class="text-[11px] text-slate-400 mt-0.5 line-clamp-2">
+                        {{ inv.get('description', '') or 'No description' }}
+                    </p>
+                </div>
+
+                {% if st == 'paid' %}
+                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
+                             text-[10px] font-bold uppercase whitespace-nowrap
+                             bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+                    Paid
+                </span>
+                {% elif st == 'overdue' %}
+                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
+                             text-[10px] font-bold uppercase whitespace-nowrap
+                             bg-red-500/20 text-red-300 border border-red-500/30">
+                    <i class="fa-solid fa-triangle-exclamation text-[8px]" aria-hidden="true"></i>
+                    Overdue
+                </span>
+                {% else %}
+                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
+                             text-[10px] font-bold uppercase whitespace-nowrap
+                             bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                    <i class="fa-solid fa-hourglass-half text-[8px]" aria-hidden="true"></i>
+                    Pending
+                </span>
+                {% endif %}
+            </div>
+
+            {# Row 2: due date + amount #}
+            <div class="grid grid-cols-2 gap-3 text-[11px] font-mono">
+                <div class="min-w-0">
+                    <p class="text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">
+                        Due Date
+                    </p>
+                    <p class="text-slate-300 truncate">
+                        {{ inv.get('due_date', '—') or '—' }}
+                    </p>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">
+                        Amount
+                    </p>
+                    <p class="text-white font-bold truncate">
+                        GH₵ {{ '%.2f' % amt }}
+                    </p>
+                </div>
+            </div>
+
+            {# Row 3: actions #}
+            <div class="flex items-center gap-2 pt-1">
+                <a href="{{ url_for('client_invoice_pdf', invoice_id=inv._id) }}"
+                   class="flex-1 inline-flex items-center justify-center gap-1.5
+                          px-3 py-2.5 rounded-lg
+                          text-[11px] font-mono font-bold
+                          bg-slate-800 hover:bg-slate-700
+                          text-slate-200 border border-slate-700
+                          transition active:scale-[0.98]"
+                   aria-label="Download PDF">
+                    <i class="fa-solid fa-file-pdf text-cyan-400 text-xs" aria-hidden="true"></i>
+                    PDF
+                </a>
+
+                {% if st != 'paid' %}
+                <a href="{{ url_for('client_invoice_pay', invoice_id=inv._id) }}"
+                   class="flex-1 inline-flex items-center justify-center gap-1.5
+                          px-3 py-2.5 rounded-lg
+                          text-[11px] font-mono font-bold
+                          bg-gradient-to-r from-cyan-400 to-emerald-400
+                          text-slate-950 hover:brightness-110
+                          transition active:scale-[0.98]"
+                   onclick="return confirm('Proceed to Paystack checkout for GH₵ {{ '%.2f' % amt }}?');"
+                   aria-label="Pay invoice now">
+                    <i class="fa-solid fa-credit-card text-xs" aria-hidden="true"></i>
+                    Pay Now
+                </a>
+                {% else %}
+                <span class="flex-1 inline-flex items-center justify-center gap-1.5
+                             px-3 py-2.5 rounded-lg
+                             text-[11px] font-mono
+                             bg-emerald-500/10 text-emerald-300
+                             border border-emerald-500/30">
+                    <i class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+                    Settled
+                </span>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    {# No results #}
+    <div id="no-results" class="hidden p-12 text-center border-t border-slate-800/60">
+        <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
+           aria-hidden="true"></i>
+        <p class="text-slate-400 text-xs font-mono">No invoices match your search.</p>
+        <button type="button"
+                onclick="resetFilters()"
+                class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+            Clear filters
+        </button>
+    </div>
+
+    {% else %}
+    {# ============================================================
+       EMPTY STATE
+    ============================================================ #}
+    <div class="p-12 sm:p-16 text-center">
+        <div class="w-20 h-20 rounded-full
+                    bg-gradient-to-br from-emerald-500/20 to-cyan-500/20
+                    border border-emerald-500/30
+                    flex items-center justify-center mx-auto mb-6">
+            <i class="fa-solid fa-file-invoice-dollar text-3xl text-emerald-400"
+               aria-hidden="true"></i>
+        </div>
+        <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
+            No Invoices Yet
+        </h3>
+        <p class="text-slate-400 text-sm font-mono max-w-md mx-auto leading-relaxed">
+            When The Media Scientist issues an invoice, it will appear here.
+            You'll be able to download a PDF copy and pay securely via Paystack.
+        </p>
+        <a href="{{ url_for('client_messages') }}"
+           class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl
+                  text-xs font-mono font-bold
+                  bg-cyan-500/15 text-cyan-300 border border-cyan-500/30
+                  hover:bg-cyan-500/25 transition">
+            <i class="fa-solid fa-comments" aria-hidden="true"></i>
+            Ask a Question
+        </a>
+    </div>
+    {% endif %}
+
 </div>
+
+<script>
+// ============================================================
+// SEARCH + FILTER + SORT
+// ============================================================
+let currentFilter = 'all';
+let currentSearch = '';
+
+function applyFilters() {
+    const rows = document.querySelectorAll('.invoice-row');
+    const noResults = document.getElementById('no-results');
+    let visible = 0;
+
+    rows.forEach(row => {
+        const status = row.dataset.status || '';
+        const haystack = row.dataset.search || '';
+
+        const matchesFilter = (currentFilter === 'all' || status === currentFilter);
+        const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
+
+        if (matchesFilter && matchesSearch) {
+            row.style.display = '';
+            visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const countEl = document.getElementById('invoice-count');
+    if (countEl) {
+        const total = rows.length;
+        countEl.textContent = (visible === total)
+            ? `(${total})`
+            : `(${visible} of ${total})`;
+    }
+
+    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+}
+
+function filterInvoices(filter) {
+    currentFilter = filter;
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-cyan-500/20', isActive);
+        btn.classList.toggle('text-cyan-300', isActive);
+        btn.classList.toggle('border-cyan-500/40', isActive);
+        btn.classList.toggle('bg-slate-900', !isActive);
+        btn.classList.toggle('text-slate-400', !isActive);
+        btn.classList.toggle('border-slate-800', !isActive);
+    });
+
+    applyFilters();
+}
+
+function resetFilters() {
+    currentSearch = '';
+    const searchInput = document.getElementById('invoice-search');
+    if (searchInput) searchInput.value = '';
+    filterInvoices('all');
+}
+
+function sortInvoices(order) {
+    // Group rows by their parent container (tbody or card list)
+    const tbody = document.querySelector('.invoice-row')?.closest('tbody');
+    const mobileList = document.querySelectorAll('.lg\\:hidden .invoice-row');
+
+    const sortFn = (a, b) => {
+        const tsA = parseFloat(a.dataset.timestamp) || 0;
+        const tsB = parseFloat(b.dataset.timestamp) || 0;
+        const amtA = parseFloat(a.dataset.amount) || 0;
+        const amtB = parseFloat(b.dataset.amount) || 0;
+
+        switch (order) {
+            case 'oldest':  return tsA - tsB;
+            case 'amount':  return amtB - amtA;
+            case 'number':
+                return (a.dataset.search || '').localeCompare(b.dataset.search || '');
+            case 'newest':
+            default:        return tsB - tsA;
+        }
+    };
+
+    if (tbody) {
+        const rows = Array.from(tbody.querySelectorAll('.invoice-row'));
+        rows.sort(sortFn);
+        rows.forEach(r => tbody.appendChild(r));
+    }
+
+    if (mobileList.length) {
+        const container = mobileList[0].parentElement;
+        const cards = Array.from(container.querySelectorAll('.invoice-row'));
+        cards.sort(sortFn);
+        cards.forEach(c => container.appendChild(c));
+    }
+}
+
+// Search input
+const searchInput = document.getElementById('invoice-search');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        currentSearch = (e.target.value || '').toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+// Sort select
+const sortSelect = document.getElementById('invoice-sort');
+if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+        sortInvoices(e.target.value);
+    });
+}
+</script>
+
+<style>
+    /* Line clamp utility */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Focus-visible ring */
+    *:focus-visible {
+        outline: 2px solid rgba(0, 242, 254, 0.6);
+        outline-offset: 2px;
+    }
+</style>
+
 {% endblock %}

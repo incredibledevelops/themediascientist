@@ -4,45 +4,728 @@
 {% block page_subtitle %}Add, edit, or remove portfolio items.{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-1">
-        <div class="glass-card rounded-2xl border border-slate-800 p-6">
-            <h3 class="font-mono-heading font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-plus text-cyan-400"></i> Add Item
-            </h3>
-            <form method="POST" action="{{ url_for('lab_portfolio_create') }}" class="space-y-3">
-                <input type="text" name="title" required placeholder="Project Title" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <input type="text" name="category" required placeholder="Category Label (e.g. Video & Motion)" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <select name="category_key" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200">
-                    <option value="visual">Photo & Retouch</option>
-                    <option value="video">Video & Motion</option>
-                    <option value="code">Websites & Software</option>
-                    <option value="brand">Graphic Design</option>
-                </select>
-                <input type="text" name="tools" placeholder="Tools used" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <input type="url" name="image" required placeholder="Image URL" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <textarea name="description" placeholder="Short description" rows="3" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"></textarea>
-                <button type="submit" class="w-full py-2.5 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">ADD ITEM</button>
-            </form>
+
+{# ============================================================
+   SUMMARY STATS
+============================================================ #}
+{% set ns = namespace(visual=0, video=0, code=0, brand=0) %}
+{% for item in portfolio %}
+    {% set key = item.get('category_key', 'visual') %}
+    {% if key == 'visual' %}{% set ns.visual = ns.visual + 1 %}
+    {% elif key == 'video' %}{% set ns.video = ns.video + 1 %}
+    {% elif key == 'code' %}{% set ns.code = ns.code + 1 %}
+    {% elif key == 'brand' %}{% set ns.brand = ns.brand + 1 %}
+    {% endif %}
+{% endfor %}
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-folder-open text-cyan-400" aria-hidden="true"></i>
+            Total
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ portfolio|length }}
         </div>
     </div>
-    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {% for item in portfolio %}
-        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-            <div class="aspect-video bg-slate-900">
-                <img src="{{ item.image }}" class="w-full h-full object-cover" alt="{{ item.title }}">
-            </div>
-            <div class="p-4">
-                <h4 class="font-bold text-white text-xs">{{ item.title }}</h4>
-                <p class="text-[10px] font-mono text-cyan-400 mt-1">{{ item.category }}</p>
-                <form method="POST" action="{{ url_for('lab_portfolio_delete', item_id=item._id) }}" onsubmit="return confirm('Delete item?');" class="mt-3">
-                    <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i> Delete</button>
-                </form>
-            </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-camera text-cyan-400" aria-hidden="true"></i>
+            Photo
         </div>
-        {% else %}
-        <div class="col-span-full text-center py-12 text-slate-400 text-xs font-mono glass-card rounded-2xl border border-slate-800">No portfolio items yet.</div>
-        {% endfor %}
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.visual }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-film text-purple-400" aria-hidden="true"></i>
+            Video
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.video }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-code text-emeraldMint" aria-hidden="true"></i>
+            Code + Brand
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.code + ns.brand }}
+        </div>
+    </div>
+
+</div>
+
+{# ============================================================
+   SEARCH + CATEGORY FILTER
+============================================================ #}
+<div class="glass-card rounded-2xl border border-slate-800 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+
+        <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
+                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+            <input type="text"
+                   id="portfolio-search"
+                   placeholder="Search by title, description, or tools..."
+                   autocomplete="off"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
+                          bg-slate-900 border border-slate-800
+                          text-sm text-white placeholder-slate-500
+                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                          transition">
+        </div>
+
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono overflow-x-auto
+                    pb-1 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+            {% set filters = [
+                ('all', 'All', portfolio|length),
+                ('visual', 'Photo', ns.visual),
+                ('video', 'Video', ns.video),
+                ('code', 'Code', ns.code),
+                ('brand', 'Brand', ns.brand)
+            ] %}
+            {% for key, label, count in filters %}
+            <button type="button"
+                    onclick="filterPortfolio('{{ key }}')"
+                    data-filter="{{ key }}"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg transition whitespace-nowrap
+                           {% if key == 'all' %}
+                               bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                           {% else %}
+                               bg-slate-900 text-slate-400 border border-slate-800
+                               hover:text-white
+                           {% endif %}">
+                {{ label }}
+                <span class="opacity-60 ml-0.5">({{ count }})</span>
+            </button>
+            {% endfor %}
+        </div>
+
     </div>
 </div>
+
+{# ============================================================
+   MAIN LAYOUT
+============================================================ #}
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+    {# ==========================================================
+       LEFT: ADD ITEM FORM (sticky on desktop, collapsible on mobile)
+    ========================================================== #}
+    <aside class="lg:col-span-1">
+
+        <details class="lg:!block group glass-card rounded-2xl border border-slate-800
+                        lg:sticky lg:top-24"
+                 {% if not portfolio %}open{% endif %}>
+
+            {# Mobile toggle header #}
+            <summary class="lg:!hidden p-4 cursor-pointer flex items-center justify-between gap-3
+                            border-b border-slate-800 list-none">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-plus text-cyan-400" aria-hidden="true"></i>
+                    Add Portfolio Item
+                </h3>
+                <i class="fa-solid fa-chevron-down text-slate-400 text-xs
+                          group-open:rotate-180 transition-transform" aria-hidden="true"></i>
+            </summary>
+
+            {# Desktop header #}
+            <header class="hidden lg:block p-5 border-b border-slate-800">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-plus text-cyan-400" aria-hidden="true"></i>
+                    Add Portfolio Item
+                </h3>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    Fill in the details to publish a new project.
+                </p>
+            </header>
+
+            <form method="POST"
+                  action="{{ url_for('lab_portfolio_create') }}"
+                  id="create-portfolio-form"
+                  class="p-4 sm:p-5 space-y-3.5">
+
+                {# Title #}
+                <div>
+                    <label for="new-title" class="block text-[10px] font-mono text-slate-400
+                                                   uppercase tracking-wider mb-1.5">
+                        Project Title <span class="text-cyan-400">*</span>
+                    </label>
+                    <input type="text"
+                           id="new-title"
+                           name="title"
+                           required
+                           maxlength="120"
+                           placeholder="e.g. Commercial Beauty Photo Edit"
+                           class="w-full px-3.5 py-2.5 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                  transition">
+                </div>
+
+                {# Category label #}
+                <div>
+                    <label for="new-category" class="block text-[10px] font-mono text-slate-400
+                                                      uppercase tracking-wider mb-1.5">
+                        Category Label <span class="text-cyan-400">*</span>
+                    </label>
+                    <input type="text"
+                           id="new-category"
+                           name="category"
+                           required
+                           maxlength="60"
+                           placeholder="e.g. Video & Motion"
+                           class="w-full px-3.5 py-2.5 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                  transition">
+                </div>
+
+                {# Category key #}
+                <div>
+                    <label for="new-category-key" class="block text-[10px] font-mono text-slate-400
+                                                          uppercase tracking-wider mb-1.5">
+                        Category Group
+                    </label>
+                    <select id="new-category-key"
+                            name="category_key"
+                            class="w-full px-3.5 py-2.5 rounded-xl
+                                   bg-slate-900 border border-slate-800
+                                   text-sm text-slate-200
+                                   focus:outline-none focus:border-cyan-400 transition">
+                        <option value="visual">Photo &amp; Retouch</option>
+                        <option value="video">Video &amp; Motion</option>
+                        <option value="code">Websites &amp; Software</option>
+                        <option value="brand">Graphic Design</option>
+                    </select>
+                </div>
+
+                {# Tools #}
+                <div>
+                    <label for="new-tools" class="block text-[10px] font-mono text-slate-400
+                                                   uppercase tracking-wider mb-1.5">
+                        Tools Used
+                    </label>
+                    <input type="text"
+                           id="new-tools"
+                           name="tools"
+                           maxlength="200"
+                           placeholder="DaVinci, Photoshop, Figma"
+                           class="w-full px-3.5 py-2.5 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                  transition">
+                </div>
+
+                {# Image URL with preview #}
+                <div>
+                    <label for="new-image" class="block text-[10px] font-mono text-slate-400
+                                                   uppercase tracking-wider mb-1.5">
+                        Image URL <span class="text-cyan-400">*</span>
+                    </label>
+                    <input type="text"
+                           id="new-image"
+                           name="image"
+                           required
+                           maxlength="500"
+                           data-url-field="true"
+                           placeholder="https://... or /uploads/..."
+                           class="url-input w-full px-3.5 py-2.5 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                  transition">
+
+                    {# Live preview #}
+                    <div id="image-preview-wrapper"
+                         class="hidden mt-2 rounded-xl overflow-hidden
+                                border border-slate-800 bg-slate-900">
+                        <img id="image-preview"
+                             src=""
+                             alt="Preview"
+                             class="w-full aspect-video object-cover">
+                    </div>
+
+                    {# Error message #}
+                    <p id="image-error"
+                       class="hidden text-[10px] font-mono text-red-400 mt-1.5
+                              flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        <span>Could not load image. Check the URL.</span>
+                    </p>
+
+                    <p class="text-[10px] font-mono text-slate-500 mt-1.5">
+                        Full URL or relative path (e.g. <code class="text-cyan-300">/uploads/photo.jpg</code>).
+                    </p>
+                </div>
+
+                {# Description #}
+                <div>
+                    <label for="new-description" class="block text-[10px] font-mono text-slate-400
+                                                         uppercase tracking-wider mb-1.5">
+                        Short Description
+                    </label>
+                    <textarea id="new-description"
+                              name="description"
+                              rows="3"
+                              maxlength="300"
+                              placeholder="Brief summary of the project..."
+                              class="w-full px-3.5 py-2.5 rounded-xl
+                                     bg-slate-900 border border-slate-800
+                                     text-sm text-white placeholder-slate-500
+                                     resize-y min-h-[80px]
+                                     focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                     transition"></textarea>
+                </div>
+
+                <button type="submit"
+                        id="create-portfolio-btn"
+                        class="w-full py-3 rounded-xl text-xs font-mono font-bold
+                               text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
+                               hover:brightness-110 transition active:scale-[0.98]
+                               inline-flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    <span id="create-portfolio-label">Add Item</span>
+                </button>
+            </form>
+        </details>
+    </aside>
+
+    {# ==========================================================
+       RIGHT: PORTFOLIO GRID
+    ========================================================== #}
+    <section class="lg:col-span-3">
+
+        {# Header #}
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+
+            <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+                           flex items-center justify-between gap-3">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-folder-open text-cyan-400" aria-hidden="true"></i>
+                    All Items
+                    <span class="text-[10px] font-mono font-normal text-slate-500"
+                          id="portfolio-count">
+                        ({{ portfolio|length }})
+                    </span>
+                </h3>
+            </header>
+
+            {# Grid #}
+            <div class="p-4 sm:p-5">
+                <div id="portfolio-grid"
+                     class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+
+                    {% for item in portfolio %}
+                    <article class="portfolio-item glass-card rounded-xl overflow-hidden
+                                    border border-slate-800 hover:border-cyan-500/40
+                                    transition-colors group"
+                             data-category="{{ item.get('category_key', 'visual') }}"
+                             data-search="{{ (item.title ~ ' ' ~ (item.category or '') ~ ' ' ~ (item.description or '') ~ ' ' ~ (item.tools or ''))|lower }}">
+
+                        {# Image #}
+                        <div class="relative aspect-video overflow-hidden bg-slate-900">
+                            <img src="{{ item.image }}"
+                                 alt="{{ item.title }}"
+                                 loading="lazy"
+                                 class="w-full h-full object-cover
+                                        group-hover:scale-105 transition-transform duration-500">
+
+                            {# Category badge #}
+                            <div class="absolute top-2 left-2 px-2 py-0.5 rounded
+                                        bg-slate-950/85 backdrop-blur-sm
+                                        text-[9px] font-mono text-cyan-300
+                                        border border-slate-700">
+                                {{ item.category or '—' }}
+                            </div>
+
+                            {# Hover overlay #}
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent
+                                        opacity-0 group-hover:opacity-100 transition-opacity
+                                        flex items-end justify-end p-2">
+                                <a href="{{ item.image }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="w-8 h-8 rounded-lg bg-slate-900/90 border border-slate-700
+                                          flex items-center justify-center text-cyan-400
+                                          hover:bg-cyan-500 hover:text-slate-950 transition"
+                                   title="Open full image"
+                                   aria-label="Open {{ item.title }} in new tab">
+                                    <i class="fa-solid fa-up-right-from-square text-[10px]"
+                                       aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        {# Content #}
+                        <div class="p-3 sm:p-4">
+                            <h4 class="font-bold text-white text-sm leading-tight truncate"
+                                title="{{ item.title }}">
+                                {{ item.title }}
+                            </h4>
+                            {% if item.tools %}
+                            <p class="text-[10px] font-mono text-slate-500 mt-1 truncate">
+                                {{ item.tools }}
+                            </p>
+                            {% endif %}
+                        </div>
+
+                        {# Actions #}
+                        <div class="px-3 sm:px-4 pb-3 sm:pb-4 flex items-center gap-2">
+
+                            {# Edit toggle #}
+                            <button type="button"
+                                    onclick="toggleEdit('{{ item._id }}')"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5
+                                           px-2.5 py-2 rounded-lg
+                                           bg-slate-800 border border-slate-700
+                                           text-[10px] font-mono font-bold text-slate-300
+                                           hover:bg-slate-700 hover:border-slate-600
+                                           transition active:scale-[0.98]"
+                                    aria-label="Edit {{ item.title }}">
+                                <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
+                                Edit
+                            </button>
+
+                            {# Delete #}
+                            <form method="POST"
+                                  action="{{ url_for('lab_portfolio_delete', item_id=item._id) }}"
+                                  onsubmit="return confirm('Delete &quot;{{ item.title }}&quot;? This cannot be undone.');"
+                                  class="flex-1">
+                                <button type="submit"
+                                        class="w-full inline-flex items-center justify-center gap-1.5
+                                               px-2.5 py-2 rounded-lg
+                                               bg-red-950/40 border border-red-500/30
+                                               text-[10px] font-mono font-bold text-red-300
+                                               hover:bg-red-500/20 hover:border-red-500/50
+                                               transition active:scale-[0.98]"
+                                        aria-label="Delete {{ item.title }}">
+                                    <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+
+                        {# Hidden edit form (revealed by toggleEdit) #}
+                        <div id="edit-{{ item._id }}"
+                             class="hidden border-t border-slate-800 bg-slate-950/40
+                                    p-3 sm:p-4 space-y-2.5">
+
+                            <p class="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">
+                                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                                Edit Item
+                            </p>
+
+                            <form method="POST"
+                                  action="{{ url_for('lab_portfolio_update', item_id=item._id) }}"
+                                  class="space-y-2.5">
+
+                                <input type="text" name="title"
+                                       value="{{ item.title }}"
+                                       required maxlength="120"
+                                       placeholder="Title"
+                                       class="w-full px-3 py-2.5 rounded-lg
+                                              bg-slate-900 border border-slate-800
+                                              text-xs text-white
+                                              focus:outline-none focus:border-cyan-400 transition">
+
+                                <input type="text" name="category"
+                                       value="{{ item.category or '' }}"
+                                       required maxlength="60"
+                                       placeholder="Category label"
+                                       class="w-full px-3 py-2.5 rounded-lg
+                                              bg-slate-900 border border-slate-800
+                                              text-xs text-white
+                                              focus:outline-none focus:border-cyan-400 transition">
+
+                                <select name="category_key"
+                                        class="w-full px-3 py-2.5 rounded-lg
+                                               bg-slate-900 border border-slate-800
+                                               text-xs text-slate-200
+                                               focus:outline-none focus:border-cyan-400 transition">
+                                    {% for key, label in [
+                                        ('visual', 'Photo & Retouch'),
+                                        ('video', 'Video & Motion'),
+                                        ('code', 'Websites & Software'),
+                                        ('brand', 'Graphic Design')
+                                    ] %}
+                                    <option value="{{ key }}"
+                                            {% if item.get('category_key')==key %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+
+                                <input type="text" name="tools"
+                                       value="{{ item.tools or '' }}"
+                                       maxlength="200"
+                                       placeholder="Tools used"
+                                       class="w-full px-3 py-2.5 rounded-lg
+                                              bg-slate-900 border border-slate-800
+                                              text-xs text-white
+                                              focus:outline-none focus:border-cyan-400 transition">
+
+                                <input type="text" name="image"
+                                       value="{{ item.image }}"
+                                       required maxlength="500"
+                                       placeholder="Image URL"
+                                       class="w-full px-3 py-2.5 rounded-lg
+                                              bg-slate-900 border border-slate-800
+                                              text-xs text-white
+                                              focus:outline-none focus:border-cyan-400 transition">
+
+                                <textarea name="description"
+                                          rows="2"
+                                          maxlength="300"
+                                          placeholder="Short description"
+                                          class="w-full px-3 py-2.5 rounded-lg
+                                                 bg-slate-900 border border-slate-800
+                                                 text-xs text-white resize-y
+                                                 focus:outline-none focus:border-cyan-400 transition">{{ item.description or '' }}</textarea>
+
+                                <div class="flex gap-2">
+                                    <button type="button"
+                                            onclick="toggleEdit('{{ item._id }}')"
+                                            class="flex-1 py-2 rounded-lg text-[10px] font-mono font-bold
+                                                   bg-slate-800 text-slate-300 border border-slate-700
+                                                   hover:bg-slate-700 transition">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                            class="flex-1 py-2 rounded-lg text-[10px] font-mono font-bold
+                                                   text-slate-950 bg-emeraldMint
+                                                   hover:brightness-110 transition active:scale-[0.98]">
+                                        <i class="fa-solid fa-save" aria-hidden="true"></i>
+                                        Save
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </article>
+                    {% else %}
+                    <div class="col-span-full py-16 text-center">
+                        <i class="fa-solid fa-folder-open text-4xl text-slate-700 mb-3"
+                           aria-hidden="true"></i>
+                        <p class="text-slate-400 text-xs font-mono">No portfolio items yet.</p>
+                        <p class="text-slate-500 text-[10px] font-mono mt-1">
+                            Add your first project using the form.
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {# No results #}
+                <div id="no-results" class="hidden py-16 text-center">
+                    <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
+                       aria-hidden="true"></i>
+                    <p class="text-slate-400 text-xs font-mono">No items match your search.</p>
+                    <button type="button"
+                            onclick="resetFilters()"
+                            class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+                        Clear filters
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+// ============================================================
+// SEARCH + FILTER
+// ============================================================
+let currentFilter = 'all';
+let currentSearch = '';
+
+function applyFilters() {
+    const items = document.querySelectorAll('.portfolio-item');
+    let visible = 0;
+
+    items.forEach(item => {
+        const cat = item.dataset.category || '';
+        const haystack = item.dataset.search || '';
+
+        const matchesFilter = (currentFilter === 'all' || cat === currentFilter);
+        const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
+
+        if (matchesFilter && matchesSearch) {
+            item.style.display = '';
+            visible++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    const countEl = document.getElementById('portfolio-count');
+    if (countEl) {
+        const total = items.length;
+        countEl.textContent = (visible === total)
+            ? `(${total})`
+            : `(${visible} of ${total})`;
+    }
+
+    const noResults = document.getElementById('no-results');
+    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+}
+
+function filterPortfolio(filter) {
+    currentFilter = filter;
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-cyan-500/20', isActive);
+        btn.classList.toggle('text-cyan-300', isActive);
+        btn.classList.toggle('border-cyan-500/40', isActive);
+        btn.classList.toggle('bg-slate-900', !isActive);
+        btn.classList.toggle('text-slate-400', !isActive);
+        btn.classList.toggle('border-slate-800', !isActive);
+    });
+
+    applyFilters();
+}
+
+function resetFilters() {
+    currentSearch = '';
+    const searchInput = document.getElementById('portfolio-search');
+    if (searchInput) searchInput.value = '';
+    filterPortfolio('all');
+}
+
+const searchInput = document.getElementById('portfolio-search');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        currentSearch = (e.target.value || '').toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+// ============================================================
+// EDIT TOGGLE
+// ============================================================
+function toggleEdit(itemId) {
+    const form = document.getElementById('edit-' + itemId);
+    if (!form) return;
+    form.classList.toggle('hidden');
+
+    // Smooth scroll into view when opening
+    if (!form.classList.contains('hidden')) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// ============================================================
+// IMAGE URL AUTO-NORMALIZE
+// ============================================================
+function normalizeUrl(value) {
+    const v = (value || '').trim();
+    if (!v) return '';
+    if (v.startsWith('/')) return v;                          // relative path
+    if (/^https?:\/\//i.test(v)) return v;                    // already has protocol
+    if (/^[\w.-]+\.[a-z]{2,}/i.test(v)) return 'https://' + v; // looks like domain
+    return v;
+}
+
+document.querySelectorAll('.url-input').forEach(input => {
+    input.addEventListener('blur', () => {
+        const normalized = normalizeUrl(input.value);
+        if (normalized !== input.value) input.value = normalized;
+    });
+});
+
+// ============================================================
+// IMAGE PREVIEW
+// ============================================================
+const imageInput = document.getElementById('new-image');
+const imagePreviewWrapper = document.getElementById('image-preview-wrapper');
+const imagePreview = document.getElementById('image-preview');
+const imageError = document.getElementById('image-error');
+
+if (imageInput && imagePreview && imagePreviewWrapper && imageError) {
+    let previewTimer = null;
+
+    imageInput.addEventListener('input', () => {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(() => {
+            const url = normalizeUrl(imageInput.value);
+            if (!url) {
+                imagePreviewWrapper.classList.add('hidden');
+                imageError.classList.add('hidden');
+                return;
+            }
+
+            imagePreview.onload = () => {
+                imagePreviewWrapper.classList.remove('hidden');
+                imageError.classList.add('hidden');
+                imagePreviewWrapper.classList.remove('border-red-500/40');
+                imagePreviewWrapper.classList.add('border-slate-800');
+            };
+
+            imagePreview.onerror = () => {
+                imagePreviewWrapper.classList.add('hidden');
+                imageError.classList.remove('hidden');
+            };
+
+            imagePreview.src = url;
+        }, 400);
+    });
+}
+
+// ============================================================
+// CREATE FORM SUBMIT FEEDBACK
+// ============================================================
+const createForm = document.getElementById('create-portfolio-form');
+const createBtn = document.getElementById('create-portfolio-btn');
+const createLabel = document.getElementById('create-portfolio-label');
+
+if (createForm && createBtn && createLabel) {
+    createForm.addEventListener('submit', () => {
+        if (!createForm.checkValidity()) return;
+        createBtn.disabled = true;
+        createBtn.classList.add('opacity-70', 'cursor-not-allowed');
+        createBtn.innerHTML = `
+            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+            <span>Adding...</span>
+        `;
+    });
+}
+</script>
+
+<style>
+    /* Hide default <details> marker */
+    details summary::-webkit-details-marker { display: none; }
+    details summary::marker { content: ''; }
+
+    /* Force the <details> open on desktop */
+    @media (min-width: 1024px) {
+        details[open] > summary,
+        details > summary {
+            display: none;
+        }
+        details > *:not(summary) {
+            display: revert !important;
+        }
+    }
+
+    /* Smooth fade-in for edit panel */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    #portfolio-grid [id^="edit-"]:not(.hidden) {
+        animation: fadeIn 0.2s ease-out;
+    }
+</style>
+
 {% endblock %}

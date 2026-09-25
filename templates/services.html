@@ -1,45 +1,349 @@
 {% extends 'base.html' %}
+
+{# ============================================================
+   SEO: Page-specific overrides
+============================================================ #}
+{% block seo_title %}Services & Pricing | The Media Scientist — Video, Photo, Design & Web{% endblock %}
+{% block seo_description %}Explore service packages and pricing from The Media Scientist. Video production, photography, motion graphics, graphic design, web development and digital marketing plans in Ghana Cedis.{% endblock %}
+{% block seo_keywords %}media production pricing Ghana, video editing packages, photography prices Ghana, motion graphics pricing, web development Ghana, digital marketing packages{% endblock %}
+
+{% block og_type %}website{% endblock %}
+{% block og_title %}Services & Pricing — The Media Scientist{% endblock %}
+{% block og_description %}Transparent packages for video, photo, design, motion, web & marketing.{% endblock %}
+
+{% block breadcrumb_extra %}
+,{
+  "@type": "ListItem",
+  "position": 2,
+  "name": "Services",
+  "item": "{{ config.SITE_URL }}/services"
+}
+{% endblock %}
+
+{# ============================================================
+   Structured data: full Service list with offers
+============================================================ #}
+{% block structured_data_extra %}
+,{
+  "@type": "OfferCatalog",
+  "@id": "{{ config.SITE_URL }}/services#catalog",
+  "name": "The Media Scientist Services",
+  "url": "{{ config.SITE_URL }}/services",
+  "numberOfItems": {{ services|length }},
+  "itemListElement": [
+    {% for svc in services %}
+    {
+      "@type": "Offer",
+      "position": {{ loop.index }},
+      "name": "{{ svc.title }}",
+      "description": "{{ svc.description|replace('"', '\\"') }}",
+      "category": "{{ svc.slug if svc.slug else svc.title }}",
+      "availability": "https://schema.org/InStock",
+      "priceCurrency": "GHS"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+{% endblock %}
+
+{# ============================================================
+   Page title
+============================================================ #}
 {% block title %}Services | The Media Scientist{% endblock %}
+
 {% block content %}
-<section class="py-20 px-4 max-w-7xl mx-auto relative z-10">
-    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+
+<section class="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative z-10"
+         aria-labelledby="services-heading">
+
+    {# ============================================================
+       HEADER
+    ============================================================ #}
+    <header class="text-center max-w-3xl mx-auto mb-10 sm:mb-16 space-y-4">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-xs font-mono text-cyan-300">
-            <i class="fa-solid fa-tags"></i> SERVICES & PRICING PLANS
+            <i class="fa-solid fa-tags" aria-hidden="true"></i> SERVICES & PRICING PLANS
         </div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Service Packages & <span class="text-gradient-cyan">Pricing Plans</span></h2>
-        <p class="text-slate-400 text-sm sm:text-base">Transparent packages in Ghana Cedis tailored to elevate your business, personal brand, or project.</p>
-    </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <h1 id="services-heading"
+            class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-mono-heading leading-tight">
+            Service Packages & <span class="text-gradient-cyan">Pricing Plans</span>
+        </h1>
+        <p class="text-slate-400 text-sm sm:text-base lg:text-lg leading-relaxed">
+            Transparent packages in Ghana Cedis tailored to elevate your business, personal brand, or project.
+            Custom quotes available on request.
+        </p>
+
+        {# Trust badges #}
+        <div class="flex flex-wrap justify-center gap-3 pt-2 text-[10px] sm:text-xs font-mono">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-emerald-300">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> 100% Satisfaction
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-950/40 border border-purple-500/20 text-purple-300">
+                <i class="fa-solid fa-clock" aria-hidden="true"></i> Fast Turnaround
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-950/40 border border-cyan-500/20 text-cyan-300">
+                <i class="fa-solid fa-globe" aria-hidden="true"></i> Worldwide Remote
+            </span>
+        </div>
+    </header>
+
+    {# ============================================================
+       SERVICES GRID
+    ============================================================ #}
+    {% if services %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+
         {% for svc in services %}
-        <div class="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800 flex flex-col justify-between space-y-6">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 rounded-xl bg-{{ svc.color }}-500/10 border border-{{ svc.color }}-500/30 flex items-center justify-center text-{{ svc.color }}-400 text-xl">
-                        <i class="fa-solid {{ svc.icon }}"></i>
+        {% set svc_color = svc.color if svc.color else 'cyan' %}
+        <article class="glass-card rounded-2xl p-5 sm:p-6 lg:p-8 border border-slate-800 flex flex-col justify-between space-y-5 sm:space-y-6"
+                 itemscope itemtype="https://schema.org/Service">
+
+            <div class="space-y-5">
+
+                {# Icon + badge row — responsive #}
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div class="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-xl
+                                bg-{{ svc_color }}-500/10 border border-{{ svc_color }}-500/30
+                                flex items-center justify-center text-{{ svc_color }}-400 text-lg sm:text-xl">
+                        <i class="fa-solid {{ svc.icon }}" aria-hidden="true"></i>
                     </div>
-                    <span class="text-xs font-mono text-{{ svc.color }}-400 uppercase tracking-widest bg-{{ svc.color }}-950/60 px-3 py-1 rounded-full border border-{{ svc.color }}-500/30">SERVICE {{ '%02d' % loop.index }}</span>
+                    <span class="text-[10px] sm:text-xs font-mono text-{{ svc_color }}-400 uppercase tracking-widest
+                                 bg-{{ svc_color }}-950/60 px-2.5 py-1 rounded-full
+                                 border border-{{ svc_color }}-500/30 whitespace-nowrap">
+                        SERVICE {{ '%02d' % loop.index }}
+                    </span>
                 </div>
-                <h3 class="font-mono-heading font-bold text-2xl text-white">{{ svc.title }}</h3>
-                <p class="text-xs text-slate-400 mt-2 leading-relaxed">{{ svc.description }}</p>
-                <div class="mt-6 space-y-4">
+
+                {# Title #}
+                <h2 class="font-mono-heading font-bold text-xl sm:text-2xl lg:text-3xl text-white leading-tight"
+                    itemprop="name">
+                    {{ svc.title }}
+                </h2>
+
+                {# Description #}
+                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed"
+                   itemprop="description">
+                    {{ svc.description }}
+                </p>
+
+                {# Plans #}
+                {% if svc.plans %}
+                <div class="mt-5 sm:mt-6 space-y-3 sm:space-y-4" itemprop="offers" itemscope itemtype="https://schema.org/OfferCatalog">
                     {% for plan in svc.plans %}
-                    <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-mono font-bold text-sm text-{{ svc.color }}-300">{{ plan.name }}</span>
-                            <span class="font-mono text-xs font-bold text-emeraldMint">{{ plan.price }}</span>
+                    <div class="p-3.5 sm:p-4 rounded-xl bg-slate-900/90 border border-slate-800
+                                hover:border-{{ svc_color }}-500/40 transition-colors">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 sm:gap-2 mb-1.5">
+                            <span class="font-mono font-bold text-sm text-{{ svc_color }}-300">
+                                {{ plan.name }}
+                            </span>
+                            <span class="font-mono text-xs sm:text-sm font-bold text-emeraldMint whitespace-nowrap">
+                                {{ plan.price }}
+                            </span>
                         </div>
-                        <p class="text-xs text-slate-400">{{ plan.desc }}</p>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            {{ plan.desc }}
+                        </p>
                     </div>
                     {% endfor %}
                 </div>
+                {% endif %}
             </div>
+
+            {# Book button #}
             <div class="pt-4 border-t border-slate-800">
-                <a href="{{ url_for('contact') }}" class="w-full py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition flex items-center justify-center gap-2">
-                    Book {{ svc.title }} Plan <i class="fa-solid fa-arrow-right"></i>
+                <a href="{{ url_for('contact') }}"
+                   class="w-full py-3.5 rounded-xl font-mono text-xs font-bold text-slate-950
+                          bg-cyan-400 hover:bg-cyan-300
+                          transition-all active:scale-[0.98]
+                          flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                    Book {{ svc.title }} Plan
                 </a>
             </div>
-        </div>
+        </article>
         {% endfor %}
+
     </div>
+    {% else %}
+
+    {# Empty state #}
+    <div class="glass-card rounded-2xl border border-slate-800 p-12 sm:p-16 text-center max-w-2xl mx-auto">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-6">
+            <i class="fa-solid fa-tags text-3xl text-cyan-400" aria-hidden="true"></i>
+        </div>
+        <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
+            Services Loading Soon
+        </h3>
+        <p class="text-slate-400 text-sm font-mono max-w-md mx-auto">
+            Our service packages are being updated. In the meantime, reach out for a custom quote.
+        </p>
+        <a href="{{ url_for('contact') }}"
+           class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-xl text-xs font-mono font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:brightness-110 transition">
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Request Custom Quote
+        </a>
+    </div>
+
+    {% endif %}
+
+    {# ============================================================
+       WHY CHOOSE US — 4-column feature grid
+    ============================================================ #}
+    {% if services %}
+    <div class="mt-16 sm:mt-20">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
+                Why Work With <span class="text-gradient-purple">The Media Scientist</span>
+            </h2>
+            <p class="text-slate-400 text-sm mt-3">
+                Every project gets the same level of care, whether it's a single photo or a full app.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% set features = [
+                ('fa-bolt', 'cyan', 'Fast Turnaround', 'Most projects delivered within agreed timelines, often ahead of schedule.'),
+                ('fa-award', 'purple', 'Premium Quality', 'Studio-grade production, professional color grading, and pixel-perfect editing.'),
+                ('fa-headset', 'emerald', 'Direct Communication', 'No middlemen. You talk directly to the person doing the work.'),
+                ('fa-infinity', 'cyan', 'Revisions Included', 'Each plan includes revision rounds to make sure you\'re 100% happy.')
+            ] %}
+            {% for icon, color, title, desc in features %}
+            <div class="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 hover:border-{{ color }}-500/40 transition-colors">
+                <div class="w-11 h-11 rounded-xl bg-{{ color }}-500/10 border border-{{ color }}-500/30 flex items-center justify-center text-{{ color }}-400 text-lg mb-4">
+                    <i class="fa-solid {{ icon }}" aria-hidden="true"></i>
+                </div>
+                <h3 class="font-mono-heading font-bold text-sm sm:text-base text-white mb-2">
+                    {{ title }}
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    {{ desc }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ============================================================
+       PROCESS — 4-step timeline
+    ============================================================ #}
+    {% if services %}
+    <div class="mt-16 sm:mt-20 glass-card rounded-2xl p-6 sm:p-10 border border-slate-800">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-xs font-mono text-emerald-300 mb-3">
+                <i class="fa-solid fa-route" aria-hidden="true"></i> HOW IT WORKS
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
+                Simple 4-Step <span class="text-gradient-mint">Process</span>
+            </h2>
+        </div>
+
+        <ol class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+            {% set steps = [
+                ('01', 'Share Your Idea', 'Fill out the contact form with your goals, budget, and timeline.'),
+                ('02', 'Get a Plan', 'I\'ll send you a tailored proposal with pricing and delivery dates.'),
+                ('03', 'Collaborate', 'We work together — you review drafts, I refine. Revisions included.'),
+                ('04', 'Deliver', 'Final files delivered in your preferred formats. Ready to launch.')
+            ] %}
+            {% for num, title, desc in steps %}
+            <li class="relative">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 text-slate-950 font-mono font-bold text-sm flex items-center justify-center shrink-0">
+                        {{ num }}
+                    </span>
+                    <h3 class="font-mono-heading font-bold text-sm sm:text-base text-white">
+                        {{ title }}
+                    </h3>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed pl-[52px]">
+                    {{ desc }}
+                </p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+    {% endif %}
+
+    {# ============================================================
+       FAQ — SEO rich content
+    ============================================================ #}
+    {% if services %}
+    <div class="mt-16 sm:mt-20 max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
+                Frequently Asked <span class="text-gradient-cyan">Questions</span>
+            </h2>
+        </div>
+
+        {% set faqs = [
+            ('How do I pay?', 'I accept bank transfer, Mobile Money (MTN, Vodafone, AirtelTigo) and card payments via Paystack. Typically 50% upfront, 50% on delivery.'),
+            ('Do you work with clients outside Ghana?', 'Absolutely. Over 60% of my clients are international. All remote work is done via email, WhatsApp, or Google Meet. Payment via Paystack or bank transfer.'),
+            ('What if I need revisions?', 'Each plan includes revision rounds. If you need extra beyond that, I charge a small hourly rate — but it rarely comes to that.'),
+            ('How long does a project take?', 'Depends on the scope. Photo retouching: 1–3 days. Video editing: 3–7 days. Web development: 1–4 weeks. Full commercial productions: custom timeline.'),
+            ('Can I get a custom package?', 'Yes! The listed packages are starting points. If you need something different, reach out and we\'ll build a custom quote.')
+        ] %}
+        <div class="space-y-3">
+            {% for q, a in faqs %}
+            <details class="glass-card rounded-xl border border-slate-800 group open:border-cyan-500/40 transition-colors">
+                <summary class="p-4 sm:p-5 flex items-center justify-between gap-4 cursor-pointer list-none">
+                    <span class="font-mono-heading font-bold text-sm sm:text-base text-white pr-2">
+                        {{ q }}
+                    </span>
+                    <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform shrink-0" aria-hidden="true"></i>
+                </summary>
+                <div class="px-4 sm:px-5 pb-4 sm:pb-5 -mt-1">
+                    <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                        {{ a }}
+                    </p>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ============================================================
+       BOTTOM CTA
+    ============================================================ #}
+    <div class="mt-16 glass-card rounded-2xl p-8 sm:p-10 border border-slate-800 text-center">
+        <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
+            Not sure which plan fits?
+        </h2>
+        <p class="text-slate-400 text-sm mt-3 max-w-xl mx-auto">
+            Send me your project brief and I'll recommend the best package — or design a custom one just for you.
+        </p>
+        <div class="flex flex-wrap justify-center gap-3 mt-6">
+            <a href="{{ url_for('contact') }}"
+               class="inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:brightness-110 transition">
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Get a Custom Quote
+            </a>
+            <a href="{{ url_for('portfolio') }}"
+               class="inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl font-mono text-xs text-slate-200 glass-card hover:border-slate-600 transition">
+                <i class="fa-regular fa-folder-open text-cyan-400" aria-hidden="true"></i> See Past Work
+            </a>
+        </div>
+    </div>
+
 </section>
+
+<style>
+    /* FAQ: hide default marker */
+    details summary::-webkit-details-marker { display: none; }
+    details summary::marker { content: ''; }
+
+    /* FAQ: smooth reveal */
+    details[open] > div {
+        animation: fadeIn 0.25s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Narrow phone: keep plan name readable */
+    @media (max-width: 400px) {
+        article h2 {
+            font-size: 1.15rem;
+        }
+    }
+</style>
+
 {% endblock %}

@@ -4,43 +4,703 @@
 {% block page_subtitle %}Manage your account preferences and security.{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-1 glass-card rounded-2xl p-6 border border-slate-800 text-center">
-        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4">
-            {{ client.name[0]|upper if client.name else 'C' }}
-        </div>
-        <h3 class="font-bold text-white">{{ client.name }}</h3>
-        <p class="text-xs text-slate-400 font-mono mt-1">{{ client.email }}</p>
-        <div class="mt-4 inline-block px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 text-[10px] font-mono">
-            {{ client.client_code or '—' }}
-        </div>
-    </div>
 
-    <div class="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-800">
-        <h3 class="font-mono-heading font-bold text-white mb-4 flex items-center gap-2">
-            <i class="fa-solid fa-key text-cyan-400"></i> Change Password
-        </h3>
-        <form method="POST" action="{{ url_for('client_settings') }}" class="space-y-4">
-            <div>
-                <label class="block text-xs font-mono text-slate-300 mb-1.5">NEW PASSWORD</label>
-                <input type="password" name="new_password" required minlength="6" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-            </div>
-            <div>
-                <label class="block text-xs font-mono text-slate-300 mb-1.5">CONFIRM NEW PASSWORD</label>
-                <input type="password" name="confirm_password" required minlength="6" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-            </div>
-            <button type="submit" class="px-6 py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">
-                <i class="fa-solid fa-save"></i> UPDATE PASSWORD
-            </button>
-        </form>
+{# ============================================================
+   SAFE CLIENT DATA — defensive access
+============================================================ #}
+{% set client_name = (client.name if client and client.name else 'Client')|string %}
+{% set client_email = (client.email if client and client.email else '')|string %}
+{% set client_code = (client.client_code if client and client.client_code else '')|string %}
+{% set client_role = (client.role if client and client.role else 'client')|string %}
+{% set client_created = (client.created_at if client and client.created_at else none) %}
+{% set client_active = (client.is_active if client and client.is_active is defined else True) %}
+{% set initial = client_name[0]|upper if client_name else 'C' %}
 
-        <div class="mt-8 pt-6 border-t border-slate-800">
-            <h4 class="font-mono-heading font-bold text-white mb-2 text-sm">Need Help?</h4>
-            <p class="text-xs text-slate-400 leading-relaxed">
-                Forgot your current password or having trouble logging in?
-                <a href="{{ url_for('contact') }}" class="text-cyan-400 hover:text-white">Contact support</a>.
+{# Get optional preferences (with defaults if not set) #}
+{% set prefs = client.preferences if client and client.preferences is defined and client.preferences else {} %}
+{% set pref_email_files    = prefs.get('email_on_files', True) if prefs is mapping else True %}
+{% set pref_email_invoices = prefs.get('email_on_invoices', True) if prefs is mapping else True %}
+{% set pref_email_messages = prefs.get('email_on_messages', True) if prefs is mapping else True %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+
+    {# ============================================================
+       LEFT: PROFILE CARD
+    ============================================================ #}
+    <aside class="lg:col-span-1 space-y-4 sm:space-y-5">
+
+        <section class="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 text-center">
+
+            {# Avatar #}
+            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full mx-auto mb-4
+                        bg-gradient-to-br from-cyan-400 to-purple-600
+                        flex items-center justify-center
+                        text-white font-bold text-3xl sm:text-4xl
+                        shadow-lg shadow-cyan-500/20">
+                {{ initial }}
+            </div>
+
+            {# Name #}
+            <h2 class="font-mono-heading font-bold text-white
+                       text-base sm:text-lg truncate">
+                {{ client_name }}
+            </h2>
+
+            {# Email #}
+            <p class="text-xs font-mono text-slate-400 mt-1 truncate">
+                {{ client_email }}
             </p>
-        </div>
+
+            {# Client Code #}
+            {% if client_code %}
+            <div class="mt-4 inline-flex items-center gap-1.5
+                        px-3 py-1 rounded-full
+                        bg-purple-500/10 text-purple-300
+                        border border-purple-500/30
+                        text-[10px] font-mono uppercase tracking-wider">
+                <i class="fa-solid fa-hashtag text-[9px]" aria-hidden="true"></i>
+                {{ client_code }}
+            </div>
+            {% endif %}
+
+            {# Meta info #}
+            <div class="mt-5 pt-4 border-t border-slate-800 space-y-2.5 text-left">
+
+                {% if client_created and client_created.strftime is defined %}
+                <div class="flex items-center justify-between gap-3 text-[11px] font-mono">
+                    <span class="text-slate-500 inline-flex items-center gap-1.5">
+                        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                        Member since
+                    </span>
+                    <span class="text-slate-300">
+                        {{ client_created.strftime('%b %Y') }}
+                    </span>
+                </div>
+                {% endif %}
+
+                <div class="flex items-center justify-between gap-3 text-[11px] font-mono">
+                    <span class="text-slate-500 inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-dot" aria-hidden="true"></i>
+                        Status
+                    </span>
+                    {% if client_active %}
+                    <span class="inline-flex items-center gap-1
+                                 text-emerald-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                              aria-hidden="true"></span>
+                        Active
+                    </span>
+                    {% else %}
+                    <span class="text-red-400 inline-flex items-center gap-1">
+                        <i class="fa-solid fa-pause text-[9px]" aria-hidden="true"></i>
+                        Inactive
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center justify-between gap-3 text-[11px] font-mono">
+                    <span class="text-slate-500 inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-tag" aria-hidden="true"></i>
+                        Role
+                    </span>
+                    <span class="text-purple-300 capitalize">{{ client_role }}</span>
+                </div>
+
+            </div>
+        </section>
+
+    </aside>
+
+    {# ============================================================
+       RIGHT: SETTINGS PANELS
+    ============================================================ #}
+    <div class="lg:col-span-2 space-y-5 sm:space-y-6">
+
+        {# ---------- SECTION 01: CHANGE PASSWORD ---------- #}
+        <section class="glass-card rounded-2xl border border-slate-800
+                        p-5 sm:p-6 space-y-5">
+
+            <header class="flex items-center justify-between gap-3
+                           pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg
+                                bg-cyan-500/10 border border-cyan-500/30
+                                flex items-center justify-center text-cyan-400">
+                        <i class="fa-solid fa-key text-xs" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
+                        Change Password
+                    </h3>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 01
+                </span>
+            </header>
+
+            <form method="POST"
+                  action="{{ url_for('client_settings') }}"
+                  id="password-form"
+                  class="space-y-4"
+                  novalidate>
+
+                {# Current password #}
+                <div>
+                    <label for="current-password"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider mb-1.5">
+                        Current Password <span class="text-cyan-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none"
+                           aria-hidden="true"></i>
+                        <input type="password"
+                               id="current-password"
+                               name="current_password"
+                               required
+                               autocomplete="current-password"
+                               placeholder="Enter current password"
+                               class="w-full pl-10 pr-12 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                        <button type="button"
+                                onclick="toggleField('current-password', this)"
+                                class="absolute right-2 top-1/2 -translate-y-1/2
+                                       w-9 h-9 rounded-lg flex items-center justify-center
+                                       text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10
+                                       transition"
+                                aria-label="Show current password">
+                            <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                {# New password #}
+                <div>
+                    <label for="new-password"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider mb-1.5">
+                        New Password <span class="text-cyan-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none"
+                           aria-hidden="true"></i>
+                        <input type="password"
+                               id="new-password"
+                               name="new_password"
+                               required
+                               minlength="6"
+                               autocomplete="new-password"
+                               placeholder="At least 6 characters"
+                               oninput="updateStrength(this.value); updateMatch();"
+                               class="w-full pl-10 pr-12 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                        <button type="button"
+                                onclick="toggleField('new-password', this)"
+                                class="absolute right-2 top-1/2 -translate-y-1/2
+                                       w-9 h-9 rounded-lg flex items-center justify-center
+                                       text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10
+                                       transition"
+                                aria-label="Show new password">
+                            <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    {# Strength meter #}
+                    <div class="mt-2">
+                        <div class="flex gap-1 h-1">
+                            {% for i in range(1, 5) %}
+                            <div class="strength-bar flex-1 rounded-full bg-slate-800
+                                        transition-colors duration-200"
+                                 data-strength="{{ i }}"></div>
+                            {% endfor %}
+                        </div>
+                        <p id="strength-label"
+                           class="text-[10px] font-mono text-slate-500 mt-1.5">
+                            Minimum 6 characters
+                        </p>
+                    </div>
+                </div>
+
+                {# Confirm #}
+                <div>
+                    <label for="confirm-password"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider mb-1.5">
+                        Confirm New Password <span class="text-cyan-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none"
+                           aria-hidden="true"></i>
+                        <input type="password"
+                               id="confirm-password"
+                               name="confirm_password"
+                               required
+                               autocomplete="new-password"
+                               placeholder="Re-enter new password"
+                               oninput="updateMatch()"
+                               class="w-full pl-10 pr-12 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                        <span id="match-icon"
+                              class="absolute right-4 top-1/2 -translate-y-1/2
+                                     text-slate-600 text-sm hidden"
+                              aria-hidden="true"></span>
+                    </div>
+                    <p id="match-msg"
+                       class="hidden text-[10px] font-mono text-red-400 mt-1.5
+                              flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        <span>Passwords do not match.</span>
+                    </p>
+                </div>
+
+                {# Submit #}
+                <div class="pt-1">
+                    <button type="submit"
+                            id="password-submit-btn"
+                            class="w-full sm:w-auto px-5 py-3 rounded-xl
+                                   text-xs font-mono font-bold
+                                   text-slate-950
+                                   bg-gradient-to-r from-cyan-400 to-emerald-400
+                                   hover:brightness-110
+                                   transition active:scale-[0.98]
+                                   inline-flex items-center justify-center gap-2
+                                   disabled:opacity-70 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-save" aria-hidden="true"></i>
+                        <span>Update Password</span>
+                    </button>
+                </div>
+            </form>
+
+            {# Help text #}
+            <div class="pt-4 border-t border-slate-800">
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    <i class="fa-solid fa-circle-info text-cyan-400 mr-1.5"
+                       aria-hidden="true"></i>
+                    Forgot your current password?
+                    <a href="{{ url_for('contact') }}"
+                       class="text-cyan-400 hover:text-cyan-300 underline-offset-2 hover:underline transition">
+                        Contact support
+                    </a>
+                    to reset it manually.
+                </p>
+            </div>
+
+        </section>
+
+        {# ---------- SECTION 02: NOTIFICATIONS ---------- #}
+        <section class="glass-card rounded-2xl border border-slate-800
+                        p-5 sm:p-6 space-y-5">
+
+            <header class="flex items-center justify-between gap-3
+                           pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg
+                                bg-purple-500/10 border border-purple-500/30
+                                flex items-center justify-center text-purple-400">
+                        <i class="fa-solid fa-bell text-xs" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
+                        Email Notifications
+                    </h3>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 02
+                </span>
+            </header>
+
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+                Choose which events trigger an email to
+                <span class="font-mono text-cyan-300">{{ client_email }}</span>.
+            </p>
+
+            <form method="POST"
+                  action="{{ url_for('client_settings_preferences') }}"
+                  class="space-y-2.5">
+
+                {% set pref_items = [
+                    ('email_on_files',    'New files uploaded',       'Get notified when a deliverable is ready for review.', 'fa-cloud-arrow-down', 'cyan'),
+                    ('email_on_invoices', 'New invoices issued',      'Be alerted when a new invoice is available to pay.',   'fa-file-invoice',      'emerald'),
+                    ('email_on_messages', 'New support messages',     'Receive a copy of new replies from the support team.', 'fa-comments',          'purple')
+                ] %}
+
+                {% for key, title, desc, icon, color in pref_items %}
+                {% set checked = prefs.get(key, True) if prefs is mapping else True %}
+                <label class="flex items-start gap-3 p-3 rounded-xl
+                              bg-slate-900/70 border border-slate-800
+                              hover:border-{{ color }}-500/40
+                              transition cursor-pointer">
+
+                    <div class="shrink-0 w-9 h-9 rounded-lg
+                                bg-{{ color }}-500/10 border border-{{ color }}-500/30
+                                flex items-center justify-center
+                                text-{{ color }}-400">
+                        <i class="fa-solid {{ icon }} text-xs" aria-hidden="true"></i>
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-semibold text-white">{{ title }}</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                            {{ desc }}
+                        </p>
+                    </div>
+
+                    {# Custom toggle #}
+                    <div class="shrink-0 mt-1">
+                        <input type="checkbox"
+                               name="{{ key }}"
+                               {% if checked %}checked{% endif %}
+                               class="sr-only peer">
+                        <div class="w-11 h-6 rounded-full
+                                    bg-slate-800 border border-slate-700
+                                    peer-checked:bg-{{ color }}-500
+                                    peer-checked:border-{{ color }}-500
+                                    relative transition-colors duration-200
+                                    cursor-pointer">
+                            <div class="absolute top-0.5 left-0.5
+                                        w-5 h-5 rounded-full bg-white
+                                        shadow-md
+                                        peer-checked:translate-x-5
+                                        transition-transform duration-200"></div>
+                        </div>
+                    </div>
+                </label>
+                {% endfor %}
+
+                <div class="pt-2">
+                    <button type="submit"
+                            class="w-full sm:w-auto px-5 py-3 rounded-xl
+                                   text-xs font-mono font-bold
+                                   text-slate-950
+                                   bg-gradient-to-r from-purple-400 to-cyan-400
+                                   hover:brightness-110
+                                   transition active:scale-[0.98]
+                                   inline-flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-save" aria-hidden="true"></i>
+                        Save Preferences
+                    </button>
+                </div>
+            </form>
+
+        </section>
+
+        {# ---------- SECTION 03: SESSIONS ---------- #}
+        <section class="glass-card rounded-2xl border border-slate-800
+                        p-5 sm:p-6 space-y-4">
+
+            <header class="flex items-center justify-between gap-3
+                           pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg
+                                bg-emerald-500/10 border border-emerald-500/30
+                                flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-shield-halved text-xs" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
+                        Security & Sessions
+                    </h3>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 03
+                </span>
+            </header>
+
+            <div class="flex items-start gap-3">
+                <div class="shrink-0 w-9 h-9 rounded-lg
+                            bg-emerald-500/10 border border-emerald-500/30
+                            flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-laptop text-xs" aria-hidden="true"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-white">Sign out of all devices</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                        This will end every active session, including on any other devices where you're logged in.
+                    </p>
+                </div>
+            </div>
+
+            <form method="POST"
+                  action="{{ url_for('client_logout_all') }}"
+                  onsubmit="return confirm('Sign out of all devices? You will need to log in again everywhere.');">
+                <button type="submit"
+                        class="w-full sm:w-auto px-5 py-3 rounded-xl
+                               text-xs font-mono font-bold
+                               text-red-300
+                               bg-red-950/40 border border-red-500/30
+                               hover:bg-red-500/20 hover:border-red-500/50
+                               transition active:scale-[0.98]
+                               inline-flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                    Sign Out Everywhere
+                </button>
+            </form>
+
+        </section>
+
+        {# ---------- SECTION 04: DANGER ZONE ---------- #}
+        <details class="glass-card rounded-2xl border border-red-500/30
+                        overflow-hidden group">
+            <summary class="p-5 sm:p-6 cursor-pointer
+                            flex items-center justify-between gap-3
+                            list-none">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg
+                                bg-red-500/10 border border-red-500/30
+                                flex items-center justify-center text-red-400">
+                        <i class="fa-solid fa-triangle-exclamation text-xs"
+                           aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-mono-heading font-bold text-red-300
+                               text-sm sm:text-base">
+                        Danger Zone
+                    </h3>
+                </div>
+                <i class="fa-solid fa-chevron-down text-red-400 text-xs
+                          group-open:rotate-180 transition-transform"
+                   aria-hidden="true"></i>
+            </summary>
+
+            <div class="p-5 sm:p-6 pt-0 space-y-4">
+
+                <div class="flex items-start gap-3">
+                    <div class="shrink-0 w-9 h-9 rounded-lg
+                                bg-red-500/10 border border-red-500/30
+                                flex items-center justify-center text-red-400">
+                        <i class="fa-solid fa-user-slash text-xs" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-semibold text-white">
+                            Delete my account
+                        </p>
+                        <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                            Permanently remove your portal access. Projects and invoices will remain
+                            with The Media Scientist for record-keeping, but you will no longer be able to log in.
+                        </p>
+                    </div>
+                </div>
+
+                <form method="POST"
+                      action="{{ url_for('client_delete_account') }}"
+                      id="delete-account-form"
+                      class="space-y-3">
+                    <div>
+                        <label for="confirm-delete"
+                               class="block text-[10px] font-mono text-red-300
+                                      uppercase tracking-wider mb-1.5">
+                            Type <code class="px-1.5 py-0.5 rounded bg-red-950/60 border border-red-500/30
+                                             font-bold text-red-200">DELETE</code> to confirm
+                        </label>
+                        <input type="text"
+                               id="confirm-delete"
+                               name="confirm"
+                               autocomplete="off"
+                               placeholder="DELETE"
+                               required
+                               oninput="validateDelete(this)"
+                               class="w-full px-4 py-3 rounded-xl
+                                      bg-slate-900 border border-red-500/30
+                                      text-sm text-white placeholder-slate-600 font-mono tracking-widest
+                                      focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400/30
+                                      transition">
+                    </div>
+                    <button type="submit"
+                            id="delete-submit-btn"
+                            disabled
+                            class="w-full sm:w-auto px-5 py-3 rounded-xl
+                                   text-xs font-mono font-bold
+                                   text-white bg-red-500/80
+                                   hover:bg-red-500
+                                   transition active:scale-[0.98]
+                                   disabled:opacity-40 disabled:cursor-not-allowed
+                                   inline-flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                        Delete Account Permanently
+                    </button>
+                </form>
+            </div>
+        </details>
+
     </div>
 </div>
+
+<script>
+// ============================================================
+// PASSWORD VISIBILITY TOGGLE
+// ============================================================
+function toggleField(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    const icon = btn.querySelector('i');
+    if (icon) {
+        icon.className = isPassword
+            ? 'fa-solid fa-eye-slash text-sm'
+            : 'fa-solid fa-eye text-sm';
+    }
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+}
+
+// ============================================================
+// PASSWORD STRENGTH METER
+// ============================================================
+function updateStrength(value) {
+    const bars = document.querySelectorAll('.strength-bar');
+    const label = document.getElementById('strength-label');
+    if (!bars.length || !label) return;
+
+    const len = (value || '').length;
+
+    // Score 0–4
+    let score = 0;
+    if (len >= 6) score++;
+    if (len >= 10) score++;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+    if (/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) score++;
+
+    const colorMap = {
+        0: 'bg-slate-800',
+        1: 'bg-red-500',
+        2: 'bg-orange-500',
+        3: 'bg-amber-400',
+        4: 'bg-emerald-400'
+    };
+    const labelMap = {
+        0: 'Minimum 6 characters',
+        1: 'Weak password',
+        2: 'Fair password',
+        3: 'Good password',
+        4: 'Strong password'
+    };
+    const labelColorMap = {
+        0: 'text-slate-500',
+        1: 'text-red-400',
+        2: 'text-orange-400',
+        3: 'text-amber-400',
+        4: 'text-emerald-400'
+    };
+
+    bars.forEach(bar => {
+        const barScore = parseInt(bar.dataset.strength, 10);
+        // Reset classes
+        Object.values(colorMap).forEach(c => bar.classList.remove(c));
+        // Apply color if within active score range
+        bar.classList.add(barScore <= score ? colorMap[score] : colorMap[0]);
+    });
+
+    label.textContent = labelMap[score];
+    label.className = 'text-[10px] font-mono mt-1.5 ' + labelColorMap[score];
+}
+
+// ============================================================
+// CONFIRM MATCH
+// ============================================================
+function updateMatch() {
+    const pwd = document.getElementById('new-password');
+    const confirm = document.getElementById('confirm-password');
+    const msg = document.getElementById('match-msg');
+    const icon = document.getElementById('match-icon');
+    if (!pwd || !confirm || !msg || !icon) return;
+
+    const v1 = pwd.value || '';
+    const v2 = confirm.value || '';
+
+    if (!v2) {
+        msg.classList.add('hidden');
+        icon.classList.add('hidden');
+        return;
+    }
+
+    if (v1 === v2) {
+        msg.classList.add('hidden');
+        icon.classList.remove('hidden');
+        icon.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 text-sm';
+        icon.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
+    } else {
+        msg.classList.remove('hidden');
+        icon.classList.remove('hidden');
+        icon.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-red-400 text-sm';
+        icon.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+    }
+}
+
+// ============================================================
+// SUBMIT FEEDBACK: Password Form
+// ============================================================
+const passwordForm = document.getElementById('password-form');
+const submitBtn = document.getElementById('password-submit-btn');
+
+if (passwordForm && submitBtn) {
+    passwordForm.addEventListener('submit', (e) => {
+        const pwd = document.getElementById('new-password');
+        const confirm = document.getElementById('confirm-password');
+        if (pwd && confirm && pwd.value !== confirm.value) {
+            e.preventDefault();
+            confirm.focus();
+            return;
+        }
+        if (!passwordForm.checkValidity()) return;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+            <span>Updating...</span>
+        `;
+    });
+}
+
+// ============================================================
+// DANGER ZONE: Confirm-by-typing
+// ============================================================
+function validateDelete(input) {
+    const btn = document.getElementById('delete-submit-btn');
+    if (!btn) return;
+    btn.disabled = (input.value.trim().toUpperCase() !== 'DELETE');
+}
+</script>
+
+<style>
+    /* Sticky bottom on mobile handled by base */
+
+    /* Focus-visible ring */
+    *:focus-visible {
+        outline: 2px solid rgba(0, 242, 254, 0.6);
+        outline-offset: 2px;
+    }
+
+    /* Smooth transitions */
+    input, textarea, button, summary {
+        transition: border-color 0.15s ease, background-color 0.15s ease,
+                    color 0.15s ease, transform 0.15s ease;
+    }
+
+    /* Hide default <details> marker */
+    details summary::-webkit-details-marker { display: none; }
+    details summary::marker { content: ''; }
+
+    /* Fade-in animation for details open */
+    details[open] > div {
+        animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Ensure checkbox toggle appearance with peer */
+    .peer:checked ~ div > div:last-child {
+        transform: translateX(20px);
+    }
+</style>
+
 {% endblock %}

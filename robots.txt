@@ -1,6 +1,244 @@
+# ============================================================
+#  robots.txt — The Media Scientist
+#  https://themediascientist.com/robots.txt
+#  Last updated: 2026
+# ============================================================
+#
+#  This file is served dynamically by Flask (app.py route: /robots.txt).
+#  The hardcoded domain below is replaced at request time with the
+#  value of Config.SITE_URL. Do not edit the placeholder manually —
+#  change SITE_URL in your .env instead.
+# ============================================================
+
+# ------------------------------------------------------------
+#  DEFAULT: allow everyone, block private areas
+# ------------------------------------------------------------
 User-agent: *
 Allow: /
+
+# Private portal & admin areas (never index)
 Disallow: /lab/
 Disallow: /lab
+Disallow: /client/
+Disallow: /client
 
-Sitemap: http://localhost:5000/sitemap.xml
+# Uploaded user files (served through authenticated route, but be explicit)
+Disallow: /uploads/
+Disallow: /uploads
+
+# API endpoints (JSON responses, no SEO value)
+Disallow: /api/
+Disallow: /api
+
+# Source & config files that should never be exposed
+Disallow: /static/*.py
+Disallow: /static/*.env
+Disallow: /static/*.log
+Disallow: /*.py$
+Disallow: /*.env$
+Disallow: /*.log$
+
+# Flask internal paths
+Disallow: /static/admin/
+Disallow: /__debug__/
+Disallow: /console/
+
+# Sitemap
+Sitemap: https://themediascientist.com/sitemap.xml
+
+# ------------------------------------------------------------
+#  MAJOR SEARCH ENGINES (explicit allow for clarity)
+# ------------------------------------------------------------
+User-agent: Googlebot
+Allow: /
+Disallow: /lab/
+Disallow: /client/
+Disallow: /uploads/
+Disallow: /api/
+
+User-agent: Googlebot-Image
+Allow: /
+Allow: /static/
+
+User-agent: Googlebot-News
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+Disallow: /lab/
+Disallow: /client/
+Disallow: /uploads/
+Disallow: /api/
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# ------------------------------------------------------------
+#  SEO TOOLS — apply a crawl delay to be kind to the server
+# ------------------------------------------------------------
+User-agent: AhrefsBot
+Crawl-delay: 10
+Disallow: /lab/
+Disallow: /client/
+Disallow: /uploads/
+Disallow: /api/
+
+User-agent: SemrushBot
+Crawl-delay: 10
+Disallow: /lab/
+Disallow: /client/
+Disallow: /uploads/
+Disallow: /api/
+
+User-agent: MJ12bot
+Crawl-delay: 10
+Disallow: /
+
+User-agent: DotBot
+Crawl-delay: 10
+Disallow: /
+
+User-agent: PetalBot
+Crawl-delay: 10
+Disallow: /
+
+# ------------------------------------------------------------
+#  AI CRAWLERS — opt out of training data scraping
+#  (OpenAI, Anthropic, Google AI, Perplexity, Amazon, Apple, Meta)
+# ------------------------------------------------------------
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: GoogleOther
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+User-agent: Webzio-Extended
+Disallow: /
+
+# ------------------------------------------------------------
+#  SOCIAL PREVIEW BOTS — allow so shared links render nicely
+#  (these are NOT search crawlers; they just fetch OG meta)
+# ------------------------------------------------------------
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: Slackbot-LinkExpanding
+Allow: /
+
+User-agent: Pinterest
+Allow: /
+
+User-agent: redditbot
+Allow: /
+
+User-agent: Embedly
+Allow: /
+
+User-agent: Quora Link Preview
+Allow: /
+
+User-agent: SkypeUriPreview
+Allow: /
+
+# ------------------------------------------------------------
+#  MONITORING BOTS — allow so uptime tools work
+# ------------------------------------------------------------
+User-agent: UptimeRobot
+Allow: /
+Disallow: /lab/
+Disallow: /client/
+
+User-agent: Pingdom
+Allow: /
+Disallow: /lab/
+Disallow: /client/
+
+User-agent: StatusCake
+Allow: /
+Disallow: /lab/
+Disallow: /client/
+
+# ------------------------------------------------------------
+#  ARCHIVE.ORG — allow (or Disallow if you prefer privacy)
+# ------------------------------------------------------------
+User-agent: ia_archiver
+Allow: /
+
+# ============================================================
+#  END OF FILE
+# ============================================================

@@ -4,58 +4,577 @@
 {% block page_subtitle %}Manage all incoming client inquiries.{% endblock %}
 
 {% block content %}
+
+{# ============================================================
+   STATS ROW
+============================================================ #}
+{% set ns = namespace(new=0, read=0, replied=0, closed=0) %}
+{% for inq in inquiries %}
+    {% set st = inq.status|default('new') %}
+    {% if st == 'new' %}
+        {% set ns.new = ns.new + 1 %}
+    {% elif st == 'read' %}
+        {% set ns.read = ns.read + 1 %}
+    {% elif st == 'replied' %}
+        {% set ns.replied = ns.replied + 1 %}
+    {% elif st == 'closed' %}
+        {% set ns.closed = ns.closed + 1 %}
+    {% endif %}
+{% endfor %}
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-inbox text-cyan-400" aria-hidden="true"></i>
+            Total
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ inquiries|length }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" aria-hidden="true"></span>
+            New
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.new }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-reply text-emerald-400" aria-hidden="true"></i>
+            Replied
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.replied }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-circle-check text-slate-400" aria-hidden="true"></i>
+            Closed
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.closed }}
+        </div>
+    </div>
+
+</div>
+
+{# ============================================================
+   SEARCH + FILTER BAR
+============================================================ #}
+<div class="glass-card rounded-2xl border border-slate-800 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+
+        {# Search input #}
+        <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
+                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+            <input type="text"
+                   id="inquiry-search"
+                   placeholder="Search by name, email, or message content..."
+                   autocomplete="off"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
+                          bg-slate-900 border border-slate-800
+                          text-sm text-white placeholder-slate-500
+                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                          transition">
+        </div>
+
+        {# Filter tabs #}
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono overflow-x-auto
+                    pb-1 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <button type="button"
+                    onclick="filterInquiries('all')"
+                    data-filter="all"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
+                           bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                           transition whitespace-nowrap">
+                All
+            </button>
+            <button type="button"
+                    onclick="filterInquiries('new')"
+                    data-filter="new"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
+                           bg-slate-900 text-slate-400 border border-slate-800
+                           hover:text-white transition whitespace-nowrap">
+                New
+            </button>
+            <button type="button"
+                    onclick="filterInquiries('read')"
+                    data-filter="read"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
+                           bg-slate-900 text-slate-400 border border-slate-800
+                           hover:text-white transition whitespace-nowrap">
+                Read
+            </button>
+            <button type="button"
+                    onclick="filterInquiries('replied')"
+                    data-filter="replied"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
+                           bg-slate-900 text-slate-400 border border-slate-800
+                           hover:text-white transition whitespace-nowrap">
+                Replied
+            </button>
+            <button type="button"
+                    onclick="filterInquiries('closed')"
+                    data-filter="closed"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
+                           bg-slate-900 text-slate-400 border border-slate-800
+                           hover:text-white transition whitespace-nowrap">
+                Closed
+            </button>
+        </div>
+
+    </div>
+</div>
+
+{# ============================================================
+   MAIN CARD
+============================================================ #}
 <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-    <div class="p-5 border-b border-slate-800 bg-slate-900/50">
-        <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-inbox text-cyan-400"></i> All Inquiries ({{ inquiries|length }})
+
+    {# Header #}
+    <div class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+                flex items-center justify-between gap-3">
+        <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+            <i class="fa-solid fa-inbox text-cyan-400" aria-hidden="true"></i>
+            All Inquiries
+            <span class="text-[10px] font-mono font-normal text-slate-500"
+                  id="inquiries-count">
+                ({{ inquiries|length }})
+            </span>
         </h3>
     </div>
-    <div class="overflow-x-auto">
+
+    {# ============================================================
+       DESKTOP TABLE (hidden below lg)
+    ============================================================ #}
+    <div class="hidden lg:block overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
+                <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
+                           uppercase bg-slate-900/30">
                     <th class="py-3 px-5">Client</th>
                     <th class="py-3 px-5">Services</th>
                     <th class="py-3 px-5">Budget</th>
                     <th class="py-3 px-5">Message</th>
+                    <th class="py-3 px-5">Date</th>
                     <th class="py-3 px-5">Status</th>
-                    <th class="py-3 px-5 text-right">Action</th>
+                    <th class="py-3 px-5 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="text-sm">
                 {% for inq in inquiries %}
-                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
-                    <td class="py-4 px-5">
-                        <div class="font-semibold text-white text-xs">{{ inq.name }}</div>
-                        <div class="text-[10px] text-slate-400 font-mono">{{ inq.email }}</div>
+                {% set st = inq.status|default('new') %}
+                <tr class="inquiry-row border-b border-slate-800/50
+                           hover:bg-slate-800/30 transition"
+                    data-status="{{ st }}"
+                    data-search="{{ (inq.name ~ ' ' ~ inq.email ~ ' ' ~ (inq.message or '') ~ ' ' ~ (inq.services|join(' ')))|lower }}">
+
+                    {# Client #}
+                    <td class="py-4 px-5 max-w-[180px]">
+                        <div class="font-semibold text-white text-xs truncate">{{ inq.name }}</div>
+                        <a href="mailto:{{ inq.email }}"
+                           class="text-[10px] text-slate-400 font-mono hover:text-cyan-400 transition truncate block mt-0.5">
+                            {{ inq.email }}
+                        </a>
                     </td>
-                    <td class="py-4 px-5 max-w-xs">
-                        {% for svc in inq.services %}
-                        <span class="inline-block px-2 py-1 rounded bg-cyan-950/60 border border-cyan-500/30 text-[10px] font-mono text-cyan-300 mr-1 mb-1">{{ svc }}</span>
-                        {% endfor %}
+
+                    {# Services #}
+                    <td class="py-4 px-5 max-w-[200px]">
+                        <div class="flex flex-wrap gap-1">
+                            {% for svc in inq.services[:3] %}
+                            <span class="inline-block px-2 py-0.5 rounded
+                                         bg-cyan-950/60 border border-cyan-500/30
+                                         text-[10px] font-mono text-cyan-300 whitespace-nowrap">
+                                {{ svc }}
+                            </span>
+                            {% endfor %}
+                            {% if inq.services|length > 3 %}
+                            <span class="text-[10px] font-mono text-slate-500 px-1">
+                                +{{ inq.services|length - 3 }}
+                            </span>
+                            {% endif %}
+                        </div>
                     </td>
-                    <td class="py-4 px-5 text-xs text-emeraldMint font-mono">{{ inq.budget }}</td>
-                    <td class="py-4 px-5 text-xs text-slate-400 max-w-sm">{{ inq.message[:120] }}{% if inq.message|length > 120 %}...{% endif %}</td>
+
+                    {# Budget #}
+                    <td class="py-4 px-5 text-xs text-emeraldMint font-mono whitespace-nowrap max-w-[140px] truncate">
+                        {{ inq.budget or '—' }}
+                    </td>
+
+                    {# Message (with details expander) #}
+                    <td class="py-4 px-5 max-w-[280px]">
+                        <details class="group">
+                            <summary class="cursor-pointer list-none
+                                            text-xs text-slate-400 hover:text-slate-200 transition">
+                                <span class="line-clamp-2 leading-snug">
+                                    {{ inq.message[:120] }}{% if inq.message|length > 120 %}...{% endif %}
+                                </span>
+                            </summary>
+                            <div class="mt-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800
+                                        text-xs text-slate-300 leading-relaxed
+                                        whitespace-pre-wrap max-h-60 overflow-y-auto">
+                                {{ inq.message }}
+                            </div>
+                        </details>
+                    </td>
+
+                    {# Date #}
+                    <td class="py-4 px-5 text-[10px] font-mono text-slate-400 whitespace-nowrap">
+                        {% if inq.created_at %}
+                            <time datetime="{{ inq.created_at.isoformat() }}"
+                                  title="{{ inq.created_at.strftime('%b %d, %Y at %H:%M') }}">
+                                {{ inq.created_at.strftime('%b %d') }}
+                            </time>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    {# Status #}
                     <td class="py-4 px-5">
-                        <form method="POST" action="{{ url_for('lab_inquiry_status', inquiry_id=inq._id) }}">
-                            <select name="status" onchange="this.form.submit()" class="bg-slate-900 border border-slate-700 text-[10px] font-mono rounded px-2 py-1 text-slate-200">
-                                {% for st in ['new','read','replied','closed'] %}
-                                <option value="{{ st }}" {% if inq.status==st %}selected{% endif %}>{{ st|upper }}</option>
+                        <form method="POST"
+                              action="{{ url_for('lab_inquiry_status', inquiry_id=inq._id) }}"
+                              class="inline-block">
+                            <select name="status"
+                                    onchange="this.form.submit()"
+                                    aria-label="Change status for {{ inq.name }}"
+                                    class="bg-slate-900 border border-slate-700
+                                           text-[10px] font-mono rounded-lg px-2.5 py-1.5
+                                           text-slate-200 cursor-pointer
+                                           hover:border-slate-600 focus:outline-none focus:border-cyan-400
+                                           transition">
+                                {% for st_opt in ['new','read','replied','closed'] %}
+                                <option value="{{ st_opt }}" {% if st==st_opt %}selected{% endif %}>
+                                    {{ st_opt|upper }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </form>
                     </td>
-                    <td class="py-4 px-5 text-right">
-                        <form method="POST" action="{{ url_for('lab_inquiry_delete', inquiry_id=inq._id) }}" onsubmit="return confirm('Delete this inquiry?');">
-                            <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
-                        </form>
+
+                    {# Actions #}
+                    <td class="py-4 px-5">
+                        <div class="flex items-center justify-end gap-1.5">
+
+                            {# Reply via email #}
+                            <a href="mailto:{{ inq.email }}?subject=Re: Your inquiry with The Media Scientist"
+                               class="w-9 h-9 rounded-lg bg-cyan-950/50 border border-cyan-500/30
+                                      flex items-center justify-center text-cyan-400
+                                      hover:bg-cyan-500/20 hover:border-cyan-500/50 transition"
+                               title="Reply via email"
+                               aria-label="Reply to {{ inq.name }} via email">
+                                <i class="fa-solid fa-reply text-xs" aria-hidden="true"></i>
+                            </a>
+
+                            {# Delete #}
+                            <form method="POST"
+                                  action="{{ url_for('lab_inquiry_delete', inquiry_id=inq._id) }}"
+                                  onsubmit="return confirm('⚠️ Delete this inquiry from {{ inq.name }}?\n\nThis cannot be undone.');">
+                                <button type="submit"
+                                        class="w-9 h-9 rounded-lg bg-red-950/50 border border-red-500/30
+                                               flex items-center justify-center text-red-400
+                                               hover:bg-red-500/20 hover:border-red-500/50 transition"
+                                        title="Delete"
+                                        aria-label="Delete inquiry from {{ inq.name }}">
+                                    <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="6" class="py-8 text-center text-slate-400 text-xs font-mono">No inquiries yet.</td></tr>
+                <tr>
+                    <td colspan="7" class="py-16 text-center">
+                        <i class="fa-solid fa-inbox text-4xl text-slate-700 mb-3"
+                           aria-hidden="true"></i>
+                        <p class="text-slate-400 text-xs font-mono">No inquiries yet.</p>
+                        <p class="text-slate-500 text-[10px] font-mono mt-1">
+                            New requests submitted from the public contact form will appear here.
+                        </p>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    {# ============================================================
+       MOBILE CARD LIST (hidden lg and up)
+    ============================================================ #}
+    <div class="lg:hidden divide-y divide-slate-800/60">
+        {% for inq in inquiries %}
+        {% set st = inq.status|default('new') %}
+        <div class="inquiry-row p-4 space-y-3"
+             data-status="{{ st }}"
+             data-search="{{ (inq.name ~ ' ' ~ inq.email ~ ' ' ~ (inq.message or '') ~ ' ' ~ (inq.services|join(' ')))|lower }}">
+
+            {# Row 1: name + status #}
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-white text-sm truncate">{{ inq.name }}</p>
+                    <a href="mailto:{{ inq.email }}"
+                       class="text-[11px] font-mono text-slate-400 hover:text-cyan-400 transition truncate block mt-0.5">
+                        {{ inq.email }}
+                    </a>
+                </div>
+                {% if st == 'new' %}
+                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
+                             text-[10px] font-mono uppercase
+                             bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                          aria-hidden="true"></span>
+                    New
+                </span>
+                {% elif st == 'read' %}
+                <span class="shrink-0 px-2 py-1 rounded-full text-[10px] font-mono uppercase
+                             bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Read
+                </span>
+                {% elif st == 'replied' %}
+                <span class="shrink-0 px-2 py-1 rounded-full text-[10px] font-mono uppercase
+                             bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Replied
+                </span>
+                {% else %}
+                <span class="shrink-0 px-2 py-1 rounded-full text-[10px] font-mono uppercase
+                             bg-slate-500/20 text-slate-400 border border-slate-500/30">
+                    Closed
+                </span>
+                {% endif %}
+            </div>
+
+            {# Row 2: services #}
+            {% if inq.services %}
+            <div class="flex flex-wrap gap-1.5">
+                {% for svc in inq.services %}
+                <span class="px-2 py-0.5 rounded
+                             bg-cyan-950/60 border border-cyan-500/30
+                             text-[10px] font-mono text-cyan-300 whitespace-nowrap">
+                    {{ svc }}
+                </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {# Row 3: budget #}
+            <div class="flex items-center justify-between gap-2 text-[10px] font-mono">
+                <span class="text-slate-500 uppercase tracking-wider">Budget</span>
+                <span class="text-emeraldMint font-bold">{{ inq.budget or '—' }}</span>
+            </div>
+
+            {# Row 4: message expander #}
+            <details class="group">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-2
+                                text-[10px] font-mono text-slate-400 hover:text-slate-200 transition
+                                p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                    <span class="inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-message text-cyan-400" aria-hidden="true"></i>
+                        Message
+                    </span>
+                    <i class="fa-solid fa-chevron-down text-[9px]
+                              group-open:rotate-180 transition-transform" aria-hidden="true"></i>
+                </summary>
+                <div class="mt-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800
+                            text-xs text-slate-300 leading-relaxed
+                            whitespace-pre-wrap max-h-60 overflow-y-auto">
+                    {{ inq.message }}
+                </div>
+            </details>
+
+            {# Row 5: status + actions #}
+            <div class="grid grid-cols-2 gap-2">
+
+                {# Status select #}
+                <form method="POST"
+                      action="{{ url_for('lab_inquiry_status', inquiry_id=inq._id) }}"
+                      class="contents">
+                    <select name="status"
+                            onchange="this.form.submit()"
+                            aria-label="Change status"
+                            class="w-full px-3 py-2.5 rounded-lg
+                                   bg-slate-900 border border-slate-800
+                                   text-xs font-mono text-slate-200
+                                   focus:outline-none focus:border-cyan-400 transition">
+                        {% for st_opt in ['new','read','replied','closed'] %}
+                        <option value="{{ st_opt }}" {% if st==st_opt %}selected{% endif %}>
+                            {{ st_opt|title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+
+                {# Reply + Delete #}
+                <div class="flex gap-2">
+                    <a href="mailto:{{ inq.email }}?subject=Re: Your inquiry with The Media Scientist"
+                       class="flex-1 inline-flex items-center justify-center gap-1.5
+                              px-3 py-2.5 rounded-lg
+                              bg-cyan-500/15 border border-cyan-500/30
+                              text-xs font-mono font-bold text-cyan-300
+                              hover:bg-cyan-500/25 transition active:scale-[0.98]"
+                       aria-label="Reply via email">
+                        <i class="fa-solid fa-reply text-xs" aria-hidden="true"></i>
+                        Reply
+                    </a>
+
+                    <form method="POST"
+                          action="{{ url_for('lab_inquiry_delete', inquiry_id=inq._id) }}"
+                          onsubmit="return confirm('⚠️ Delete this inquiry from {{ inq.name }}?');"
+                          class="flex-1">
+                        <button type="submit"
+                                class="w-full inline-flex items-center justify-center gap-1.5
+                                       px-3 py-2.5 rounded-lg
+                                       bg-red-500/15 border border-red-500/30
+                                       text-xs font-mono font-bold text-red-300
+                                       hover:bg-red-500/25 transition active:scale-[0.98]"
+                                aria-label="Delete inquiry">
+                            <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                            Delete
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+        </div>
+        {% else %}
+        <div class="p-12 text-center">
+            <i class="fa-solid fa-inbox text-4xl text-slate-700 mb-3" aria-hidden="true"></i>
+            <p class="text-slate-400 text-xs font-mono">No inquiries yet.</p>
+            <p class="text-slate-500 text-[10px] font-mono mt-1">
+                New requests from the public contact form will appear here.
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {# ============================================================
+       NO RESULTS (filter/search returned nothing)
+    ============================================================ #}
+    <div id="no-results" class="hidden p-12 text-center border-t border-slate-800/60">
+        <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
+           aria-hidden="true"></i>
+        <p class="text-slate-400 text-xs font-mono">No inquiries match your search.</p>
+        <button type="button"
+                onclick="resetFilters()"
+                class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+            Clear filters
+        </button>
+    </div>
+
 </div>
+
+<script>
+// ============================================================
+// SEARCH + FILTER
+// ============================================================
+let currentFilter = 'all';
+let currentSearch = '';
+
+function applyFilters() {
+    const rows = document.querySelectorAll('.inquiry-row');
+    let visible = 0;
+
+    rows.forEach(row => {
+        const status = row.dataset.status || '';
+        const haystack = row.dataset.search || '';
+
+        const matchesFilter = (currentFilter === 'all' || status === currentFilter);
+        const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
+
+        if (matchesFilter && matchesSearch) {
+            row.style.display = '';
+            visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const countEl = document.getElementById('inquiries-count');
+    if (countEl) {
+        const total = rows.length;
+        countEl.textContent = (visible === total)
+            ? `(${total})`
+            : `(${visible} of ${total})`;
+    }
+
+    const noResults = document.getElementById('no-results');
+    if (noResults) {
+        noResults.classList.toggle('hidden', visible > 0);
+    }
+}
+
+function filterInquiries(filter) {
+    currentFilter = filter;
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-cyan-500/20', isActive);
+        btn.classList.toggle('text-cyan-300', isActive);
+        btn.classList.toggle('border-cyan-500/40', isActive);
+        btn.classList.toggle('bg-slate-900', !isActive);
+        btn.classList.toggle('text-slate-400', !isActive);
+        btn.classList.toggle('border-slate-800', !isActive);
+    });
+
+    applyFilters();
+}
+
+function resetFilters() {
+    currentSearch = '';
+    const searchInput = document.getElementById('inquiry-search');
+    if (searchInput) searchInput.value = '';
+    filterInquiries('all');
+}
+
+const searchInput = document.getElementById('inquiry-search');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        currentSearch = (e.target.value || '').toLowerCase().trim();
+        applyFilters();
+    });
+}
+</script>
+
+<style>
+    /* Remove default <details> marker */
+    details summary::-webkit-details-marker { display: none; }
+    details summary::marker { content: ''; }
+
+    /* Line clamp utility */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Smooth fade-in for details content */
+    details[open] > div:not(summary) {
+        animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hide default browser arrow on selects (custom dark theme) */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        background-size: 12px;
+        padding-right: 2rem;
+    }
+</style>
+
 {% endblock %}

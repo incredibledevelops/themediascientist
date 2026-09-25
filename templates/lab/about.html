@@ -1,26 +1,596 @@
 {% extends 'lab/base.html' %}
-{% block title %}About Page{% endblock %}
+{% block title %}About Page Editor{% endblock %}
 {% block page_title %}About Page Editor{% endblock %}
-{% block page_subtitle %}Update your bio and story content.{% endblock %}
+{% block page_subtitle %}Update your bio, skills, tools, and story content.{% endblock %}
 
 {% block content %}
-<div class="glass-card rounded-2xl border border-slate-800 p-6 max-w-3xl">
-    <form method="POST" action="{{ url_for('lab_about') }}" class="space-y-4">
-        <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">HEADING</label>
-            <input type="text" name="heading" value="{{ about.heading }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    {# ============================================================
+       LEFT: FORM (2 columns on xl, full width on mobile)
+    ============================================================ #}
+    <form method="POST"
+          action="{{ url_for('lab_about') }}"
+          id="about-form"
+          class="xl:col-span-2 space-y-6">
+
+        {# ---------- SECTION: HEADINGS & BIO ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+
+            <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-align-left text-cyan-400" aria-hidden="true"></i>
+                    Headings & Bio
+                </h3>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 01
+                </span>
+            </div>
+
+            {# Heading #}
+            <div>
+                <label for="about-heading" class="block text-xs font-mono text-slate-300 mb-1.5">
+                    PAGE HEADING
+                </label>
+                <input type="text"
+                       id="about-heading"
+                       name="heading"
+                       value="{{ about.heading }}"
+                       maxlength="120"
+                       placeholder="The Person Behind The Brand"
+                       class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800
+                              text-sm text-white placeholder-slate-500
+                              focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                              transition">
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    Displayed as the main H1 on the About page.
+                </p>
+            </div>
+
+            {# Primary bio #}
+            <div>
+                <label for="about-bio" class="block text-xs font-mono text-slate-300 mb-1.5">
+                    PRIMARY BIO
+                </label>
+                <textarea id="about-bio"
+                          name="bio"
+                          rows="3"
+                          maxlength="500"
+                          placeholder="Tell visitors who you are..."
+                          class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800
+                                 text-sm text-white placeholder-slate-500 resize-y min-h-[80px]
+                                 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                 transition">{{ about.bio }}</textarea>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    Main intro paragraph. Aim for 1–2 sentences.
+                </p>
+            </div>
+
+            {# Secondary bio #}
+            <div>
+                <label for="about-bio2" class="block text-xs font-mono text-slate-300 mb-1.5">
+                    SECONDARY BIO
+                </label>
+                <textarea id="about-bio2"
+                          name="bio2"
+                          rows="3"
+                          maxlength="500"
+                          placeholder="Additional context..."
+                          class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800
+                                 text-sm text-white placeholder-slate-500 resize-y min-h-[80px]
+                                 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                 transition">{{ about.bio2 }}</textarea>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    Supporting paragraph. Appears below the primary bio.
+                </p>
+            </div>
+
+            {# Quote #}
+            <div>
+                <label for="about-quote" class="block text-xs font-mono text-slate-300 mb-1.5">
+                    HIGHLIGHTED QUOTE <span class="text-slate-500">(optional)</span>
+                </label>
+                <textarea id="about-quote"
+                          name="quote"
+                          rows="2"
+                          maxlength="300"
+                          placeholder="A short personal statement or philosophy..."
+                          class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800
+                                 text-sm text-white placeholder-slate-500 resize-y min-h-[60px]
+                                 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                 transition">{{ about.quote|default('') }}</textarea>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    Appears as a highlighted callout on the About page.
+                </p>
+            </div>
+
         </div>
-        <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">PRIMARY BIO</label>
-            <textarea name="bio" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">{{ about.bio }}</textarea>
+
+        {# ---------- SECTION: STATS ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+
+            <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-chart-simple text-purple-400" aria-hidden="true"></i>
+                    Quick Stats
+                </h3>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 02
+                </span>
+            </div>
+
+            {% set default_stats = [
+                {'key': 'years', 'label': 'Years', 'value': '7+', 'color': 'cyan'},
+                {'key': 'projects', 'label': 'Projects', 'value': '50+', 'color': 'purple'},
+                {'key': 'happy', 'label': 'Happy', 'value': '100%', 'color': 'emerald'}
+            ] %}
+            {% set current_stats = about.stats if about.stats else default_stats %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {% for stat in current_stats %}
+                <div class="space-y-2">
+                    <label for="stat-{{ stat.key }}"
+                           class="block text-xs font-mono text-slate-300">
+                        {{ stat.label|upper }}
+                    </label>
+                    <input type="text"
+                           id="stat-{{ stat.key }}"
+                           name="stat_{{ stat.key }}"
+                           value="{{ stat.value }}"
+                           maxlength="10"
+                           placeholder="0"
+                           class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800
+                                  text-sm text-white text-center font-mono font-bold
+                                  focus:outline-none focus:border-{{ stat.color }}-400 focus:ring-1 focus:ring-{{ stat.color }}-400/30
+                                  transition">
+                </div>
+                {% endfor %}
+            </div>
+
+            <p class="text-[10px] font-mono text-slate-500">
+                These appear as badges in the profile card. Keep them short (e.g. "7+", "50+").
+            </p>
+
         </div>
-        <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">SECONDARY BIO</label>
-            <textarea name="bio2" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">{{ about.bio2 }}</textarea>
+
+        {# ---------- SECTION: SKILLS ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-sliders text-cyan-400" aria-hidden="true"></i>
+                    Skills & Proficiency
+                </h3>
+                <button type="button"
+                        onclick="addSkill()"
+                        class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg
+                               text-[10px] font-mono font-bold
+                               bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                               hover:bg-cyan-500/30 transition">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Add Skill
+                </button>
+            </div>
+
+            <div id="skills-container" class="space-y-3">
+                {% for skill in about.skills %}
+                <div class="skill-row p-3 sm:p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-3"
+                     data-index="{{ loop.index0 }}">
+
+                    <div class="flex items-start gap-2">
+                        <div class="flex-1 min-w-0">
+                            <input type="text"
+                                   name="skill_name[]"
+                                   value="{{ skill.name }}"
+                                   placeholder="Skill name"
+                                   maxlength="80"
+                                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800
+                                          text-xs text-white placeholder-slate-500
+                                          focus:outline-none focus:border-cyan-400 transition">
+                        </div>
+                        <button type="button"
+                                onclick="removeSkill(this)"
+                                class="shrink-0 w-9 h-9 rounded-lg bg-red-950/40 border border-red-500/30
+                                       flex items-center justify-center text-red-400 hover:bg-red-500/20 transition"
+                                aria-label="Remove skill">
+                            <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <input type="range"
+                               name="skill_level[]"
+                               min="0" max="100" step="1"
+                               value="{{ skill.level }}"
+                               oninput="this.nextElementSibling.textContent = this.value + '%'"
+                               class="flex-1 accent-cyan-400 cursor-pointer">
+                        <span class="skill-level-label text-xs font-mono font-bold text-cyan-400 w-12 text-right shrink-0">
+                            {{ skill.level }}%
+                        </span>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+
+            <p class="text-[10px] font-mono text-slate-500">
+                Drag the slider to set proficiency. Levels animate on the public page.
+            </p>
+
         </div>
-        <button type="submit" class="px-6 py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">
-            <i class="fa-solid fa-save"></i> SAVE CHANGES
-        </button>
+
+        {# ---------- SECTION: TOOLS ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+
+            <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-toolbox text-emerald-400" aria-hidden="true"></i>
+                    Software & Tools
+                </h3>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                    Section 04
+                </span>
+            </div>
+
+            <div>
+                <label for="about-tools" class="block text-xs font-mono text-slate-300 mb-1.5">
+                    TOOLS (COMMA-SEPARATED)
+                </label>
+                <textarea id="about-tools"
+                          name="tools"
+                          rows="3"
+                          placeholder="DaVinci Resolve, Photoshop, Premiere Pro, Figma..."
+                          class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800
+                                 text-sm text-white placeholder-slate-500 resize-y min-h-[80px]
+                                 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30
+                                 transition">{{ about.tools|join(', ') if about.tools else '' }}</textarea>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    Separate each tool with a comma. They'll appear as tags on the About page.
+                </p>
+            </div>
+
+            {# Preview of parsed tools #}
+            <div>
+                <p class="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">
+                    Preview
+                </p>
+                <div id="tools-preview" class="flex flex-wrap gap-2">
+                    {% for tool in about.tools %}
+                    <span class="px-2.5 py-1 text-[10px] sm:text-xs font-mono rounded-md
+                                 bg-slate-900 border border-slate-800 text-slate-300">
+                        {{ tool }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        {# ---------- STICKY ACTION BAR (mobile) / INLINE BUTTONS (desktop) ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 p-4 sm:p-5
+                    sticky bottom-4 sm:static
+                    bg-slate-900/95 backdrop-blur-md z-30">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-[10px] font-mono text-slate-500 w-full sm:w-auto">
+                    <i class="fa-solid fa-circle-info text-cyan-400" aria-hidden="true"></i>
+                    <span>Changes go live immediately after saving.</span>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="reset"
+                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-mono
+                                   bg-slate-800 text-slate-300 border border-slate-700
+                                   hover:bg-slate-700 transition">
+                        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset
+                    </button>
+                    <button type="submit"
+                            class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-mono font-bold
+                                   text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
+                                   hover:brightness-110 transition active:scale-[0.98]
+                                   inline-flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-save" aria-hidden="true"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </form>
+
+    {# ============================================================
+       RIGHT: LIVE PREVIEW (hidden on < xl)
+    ============================================================ #}
+    <aside class="hidden xl:block xl:col-span-1">
+        <div class="sticky top-24 space-y-4">
+
+            {# Preview header #}
+            <div class="flex items-center gap-2 px-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
+                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Live Preview
+                </span>
+            </div>
+
+            {# Preview card #}
+            <div class="glass-card rounded-2xl border border-slate-800 p-5 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+
+                {# Profile-style preview #}
+                <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-900 aspect-square relative">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <i class="fa-solid fa-user text-6xl text-slate-700" aria-hidden="true"></i>
+                    </div>
+                    <div class="absolute bottom-3 left-3 right-3">
+                        <h3 id="preview-name" class="font-mono-heading font-bold text-sm text-white truncate">
+                            {{ site_settings.owner_name if site_settings else 'Opoku Kwadwo Incredible' }}
+                        </h3>
+                        <p class="text-[10px] text-cyan-400 font-mono">
+                            Creative Media Professional &amp; Developer
+                        </p>
+                    </div>
+                </div>
+
+                {# Stats preview #}
+                <div class="grid grid-cols-3 gap-2 text-center font-mono">
+                    {% for stat in current_stats %}
+                    <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800">
+                        <div id="preview-stat-{{ stat.key }}"
+                             class="text-sm font-bold text-{{ stat.color }}-400">
+                            {{ stat.value }}
+                        </div>
+                        <div class="text-[9px] text-slate-500 uppercase tracking-wider">
+                            {{ stat.label }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {# Heading + bio preview #}
+                <div class="pt-3 border-t border-slate-800">
+                    <h4 id="preview-heading"
+                        class="font-mono-heading font-bold text-sm text-white leading-tight mb-2">
+                        {{ about.heading }}
+                    </h4>
+                    <p id="preview-bio" class="text-[11px] text-slate-300 leading-relaxed line-clamp-4">
+                        {{ about.bio }}
+                    </p>
+                    {% if about.quote %}
+                    <p id="preview-quote" class="text-[11px] text-slate-400 italic mt-2 leading-relaxed line-clamp-3">
+                        "{{ about.quote }}"
+                    </p>
+                    {% endif %}
+                </div>
+
+                {# Skills preview #}
+                <div class="pt-3 border-t border-slate-800 space-y-2">
+                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-2">
+                        Top Skills
+                    </p>
+                    {% for skill in about.skills[:3] %}
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[10px] font-mono">
+                            <span class="text-slate-400 truncate">{{ skill.name }}</span>
+                            <span class="text-cyan-400 font-bold">{{ skill.level }}%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-900 rounded-full border border-slate-800 overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                                 style="width: {{ skill.level }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {# Tools preview #}
+                {% if about.tools %}
+                <div class="pt-3 border-t border-slate-800">
+                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-2">
+                        Tools
+                    </p>
+                    <div class="flex flex-wrap gap-1.5">
+                        {% for tool in about.tools[:6] %}
+                        <span class="px-2 py-0.5 text-[9px] font-mono rounded bg-slate-900 border border-slate-800 text-slate-400">
+                            {{ tool }}
+                        </span>
+                        {% endfor %}
+                        {% if about.tools|length > 6 %}
+                        <span class="px-2 py-0.5 text-[9px] font-mono text-slate-500">
+                            +{{ about.tools|length - 6 }} more
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            {# Preview CTA #}
+            <a href="{{ url_for('about') }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="block text-center px-4 py-2.5 rounded-xl text-xs font-mono
+                      bg-slate-800 text-slate-200 border border-slate-700
+                      hover:bg-slate-700 transition">
+                <i class="fa-solid fa-external-link-alt" aria-hidden="true"></i>
+                Open Public Page
+            </a>
+
+        </div>
+    </aside>
+
 </div>
+
+<script>
+// ---------- SKILLS: add/remove ----------
+function addSkill() {
+    const container = document.getElementById('skills-container');
+    const row = document.createElement('div');
+    row.className = 'skill-row p-3 sm:p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-3';
+    row.innerHTML = `
+        <div class="flex items-start gap-2">
+            <div class="flex-1 min-w-0">
+                <input type="text"
+                       name="skill_name[]"
+                       placeholder="New skill name"
+                       maxlength="80"
+                       class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800
+                              text-xs text-white placeholder-slate-500
+                              focus:outline-none focus:border-cyan-400 transition">
+            </div>
+            <button type="button"
+                    onclick="removeSkill(this)"
+                    class="shrink-0 w-9 h-9 rounded-lg bg-red-950/40 border border-red-500/30
+                           flex items-center justify-center text-red-400 hover:bg-red-500/20 transition">
+                <i class="fa-solid fa-trash text-xs"></i>
+            </button>
+        </div>
+        <div class="flex items-center gap-3">
+            <input type="range"
+                   name="skill_level[]"
+                   min="0" max="100" step="1" value="50"
+                   oninput="this.nextElementSibling.textContent = this.value + '%'"
+                   class="flex-1 accent-cyan-400 cursor-pointer">
+            <span class="skill-level-label text-xs font-mono font-bold text-cyan-400 w-12 text-right shrink-0">
+                50%
+            </span>
+        </div>
+    `;
+    container.appendChild(row);
+    // Focus the new input
+    row.querySelector('input[type="text"]').focus();
+}
+
+function removeSkill(btn) {
+    const row = btn.closest('.skill-row');
+    if (row) row.remove();
+}
+
+// ---------- TOOLS: live preview ----------
+const toolsInput = document.getElementById('about-tools');
+const toolsPreview = document.getElementById('tools-preview');
+
+function updateToolsPreview() {
+    if (!toolsInput || !toolsPreview) return;
+    const raw = toolsInput.value || '';
+    const tools = raw.split(',').map(t => t.trim()).filter(Boolean);
+    toolsPreview.innerHTML = tools.length
+        ? tools.map(t =>
+            `<span class="px-2.5 py-1 text-[10px] sm:text-xs font-mono rounded-md bg-slate-900 border border-slate-800 text-slate-300">${escapeHtml(t)}</span>`
+          ).join('')
+        : '<span class="text-[10px] font-mono text-slate-600 italic">No tools yet</span>';
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+}
+
+if (toolsInput) {
+    toolsInput.addEventListener('input', updateToolsPreview);
+    updateToolsPreview();
+}
+
+// ---------- LIVE PREVIEW SYNC (desktop only) ----------
+const headingInput = document.getElementById('about-heading');
+const bioInput = document.getElementById('about-bio');
+const quoteInput = document.getElementById('about-quote');
+
+const previewHeading = document.getElementById('preview-heading');
+const previewBio = document.getElementById('preview-bio');
+const previewQuote = document.getElementById('preview-quote');
+
+if (headingInput && previewHeading) {
+    headingInput.addEventListener('input', () => {
+        previewHeading.textContent = headingInput.value || 'Page Heading';
+    });
+}
+if (bioInput && previewBio) {
+    bioInput.addEventListener('input', () => {
+        previewBio.textContent = bioInput.value || 'Your bio will appear here...';
+    });
+}
+if (quoteInput && previewQuote) {
+    quoteInput.addEventListener('input', () => {
+        if (quoteInput.value.trim()) {
+            previewQuote.textContent = '"' + quoteInput.value + '"';
+            previewQuote.classList.remove('hidden');
+        } else {
+            previewQuote.textContent = '';
+            previewQuote.classList.add('hidden');
+        }
+    });
+}
+
+// Stats live preview
+['years', 'projects', 'happy'].forEach(key => {
+    const input = document.getElementById('stat-' + key);
+    const preview = document.getElementById('preview-stat-' + key);
+    if (input && preview) {
+        input.addEventListener('input', () => {
+            preview.textContent = input.value || '0';
+        });
+    }
+});
+</script>
+
+<style>
+    /* Range slider custom styling */
+    input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        border-radius: 9999px;
+        background: #1e293b;
+        outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #00F2FE;
+        cursor: pointer;
+        box-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
+    }
+    input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #00F2FE;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
+    }
+    input[type="range"]::-moz-range-track {
+        background: #1e293b;
+        border-radius: 9999px;
+        height: 6px;
+    }
+
+    /* Line clamp for preview bio */
+    .line-clamp-4 {
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Ensure sticky action bar doesn't overflow on mobile */
+    @media (max-width: 640px) {
+        form .sticky {
+            margin-left: -1rem;
+            margin-right: -1rem;
+            border-radius: 0;
+            border-left: 0;
+            border-right: 0;
+        }
+    }
+</style>
+
 {% endblock %}

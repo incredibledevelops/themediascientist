@@ -2,146 +2,453 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>{% block title %}Lab Console{% endblock %} | The Media Scientist</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: { extend: {
-                colors: { obsidian:'#0B0E17', slateCard:'#111827', neonCyan:'#00F2FE', electricPurple:'#7928CA', emeraldMint:'#00F5A0' },
-                fontFamily: { sans:['Inter','sans-serif'], mono:['Space Grotesk','monospace'] }
+                colors: {
+                    obsidian:'#0B0E17',
+                    slateCard:'#111827',
+                    neonCyan:'#00F2FE',
+                    electricPurple:'#7928CA',
+                    emeraldMint:'#00F5A0'
+                },
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    mono: ['Space Grotesk', 'monospace']
+                }
             }}
         }
     </script>
+
     <style>
-        body { background-color:#0B0E17; color:#F9FAFB; font-family:'Inter',sans-serif; }
-        .font-mono-heading { font-family:'Space Grotesk',monospace; }
-        .glass-card { background: rgba(17,24,39,.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border:1px solid rgba(255,255,255,.08); }
-        .tech-grid-bg { background-size:40px 40px; background-image: linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px); }
-        ::-webkit-scrollbar { width:6px; height:6px; }
+        html, body { height: 100%; }
+        body {
+            background-color: #0B0E17;
+            color: #F9FAFB;
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono-heading { font-family: 'Space Grotesk', monospace; }
+        .glass-card {
+            background: rgba(17,24,39,.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+        .tech-grid-bg {
+            background-size: 40px 40px;
+            background-image:
+                linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1F2937; border-radius:4px; }
+        ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #00F2FE; }
+
+        /* Accessibility: skip-to-content link */
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 999;
+            padding: 12px 20px;
+            background: #00F2FE;
+            color: #0B0E17;
+            font-weight: 700;
+            border-radius: 0 0 8px 0;
+        }
+        .skip-link:focus { left: 0; }
+
+        /* Respect reduced-motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
-<body class="tech-grid-bg min-h-screen text-slate-100 flex overflow-hidden">
 
-<aside class="w-64 glass-card border-r border-slate-800/80 hidden md:flex flex-col z-20 h-screen sticky top-0">
-    <div class="h-20 flex items-center px-6 border-b border-slate-800/80">
-        <a href="{{ url_for('lab_dashboard') }}" class="flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-purple-600 p-[1px]">
-                <div class="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center">
-                    <i class="fa-solid fa-camera text-cyan-400 text-sm"></i>
+<body class="tech-grid-bg min-h-screen text-slate-100">
+
+<a href="#lab-main" class="skip-link">Skip to main content</a>
+
+{# ============================================================
+   WRAPPER: flex row with overflow locked on desktop only
+============================================================ #}
+<div class="lg:flex lg:h-screen lg:overflow-hidden">
+
+    {# ============================================================
+       MOBILE OVERLAY (closes sidebar on tap)
+    ============================================================ #}
+    <div id="lab-mobile-overlay"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden lg:hidden"
+         onclick="toggleLabSidebar()"></div>
+
+    {# ============================================================
+       SIDEBAR
+    ============================================================ #}
+    <aside id="lab-sidebar"
+           class="fixed lg:static inset-y-0 left-0 z-50 w-72 lg:w-64 shrink-0
+                  glass-card border-r border-slate-800/80
+                  flex flex-col
+                  transform -translate-x-full lg:translate-x-0
+                  transition-transform duration-300 ease-in-out
+                  lg:h-screen lg:sticky lg:top-0
+                  !rounded-none !border-y-0 !border-l-0">
+
+        {# ---- Brand header ---- #}
+        <div class="h-20 shrink-0 flex items-center justify-between px-5 lg:px-6 border-b border-slate-800/80">
+            <a href="{{ url_for('lab_dashboard') }}" class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 shrink-0 rounded-lg bg-gradient-to-tr from-cyan-500 to-purple-600 p-[1px]">
+                    <div class="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center">
+                        <i class="fa-solid fa-camera text-cyan-400 text-sm" aria-hidden="true"></i>
+                    </div>
+                </div>
+                <div class="min-w-0">
+                    <span class="font-mono-heading font-bold text-sm tracking-wider text-white block truncate">
+                        LAB CONSOLE
+                    </span>
+                    <span class="text-[9px] text-cyan-400 font-mono tracking-widest uppercase">
+                        Admin System
+                    </span>
+                </div>
+            </a>
+            <button onclick="toggleLabSidebar()"
+                    class="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800/50 transition"
+                    aria-label="Close menu">
+                <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        {# ---- Nav ---- #}
+        <nav class="flex-1 overflow-y-auto py-5 px-3 lg:px-4 space-y-1" aria-label="Admin navigation">
+
+            <p class="px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">
+                Main Menu
+            </p>
+
+            {# Helper macro for active state #}
+            {% set ep = request.endpoint or '' %}
+
+            <a href="{{ url_for('lab_dashboard') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep == 'lab_dashboard' %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-chart-line w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm">Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('lab_inquiries') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep == 'lab_inquiries' %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-inbox w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm flex-1">Project Inquiries</span>
+                {% if nav_badge_inquiries and nav_badge_inquiries > 0 %}
+                <span class="bg-cyan-500 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                    {{ nav_badge_inquiries }}
+                </span>
+                {% endif %}
+            </a>
+
+            <a href="{{ url_for('lab_portfolio') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep == 'lab_portfolio' %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-folder-open w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm">Portfolio Manager</span>
+            </a>
+
+            <a href="{{ url_for('lab_services') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep == 'lab_services' %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-tags w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm">Services &amp; Pricing</span>
+            </a>
+
+            <p class="px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-6 mb-2">
+                Content &amp; Config
+            </p>
+
+            <a href="{{ url_for('lab_clients') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep in ['lab_clients', 'lab_client_projects'] %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-user-group w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm flex-1">Clients</span>
+                {% if nav_badge_clients and nav_badge_clients > 0 %}
+                <span class="bg-purple-500/20 text-purple-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-500/30">
+                    {{ nav_badge_clients }}
+                </span>
+                {% endif %}
+            </a>
+
+            <a href="{{ url_for('lab_about') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep == 'lab_about' %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-user-pen w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm">About Page</span>
+            </a>
+
+            <a href="{{ url_for('lab_contact') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep == 'lab_contact' %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-address-book w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm">Contact Info</span>
+            </a>
+
+            <a href="{{ url_for('lab_users') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep == 'lab_users' %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-users w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm">Users</span>
+            </a>
+
+            <a href="{{ url_for('lab_settings') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                      {% if ep == 'lab_settings' %}
+                          bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                      {% else %}
+                          text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent
+                      {% endif %}">
+                <i class="fa-solid fa-gear w-5 text-center" aria-hidden="true"></i>
+                <span class="font-medium text-sm">Site Settings</span>
+            </a>
+        </nav>
+
+        {# ---- User footer ---- #}
+        <div class="shrink-0 p-3 lg:p-4 border-t border-slate-800/80">
+            <div class="glass-card rounded-xl p-3 border border-slate-700/50 flex items-center gap-3">
+                <div class="w-9 h-9 shrink-0 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                    {{ current_user.name[0]|upper if current_user.name else 'A' }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-white truncate font-mono">
+                        {{ current_user.name }}
+                    </p>
+                    <p class="text-[10px] text-emeraldMint flex items-center gap-1 font-mono">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emeraldMint animate-pulse"></span>
+                        Online
+                    </p>
+                </div>
+                <a href="{{ url_for('lab_logout') }}"
+                   class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
+                          text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition"
+                   title="Logout" aria-label="Logout">
+                    <i class="fa-solid fa-right-from-bracket text-xs" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    {# ============================================================
+       MAIN
+    ============================================================ #}
+    <main class="flex-1 flex flex-col min-w-0 min-h-0 lg:h-screen lg:overflow-hidden relative z-10">
+
+        {# ---- Header ---- #}
+        <header class="h-16 sm:h-20 shrink-0 glass-card border-b border-slate-800/80
+                       px-4 sm:px-6 flex items-center justify-between gap-3">
+
+            <div class="flex items-center gap-3 min-w-0">
+                {# Mobile: menu button #}
+                <button onclick="toggleLabSidebar()"
+                        class="lg:hidden shrink-0 w-10 h-10 rounded-xl
+                               bg-slate-900 border border-slate-700
+                               flex items-center justify-center
+                               text-slate-300 hover:text-white hover:border-slate-600
+                               transition"
+                        aria-label="Open menu"
+                        aria-controls="lab-sidebar"
+                        aria-expanded="false">
+                    <i class="fa-solid fa-bars-staggered text-base" aria-hidden="true"></i>
+                </button>
+
+                <div class="min-w-0">
+                    <h1 class="text-base sm:text-lg lg:text-xl font-bold font-mono-heading text-white truncate">
+                        {% block page_title %}System Dashboard{% endblock %}
+                    </h1>
+                    <p class="text-[11px] sm:text-xs text-slate-400 font-mono truncate">
+                        {% block page_subtitle %}Welcome back, {{ current_user.name }}.{% endblock %}
+                    </p>
                 </div>
             </div>
-            <div>
-                <span class="font-mono-heading font-bold text-sm tracking-wider text-white block">LAB CONSOLE</span>
-                <span class="text-[9px] text-cyan-400 font-mono tracking-widest uppercase">Admin System</span>
-            </div>
-        </a>
-    </div>
 
-    <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-        <p class="px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Main Menu</p>
-        <a href="{{ url_for('lab_dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_dashboard' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-chart-line w-5 text-center"></i><span class="font-medium text-sm">Dashboard</span>
-        </a>
-        <a href="{{ url_for('lab_inquiries') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_inquiries' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-inbox w-5 text-center"></i><span class="font-medium text-sm flex-1">Project Inquiries</span>
-        </a>
-        <a href="{{ url_for('lab_portfolio') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_portfolio' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-folder-open w-5 text-center"></i><span class="font-medium text-sm">Portfolio Manager</span>
-        </a>
-        <a href="{{ url_for('lab_services') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_services' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-tags w-5 text-center"></i><span class="font-medium text-sm">Services & Pricing</span>
-        </a>
+            <div class="flex items-center gap-2 sm:gap-4 shrink-0">
+                {# Clock (hidden on very small screens) #}
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full
+                            bg-slate-900 border border-slate-700 text-xs font-mono">
+                    <i class="fa-solid fa-clock text-slate-400" aria-hidden="true"></i>
+                    <span id="sys-time" class="text-slate-300 tabular-nums">--:--:--</span>
+                </div>
 
-        <p class="px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-8 mb-2">Content & Config</p>
-        <a href="{{ url_for('lab_clients') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_clients' or request.endpoint == 'lab_client_projects' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-user-group w-5 text-center"></i><span class="font-medium text-sm flex-1">Clients</span>
-        </a>
-        <a href="{{ url_for('lab_about') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_about' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-user-pen w-5 text-center"></i><span class="font-medium text-sm">About Page</span>
-        </a>
-        <a href="{{ url_for('lab_contact') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_contact' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-address-book w-5 text-center"></i><span class="font-medium text-sm">Contact Info</span>
-        </a>
-        <a href="{{ url_for('lab_users') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_users' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-users w-5 text-center"></i><span class="font-medium text-sm">Users</span>
-        </a>
-        <a href="{{ url_for('lab_settings') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.endpoint == 'lab_settings' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% else %}text-slate-400 hover:bg-slate-800/50 hover:text-slate-200{% endif %} transition-all">
-            <i class="fa-solid fa-gear w-5 text-center"></i><span class="font-medium text-sm">Site Settings</span>
-        </a>
-    </nav>
+                {# View site #}
+                <a href="{{ url_for('index') }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="px-3 sm:px-4 py-2 rounded-xl text-xs font-mono font-semibold
+                          bg-slate-800 text-slate-200 border border-slate-700
+                          hover:bg-slate-700 transition
+                          inline-flex items-center gap-2">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    <span class="hidden sm:inline">View Site</span>
+                </a>
+            </div>
+        </header>
 
-    <div class="p-4 border-t border-slate-800/80">
-        <div class="glass-card rounded-xl p-3 border border-slate-700/50 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-300">
-                <i class="fa-solid fa-user-astronaut text-sm"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-white truncate font-mono">{{ current_user.name }}</p>
-                <p class="text-[10px] text-emeraldMint flex items-center gap-1 font-mono">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emeraldMint animate-pulse"></span> Online
-                </p>
-            </div>
-            <a href="{{ url_for('lab_logout') }}" class="text-slate-500 hover:text-red-400 text-xs" title="Logout">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </a>
-        </div>
-    </div>
-</aside>
-
-<main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
-    <header class="h-20 glass-card border-b border-slate-800/80 px-6 flex items-center justify-between shrink-0">
-        <div class="flex items-center gap-4">
-            <div>
-                <h1 class="text-xl font-bold font-mono-heading text-white">{% block page_title %}System Dashboard{% endblock %}</h1>
-                <p class="text-xs text-slate-400 font-mono">{% block page_subtitle %}Welcome back, {{ current_user.name }}.{% endblock %}</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-4">
-            <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-xs font-mono">
-                <i class="fa-solid fa-clock text-slate-400"></i>
-                <span id="sys-time" class="text-slate-300">00:00:00</span>
-            </div>
-            <a href="{{ url_for('index') }}" target="_blank" class="px-4 py-2 rounded-xl text-xs font-mono font-semibold bg-slate-800 text-slate-200 hover:bg-slate-700 transition flex items-center gap-2">
-                <i class="fa-solid fa-eye"></i> View Site
-            </a>
-        </div>
-    </header>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-      <div class="px-6 pt-4">
-          {% for category, msg in messages %}
-          <div class="mb-2 p-3 rounded-xl font-mono text-xs {% if category == 'error' %}bg-red-950/60 border border-red-500/40 text-red-200{% else %}bg-emerald-950/60 border border-emerald-500/40 text-emerald-200{% endif %}">
-              <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} mr-2"></i>{{ msg }}
+        {# ---- Flash messages ---- #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          <div class="shrink-0 px-4 sm:px-6 pt-4" role="alert" aria-live="polite">
+              {% for category, msg in messages %}
+              <div class="mb-2 p-3 rounded-xl font-mono text-xs flex items-start gap-2
+                          {% if category == 'error' %}
+                              bg-red-950/60 border border-red-500/40 text-red-200
+                          {% else %}
+                              bg-emerald-950/60 border border-emerald-500/40 text-emerald-200
+                          {% endif %}">
+                  <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} mt-0.5 shrink-0"
+                     aria-hidden="true"></i>
+                  <span>{{ msg }}</span>
+              </div>
+              {% endfor %}
           </div>
-          {% endfor %}
-      </div>
-      {% endif %}
-    {% endwith %}
+          {% endif %}
+        {% endwith %}
 
-    <div class="flex-1 overflow-y-auto p-6">
-        <div class="max-w-7xl mx-auto">
-            {% block content %}{% endblock %}
+        {# ---- THE SCROLLABLE AREA ----
+           flex-1 + min-h-0 + overflow-y-auto = the critical combo #}
+        <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain" id="lab-main" tabindex="-1">
+            <div class="p-4 sm:p-6 pb-24">
+                <div class="max-w-7xl mx-auto">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
         </div>
-    </div>
-</main>
+    </main>
+</div>
 
 <script>
-function updateClock(){
-    const now = new Date();
+// ---------- Live clock ----------
+function updateClock() {
     const el = document.getElementById('sys-time');
-    if (el) el.textContent = now.toLocaleTimeString('en-US',{hour12:false});
+    if (!el) return;
+    const now = new Date();
+    el.textContent = now.toLocaleTimeString('en-US', { hour12: false });
 }
-setInterval(updateClock,1000); updateClock();
+setInterval(updateClock, 1000);
+updateClock();
+
+// ---------- Mobile sidebar toggle ----------
+function toggleLabSidebar() {
+    const sidebar = document.getElementById('lab-sidebar');
+    const overlay = document.getElementById('lab-mobile-overlay');
+    const openBtn = document.querySelector('[aria-controls="lab-sidebar"]');
+    if (!sidebar || !overlay) return;
+
+    const isClosed = sidebar.classList.contains('-translate-x-full');
+
+    if (isClosed) {
+        // Open
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+        requestAnimationFrame(() => overlay.classList.remove('opacity-0'));
+        if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    } else {
+        // Close
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.classList.add('hidden'), 250);
+        if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+}
+
+// Close sidebar on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const sidebar = document.getElementById('lab-sidebar');
+        if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+            toggleLabSidebar();
+        }
+    }
+});
+
+// Auto-close sidebar when navigating (mobile UX)
+document.querySelectorAll('#lab-sidebar nav a').forEach(link => {
+    link.addEventListener('click', () => {
+        if (window.innerWidth < 1024) {
+            const sidebar = document.getElementById('lab-sidebar');
+            if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                toggleLabSidebar();
+            }
+        }
+    });
+});
+
+// Reset sidebar state on viewport resize (from mobile to desktop)
+let lastWasMobile = window.innerWidth < 1024;
+window.addEventListener('resize', () => {
+    const isMobile = window.innerWidth < 1024;
+    if (lastWasMobile !== isMobile) {
+        const sidebar = document.getElementById('lab-sidebar');
+        const overlay = document.getElementById('lab-mobile-overlay');
+        if (!isMobile) {
+            // Switching to desktop: ensure sidebar visible, overlay hidden
+            sidebar?.classList.remove('-translate-x-full');
+            overlay?.classList.add('hidden');
+            overlay?.classList.add('opacity-0');
+            document.body.style.overflow = '';
+        } else {
+            // Switching to mobile: hide sidebar
+            sidebar?.classList.add('-translate-x-full');
+        }
+        lastWasMobile = isMobile;
+    }
+});
 </script>
+
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

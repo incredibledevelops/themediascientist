@@ -1,15 +1,23 @@
+# =============================================================
+#  Models — The Media Scientist
+#  MongoDB access layer with static-method "models".
+# =============================================================
 from pymongo import MongoClient, DESCENDING
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 import secrets
 import string
+
 from config import Config
 
+
+# ------------------------------------------------------------
+#  Mongo client & collections
+# ------------------------------------------------------------
 client = MongoClient(Config.MONGO_URI)
 db = client.get_database()
 
-# Collections
 users_col = db.users
 inquiries_col = db.inquiries
 services_col = db.services
@@ -24,33 +32,69 @@ client_messages_col = db.client_messages
 payments_col = db.payments
 
 
+# ------------------------------------------------------------
+#  Helpers
+# ------------------------------------------------------------
+def _now():
+    """Return current UTC datetime."""
+    return datetime.now(timezone.utc)
+
+
 def gen_temp_password(length=10):
+    """Generate a secure temporary password."""
     alphabet = string.ascii_letters + string.digits
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
 def gen_client_code():
+    """Generate a short client identifier like CLT-A1B2C3."""
     return "CLT-" + secrets.token_hex(3).upper()
 
 
-# ==========================================================
+def to_oid(value):
+    """Safely convert to ObjectId; returns None on failure."""
+    if not value:
+        return None
+    if isinstance(value, ObjectId):
+        return value
+    try:
+        return ObjectId(value)
+    except Exception:
+        return None
+
+
+# =============================================================
 #  USER
-# ==========================================================
+# =============================================================
 class User:
     @staticmethod
     def create(email, password, name="Admin", role="admin"):
-        existing = users_col.find_one({"email": email.lower()})
+        """
+        Create a user. Returns (user_doc, plain_password).
+        If the email already exists, returns (existing_doc, None).
+        """
+        if not email or not password:
+            return None, None
+
+        email = email.strip().lower()
+        existing = users_col.find_one({"email": email})
         if existing:
             return existing, None
+
         user = {
-            "email": email.lower(),
+            "email": email,
             "password": generate_password_hash(password),
-            "name": name,
+            "name": name or "User",
             "role": role,
             "is_admin": role == "admin",
             "client_code": gen_client_code() if role == "client" else None,
             "is_active": True,
-            "created_at": datetime.utcnow()
+            "preferences": {
+                "email_on_files": True,
+                "email_on_invoices": True,
+                "email_on_messages": True,
+            },
+            "created_at": _now(),
         }
         result = users_col.insert_one(user)
         user["_id"] = result.inserted_id
@@ -58,20 +102,25 @@ class User:
 
     @staticmethod
     def find_by_email(email):
-        return users_col.find_one({"email": email.lower()})
+        if not email:
+            return None
+        return users_col.find_one({"email": email.strip().lower()})
 
     @staticmethod
     def find_by_id(user_id):
-        try:
-            return users_col.find_one({"_id": ObjectId(user_id)})
-        except Exception:
+        oid = to_oid(user_id)
+        if not oid:
             return None
+        return users_col.find_one({"_id": oid})
 
     @staticmethod
     def verify_password(user, password):
         if not user or not user.get("password"):
             return False
-        return check_password_hash(user["password"], password)
+        try:
+            return check_password_hash(user["password"], password)
+        except Exception:
+            return False
 
     @staticmethod
     def get_all():
@@ -87,39 +136,58 @@ class User:
 
     @staticmethod
     def update_password(user_id, new_password):
+        oid = to_oid(user_id)
+        if not oid or not new_password:
+            return None
         return users_col.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"password": generate_password_hash(new_password)}}
+            {"_id": oid},
+            {"$set": {"password": generate_password_hash(new_password)}},
+        )
+
+    @staticmethod
+    def update_preferences(user_id, prefs):
+        oid = to_oid(user_id)
+        if not oid or not isinstance(prefs, dict):
+            return None
+        return users_col.update_one(
+            {"_id": oid},
+            {"$set": {"preferences": prefs}},
         )
 
     @staticmethod
     def toggle_active(user_id):
-        user = User.find_by_id(user_id)
+        oid = to_oid(user_id)
+        if not oid:
+            return None
+        user = users_col.find_one({"_id": oid})
         if not user:
             return None
         new_state = not user.get("is_active", True)
-        users_col.update_one({"_id": ObjectId(user_id)}, {"$set": {"is_active": new_state}})
+        users_col.update_one({"_id": oid}, {"$set": {"is_active": new_state}})
         return new_state
 
     @staticmethod
     def delete(user_id):
-        return users_col.delete_one({"_id": ObjectId(user_id)})
+        oid = to_oid(user_id)
+        if not oid:
+            return None
+        return users_col.delete_one({"_id": oid})
 
 
-# ==========================================================
+# =============================================================
 #  INQUIRY
-# ==========================================================
+# =============================================================
 class Inquiry:
     @staticmethod
     def create(data):
         inquiry = {
-            "name": data.get("name", ""),
-            "email": data.get("email", ""),
-            "services": data.get("services", []),
+            "name": data.get("name", "").strip(),
+            "email": data.get("email", "").strip(),
+            "services": data.get("services", []) or [],
             "budget": data.get("budget", ""),
-            "message": data.get("message", ""),
+            "message": data.get("message", "").strip(),
             "status": "new",
-            "created_at": datetime.utcnow()
+            "created_at": _now(),
         }
         return inquiries_col.insert_one(inquiry)
 
@@ -137,23 +205,32 @@ class Inquiry:
 
     @staticmethod
     def update_status(inquiry_id, status):
+        oid = to_oid(inquiry_id)
+        if not oid:
+            return None
         return inquiries_col.update_one(
-            {"_id": ObjectId(inquiry_id)},
-            {"$set": {"status": status}}
+            {"_id": oid},
+            {"$set": {"status": status}},
         )
 
     @staticmethod
     def delete(inquiry_id):
-        return inquiries_col.delete_one({"_id": ObjectId(inquiry_id)})
+        oid = to_oid(inquiry_id)
+        if not oid:
+            return None
+        return inquiries_col.delete_one({"_id": oid})
 
 
-# ==========================================================
+# =============================================================
 #  SERVICE
-# ==========================================================
+# =============================================================
 class Service:
     @staticmethod
     def create(data):
-        data["created_at"] = datetime.utcnow()
+        data = dict(data)
+        data["created_at"] = _now()
+        data.setdefault("plans", [])
+        data.setdefault("order", 99)
         return services_col.insert_one(data)
 
     @staticmethod
@@ -162,21 +239,32 @@ class Service:
 
     @staticmethod
     def get_by_id(service_id):
-        try:
-            return services_col.find_one({"_id": ObjectId(service_id)})
-        except Exception:
+        oid = to_oid(service_id)
+        if not oid:
             return None
+        return services_col.find_one({"_id": oid})
 
     @staticmethod
     def update(service_id, data):
-        return services_col.update_one(
-            {"_id": ObjectId(service_id)},
-            {"$set": data}
-        )
+        oid = to_oid(service_id)
+        if not oid:
+            return None
+        return services_col.update_one({"_id": oid}, {"$set": data})
+
+    @staticmethod
+    def update_plans(service_id, plans):
+        """Replace the entire plans array for a service."""
+        oid = to_oid(service_id)
+        if not oid:
+            return None
+        return services_col.update_one({"_id": oid}, {"$set": {"plans": plans}})
 
     @staticmethod
     def delete(service_id):
-        return services_col.delete_one({"_id": ObjectId(service_id)})
+        oid = to_oid(service_id)
+        if not oid:
+            return None
+        return services_col.delete_one({"_id": oid})
 
     @staticmethod
     def seed_defaults():
@@ -234,18 +322,19 @@ class Service:
                     {"name": "Growth & Content Plan", "price": "GH₵ 3,000 - GH₵ 6,000 / mo", "desc": "Includes promotional video ads creation, weekly campaign management, A/B testing, and conversion rate optimization."},
                     {"name": "Full Brand Scale Strategy", "price": "GH₵ 8,000+ / mo", "desc": "End-to-end digital growth strategy, continuous video content production, web landing page integration, and dedicated campaign optimization."}
                 ]
-            }
+            },
         ]
         services_col.insert_many(defaults)
 
 
-# ==========================================================
+# =============================================================
 #  PORTFOLIO
-# ==========================================================
+# =============================================================
 class PortfolioItem:
     @staticmethod
     def create(data):
-        data["created_at"] = datetime.utcnow()
+        data = dict(data)
+        data["created_at"] = _now()
         return portfolio_col.insert_one(data)
 
     @staticmethod
@@ -257,21 +346,24 @@ class PortfolioItem:
 
     @staticmethod
     def get_by_id(item_id):
-        try:
-            return portfolio_col.find_one({"_id": ObjectId(item_id)})
-        except Exception:
+        oid = to_oid(item_id)
+        if not oid:
             return None
+        return portfolio_col.find_one({"_id": oid})
 
     @staticmethod
     def update(item_id, data):
-        return portfolio_col.update_one(
-            {"_id": ObjectId(item_id)},
-            {"$set": data}
-        )
+        oid = to_oid(item_id)
+        if not oid:
+            return None
+        return portfolio_col.update_one({"_id": oid}, {"$set": data})
 
     @staticmethod
     def delete(item_id):
-        return portfolio_col.delete_one({"_id": ObjectId(item_id)})
+        oid = to_oid(item_id)
+        if not oid:
+            return None
+        return portfolio_col.delete_one({"_id": oid})
 
     @staticmethod
     def count():
@@ -329,14 +421,14 @@ class PortfolioItem:
                 "tools": "HTML, JavaScript, Meta Pixel",
                 "description": "An interactive promotional web landing page integrated with social media ad tracking.",
                 "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80"
-            }
+            },
         ]
         portfolio_col.insert_many(defaults)
 
 
-# ==========================================================
-#  SITE CONTENT
-# ==========================================================
+# =============================================================
+#  SITE CONTENT (about / contact / settings)
+# =============================================================
 class SiteContent:
     @staticmethod
     def get_about():
@@ -347,6 +439,7 @@ class SiteContent:
                 "heading": "The Person Behind The Brand",
                 "bio": "I am Opoku Kwadwo Incredible, known as The Media Scientist. I connect powerful visual storytelling with modern software technology.",
                 "bio2": "Instead of separating photography, video production, photo retouching, animation, and web development, I combine them into a smooth, complete service to help individuals and businesses grow.",
+                "quote": "Every project is a chance to make someone's vision a reality — with precision, care, and a bit of science.",
                 "skills": [
                     {"name": "Photo Retouching & Color Grading", "level": 98},
                     {"name": "Photography & Videography", "level": 95},
@@ -355,13 +448,19 @@ class SiteContent:
                     {"name": "Digital Marketing & Graphic Design", "level": 90}
                 ],
                 "tools": ["DaVinci Resolve", "Photoshop & Lightroom", "After Effects & Premiere Pro",
-                          "HTML, CSS & JavaScript", "React, Python & Flask", "Meta Ads & Analytics"]
+                          "HTML, CSS & JavaScript", "React, Python & Flask", "Meta Ads & Analytics"],
+                "stats": [
+                    {"key": "years", "label": "Years", "value": "7+", "color": "cyan"},
+                    {"key": "projects", "label": "Projects", "value": "50+", "color": "purple"},
+                    {"key": "happy", "label": "Happy", "value": "100%", "color": "emerald"},
+                ],
             }
             about_col.insert_one(doc)
         return doc
 
     @staticmethod
     def update_about(data):
+        data = dict(data)
         data.pop("_id", None)
         return about_col.update_one({"_id": "about"}, {"$set": data}, upsert=True)
 
@@ -377,13 +476,14 @@ class SiteContent:
                 "tiktok": "https://tiktok.com/@themediascientist",
                 "youtube": "#",
                 "github": "#",
-                "phone": "+233 (0) 55 123 4567"
+                "phone": "+233 (0) 55 123 4567",
             }
             contact_col.insert_one(doc)
         return doc
 
     @staticmethod
     def update_contact(data):
+        data = dict(data)
         data.pop("_id", None)
         return contact_col.update_one({"_id": "contact"}, {"$set": data}, upsert=True)
 
@@ -397,24 +497,26 @@ class SiteContent:
                 "owner_name": "Opoku Kwadwo Incredible",
                 "tagline": "Combining Media Production, Visual Art & Software Development",
                 "status": "AVAILABLE FOR HIRE",
-                "hero_description": "Bringing together creativity and technical precision. I build high-impact websites, shoot high-quality videos, create professional graphic designs, retouch photos, and help brands grow online."
+                "hero_description": "Bringing together creativity and technical precision. I build high-impact websites, shoot high-quality videos, create professional graphic designs, retouch photos, and help brands grow online.",
             }
             settings_col.insert_one(doc)
         return doc
 
     @staticmethod
     def update_settings(data):
+        data = dict(data)
         data.pop("_id", None)
         return settings_col.update_one({"_id": "settings"}, {"$set": data}, upsert=True)
 
 
-# ==========================================================
+# =============================================================
 #  PROJECT
-# ==========================================================
+# =============================================================
 class Project:
     @staticmethod
     def create(data):
-        data["created_at"] = datetime.utcnow()
+        data = dict(data)
+        data["created_at"] = _now()
         data.setdefault("progress", 0)
         data.setdefault("status", "in_progress")
         data.setdefault("stage_label", "Kickoff")
@@ -422,7 +524,10 @@ class Project:
 
     @staticmethod
     def get_for_client(client_id):
-        return list(projects_col.find({"client_id": ObjectId(client_id)}).sort("created_at", DESCENDING))
+        oid = to_oid(client_id)
+        if not oid:
+            return []
+        return list(projects_col.find({"client_id": oid}).sort("created_at", DESCENDING))
 
     @staticmethod
     def get_all():
@@ -430,18 +535,24 @@ class Project:
 
     @staticmethod
     def get_by_id(project_id):
-        try:
-            return projects_col.find_one({"_id": ObjectId(project_id)})
-        except Exception:
+        oid = to_oid(project_id)
+        if not oid:
             return None
+        return projects_col.find_one({"_id": oid})
 
     @staticmethod
     def update(project_id, data):
-        return projects_col.update_one({"_id": ObjectId(project_id)}, {"$set": data})
+        oid = to_oid(project_id)
+        if not oid:
+            return None
+        return projects_col.update_one({"_id": oid}, {"$set": data})
 
     @staticmethod
     def delete(project_id):
-        return projects_col.delete_one({"_id": ObjectId(project_id)})
+        oid = to_oid(project_id)
+        if not oid:
+            return None
+        return projects_col.delete_one({"_id": oid})
 
     @staticmethod
     def count():
@@ -449,25 +560,32 @@ class Project:
 
     @staticmethod
     def count_active_for_client(client_id):
+        oid = to_oid(client_id)
+        if not oid:
+            return 0
         return projects_col.count_documents({
-            "client_id": ObjectId(client_id),
-            "status": {"$in": ["in_progress", "review"]}
+            "client_id": oid,
+            "status": {"$in": ["in_progress", "review"]},
         })
 
 
-# ==========================================================
+# =============================================================
 #  INVOICE
-# ==========================================================
+# =============================================================
 class Invoice:
     @staticmethod
     def create(data):
-        data["created_at"] = datetime.utcnow()
+        data = dict(data)
+        data["created_at"] = _now()
         data.setdefault("status", "pending")
         return invoices_col.insert_one(data)
 
     @staticmethod
     def get_for_client(client_id):
-        return list(invoices_col.find({"client_id": ObjectId(client_id)}).sort("created_at", DESCENDING))
+        oid = to_oid(client_id)
+        if not oid:
+            return []
+        return list(invoices_col.find({"client_id": oid}).sort("created_at", DESCENDING))
 
     @staticmethod
     def get_all():
@@ -475,56 +593,71 @@ class Invoice:
 
     @staticmethod
     def get_by_id(invoice_id):
-        try:
-            return invoices_col.find_one({"_id": ObjectId(invoice_id)})
-        except Exception:
+        oid = to_oid(invoice_id)
+        if not oid:
             return None
+        return invoices_col.find_one({"_id": oid})
 
     @staticmethod
     def get_by_reference(reference):
+        if not reference:
+            return None
         return invoices_col.find_one({"payment_reference": reference})
 
     @staticmethod
     def update(invoice_id, data):
-        return invoices_col.update_one({"_id": ObjectId(invoice_id)}, {"$set": data})
+        oid = to_oid(invoice_id)
+        if not oid:
+            return None
+        return invoices_col.update_one({"_id": oid}, {"$set": data})
 
     @staticmethod
     def mark_paid(invoice_id, reference=None):
-        update_data = {
-            "status": "paid",
-            "paid_at": datetime.utcnow()
-        }
+        oid = to_oid(invoice_id)
+        if not oid:
+            return None
+        update_data = {"status": "paid", "paid_at": _now()}
         if reference:
             update_data["payment_reference"] = reference
-        return invoices_col.update_one({"_id": ObjectId(invoice_id)}, {"$set": update_data})
+        return invoices_col.update_one({"_id": oid}, {"$set": update_data})
 
     @staticmethod
     def delete(invoice_id):
-        return invoices_col.delete_one({"_id": ObjectId(invoice_id)})
+        oid = to_oid(invoice_id)
+        if not oid:
+            return None
+        return invoices_col.delete_one({"_id": oid})
 
     @staticmethod
     def pending_total_for_client(client_id):
+        oid = to_oid(client_id)
+        if not oid:
+            return 0
         pipeline = [
-            {"$match": {"client_id": ObjectId(client_id), "status": "pending"}},
-            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+            {"$match": {"client_id": oid, "status": "pending"}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
         ]
         res = list(invoices_col.aggregate(pipeline))
         return res[0]["total"] if res else 0
 
 
-# ==========================================================
+# =============================================================
 #  DELIVERABLE
-# ==========================================================
+# =============================================================
 class Deliverable:
     @staticmethod
     def create(data):
-        data["created_at"] = datetime.utcnow()
+        data = dict(data)
+        data["created_at"] = _now()
         data.setdefault("reviewed", False)
         return deliverables_col.insert_one(data)
 
     @staticmethod
     def get_for_client(client_id):
-        return list(deliverables_col.find({"client_id": ObjectId(client_id)}).sort("created_at", DESCENDING))
+        oid = to_oid(client_id)
+        if not oid:
+            return []
+        return list(deliverables_col.find({"client_id": oid}).sort("created_at", DESCENDING))
 
     @staticmethod
     def get_all():
@@ -532,41 +665,51 @@ class Deliverable:
 
     @staticmethod
     def get_by_id(deliverable_id):
-        try:
-            return deliverables_col.find_one({"_id": ObjectId(deliverable_id)})
-        except Exception:
+        oid = to_oid(deliverable_id)
+        if not oid:
             return None
+        return deliverables_col.find_one({"_id": oid})
 
     @staticmethod
     def count_for_client(client_id):
-        return deliverables_col.count_documents({"client_id": ObjectId(client_id), "reviewed": False})
+        oid = to_oid(client_id)
+        if not oid:
+            return 0
+        return deliverables_col.count_documents({"client_id": oid, "reviewed": False})
 
     @staticmethod
     def mark_reviewed(deliverable_id):
-        return deliverables_col.update_one(
-            {"_id": ObjectId(deliverable_id)},
-            {"$set": {"reviewed": True}}
-        )
+        oid = to_oid(deliverable_id)
+        if not oid:
+            return None
+        return deliverables_col.update_one({"_id": oid}, {"$set": {"reviewed": True}})
 
     @staticmethod
     def delete(deliverable_id):
-        return deliverables_col.delete_one({"_id": ObjectId(deliverable_id)})
+        oid = to_oid(deliverable_id)
+        if not oid:
+            return None
+        return deliverables_col.delete_one({"_id": oid})
 
 
-# ==========================================================
+# =============================================================
 #  CLIENT MESSAGE
-# ==========================================================
+# =============================================================
 class ClientMessage:
     @staticmethod
     def create(data):
-        data["created_at"] = datetime.utcnow()
+        data = dict(data)
+        data["created_at"] = _now()
         data.setdefault("read", False)
         data.setdefault("from_role", "client")
         return client_messages_col.insert_one(data)
 
     @staticmethod
     def get_for_client(client_id):
-        return list(client_messages_col.find({"client_id": ObjectId(client_id)}).sort("created_at", 1))
+        oid = to_oid(client_id)
+        if not oid:
+            return []
+        return list(client_messages_col.find({"client_id": oid}).sort("created_at", 1))
 
     @staticmethod
     def count_unread_for_admin():
@@ -574,34 +717,44 @@ class ClientMessage:
 
     @staticmethod
     def count_unread_for_client(client_id):
+        oid = to_oid(client_id)
+        if not oid:
+            return 0
         return client_messages_col.count_documents({
-            "client_id": ObjectId(client_id),
+            "client_id": oid,
             "from_role": "admin",
-            "read": False
+            "read": False,
         })
 
     @staticmethod
     def mark_read_for_client(client_id):
+        oid = to_oid(client_id)
+        if not oid:
+            return None
         return client_messages_col.update_many(
-            {"client_id": ObjectId(client_id), "from_role": "admin"},
-            {"$set": {"read": True}}
+            {"client_id": oid, "from_role": "admin"},
+            {"$set": {"read": True}},
         )
 
     @staticmethod
     def mark_read_for_admin(client_id):
+        oid = to_oid(client_id)
+        if not oid:
+            return None
         return client_messages_col.update_many(
-            {"client_id": ObjectId(client_id), "from_role": "client"},
-            {"$set": {"read": True}}
+            {"client_id": oid, "from_role": "client"},
+            {"$set": {"read": True}},
         )
 
 
-# ==========================================================
+# =============================================================
 #  PAYMENT (audit log)
-# ==========================================================
+# =============================================================
 class Payment:
     @staticmethod
     def create(data):
-        data["created_at"] = datetime.utcnow()
+        data = dict(data)
+        data["created_at"] = _now()
         return payments_col.insert_one(data)
 
     @staticmethod
@@ -610,14 +763,23 @@ class Payment:
 
     @staticmethod
     def get_for_client(client_id):
-        return list(payments_col.find({"client_id": ObjectId(client_id)}).sort("created_at", DESCENDING))
+        oid = to_oid(client_id)
+        if not oid:
+            return []
+        return list(payments_col.find({"client_id": oid}).sort("created_at", DESCENDING))
 
 
-# ==========================================================
-#  SEED
-# ==========================================================
+# =============================================================
+#  SEED — runs on first app boot
+# =============================================================
 def seed_database():
-    User.create(Config.ADMIN_EMAIL, Config.ADMIN_PASSWORD, "Opoku Kwadwo Incredible", role="admin")
+    """Ensure essential data exists on startup."""
+    User.create(
+        Config.ADMIN_EMAIL,
+        Config.ADMIN_PASSWORD,
+        "Opoku Kwadwo Incredible",
+        role="admin",
+    )
     Service.seed_defaults()
     PortfolioItem.seed_defaults()
     SiteContent.get_about()

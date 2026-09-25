@@ -4,38 +4,510 @@
 {% block page_subtitle %}All files shared with you by The Media Scientist.{% endblock %}
 
 {% block content %}
-{% if deliverables %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {% for d in deliverables %}
-    <div class="glass-card rounded-2xl p-5 border border-slate-800 hover:border-purple-500/40 transition-colors">
-        <div class="flex items-start gap-4 mb-4">
-            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                <i class="{{ d.get('file_type','fa-regular fa-file') }} text-xl"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-                <h3 class="text-sm font-bold text-white truncate">{{ d.name }}</h3>
-                <p class="text-xs text-slate-400 font-mono mt-1">{{ d.get('size','—') }}</p>
-            </div>
-        </div>
-        <div class="flex items-center justify-between text-[10px] font-mono">
-            <span class="text-slate-500">{{ d.created_at.strftime('%b %d, %Y') if d.created_at else '—' }}</span>
-            {% if d.get('stored_filename') %}
-            <a href="{{ url_for('download_file', filename=d.stored_filename) }}" class="px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition-colors">
-                <i class="fa-solid fa-download"></i> Download
-            </a>
-            {% elif d.get('url') %}
-            <a href="{{ d.get('url','#') }}" target="_blank" class="px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition-colors">
-                <i class="fa-solid fa-download"></i> Download
-            </a>
-            {% endif %}
-        </div>
+
+{# ============================================================
+   FILE CATEGORY MAP
+   Maps file extensions → { category, color, icon }
+============================================================ #}
+{% set category_map = {
+    'png':    {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
+    'jpg':    {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
+    'jpeg':   {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
+    'gif':    {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
+    'webp':   {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
+    'svg':    {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
+    'mp4':    {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
+    'mov':    {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
+    'avi':    {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
+    'mkv':    {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
+    'webm':   {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
+    'pdf':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-pdf'},
+    'doc':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-word'},
+    'docx':   {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-word'},
+    'xls':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-excel'},
+    'xlsx':   {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-excel'},
+    'csv':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-csv'},
+    'ppt':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-powerpoint'},
+    'pptx':   {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-powerpoint'},
+    'zip':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-zipper'},
+    'rar':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-zipper'},
+    '7z':     {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-zipper'},
+    'psd':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-palette'},
+    'ai':     {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-palette'},
+    'fig':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-palette'},
+    'sketch': {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-palette'},
+    'mp3':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-audio'},
+    'wav':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-audio'}
+} %}
+
+{# ---------- Compute per-file display data ---------- #}
+{% set enriched = [] %}
+{% set ns = namespace(images=0, videos=0, docs=0, others=0, unreviewed=0) %}
+
+{% for d in deliverables %}
+    {% set name = d.get('name', '') %}
+    {% set ext = name.rsplit('.', 1)[-1]|lower if '.' in name else '' %}
+    {% set meta = category_map.get(ext, {'category': 'other', 'color': 'slate', 'icon': 'fa-regular fa-file'}) %}
+
+    {# Update counts #}
+    {% if meta.category == 'image' %}{% set ns.images = ns.images + 1 %}
+    {% elif meta.category == 'video' %}{% set ns.videos = ns.videos + 1 %}
+    {% elif meta.category == 'doc' %}{% set ns.docs = ns.docs + 1 %}
+    {% else %}{% set ns.others = ns.others + 1 %}
+    {% endif %}
+
+    {% if not d.get('reviewed', False) %}
+        {% set ns.unreviewed = ns.unreviewed + 1 %}
+    {% endif %}
+{% endfor %}
+
+{# ============================================================
+   EMPTY STATE
+============================================================ #}
+{% if not deliverables %}
+<div class="glass-card rounded-2xl p-12 sm:p-16 text-center border border-slate-800">
+    <div class="w-20 h-20 rounded-full
+                bg-gradient-to-br from-purple-500/20 to-cyan-500/20
+                border border-purple-500/30
+                flex items-center justify-center mx-auto mb-6">
+        <i class="fa-solid fa-folder-open text-3xl text-purple-400"
+           aria-hidden="true"></i>
     </div>
-    {% endfor %}
+    <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
+        No Files Yet
+    </h3>
+    <p class="text-slate-400 text-sm font-mono max-w-md mx-auto leading-relaxed">
+        Files shared with you will appear here. Your project manager uploads deliverables as
+        each milestone is completed.
+    </p>
+    <a href="{{ url_for('client_messages') }}"
+       class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl
+              text-xs font-mono font-bold
+              bg-cyan-500/15 text-cyan-300 border border-cyan-500/30
+              hover:bg-cyan-500/25 transition">
+        <i class="fa-solid fa-comments" aria-hidden="true"></i>
+        Ask a Question
+    </a>
 </div>
 {% else %}
-<div class="glass-card rounded-2xl p-12 text-center border border-slate-800">
-    <i class="fa-solid fa-folder-open text-5xl text-slate-600 mb-4"></i>
-    <p class="text-slate-400 text-sm font-mono">No files yet.</p>
+
+{# ============================================================
+   SUMMARY STATS
+============================================================ #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-6">
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
+                    uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-folder text-purple-400" aria-hidden="true"></i>
+            Total Files
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ deliverables|length }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
+                    uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-circle-exclamation text-amber-400" aria-hidden="true"></i>
+            New
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.unreviewed }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
+                    uppercase tracking-wider mb-1">
+            <i class="fa-regular fa-image text-cyan-400" aria-hidden="true"></i>
+            Images
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.images }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
+                    uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-file-video text-purple-400" aria-hidden="true"></i>
+            Videos
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.videos }}
+        </div>
+    </div>
+
 </div>
+
+{# ============================================================
+   TOOLBAR: SEARCH + FILTERS + SORT
+============================================================ #}
+<div class="glass-card rounded-2xl border border-slate-800 p-3 sm:p-4 mb-5 sm:mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
+
+        {# Search #}
+        <div class="relative flex-1 lg:max-w-md">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
+                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+            <input type="text"
+                   id="file-search"
+                   placeholder="Search by filename..."
+                   autocomplete="off"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
+                          bg-slate-900 border border-slate-800
+                          text-sm text-white placeholder-slate-500
+                          focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30
+                          transition">
+        </div>
+
+        {# Filter tabs #}
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
+                    overflow-x-auto pb-1 lg:pb-0
+                    -mx-3 px-3 lg:mx-0 lg:px-0 lg:flex-1">
+            {% set filters = [
+                ('all',    'All',    deliverables|length),
+                ('image',  'Images', ns.images),
+                ('video',  'Videos', ns.videos),
+                ('doc',    'Docs',   ns.docs),
+                ('other',  'Other',  ns.others)
+            ] %}
+            {% for key, label, count in filters %}
+            <button type="button"
+                    onclick="filterFiles('{{ key }}')"
+                    data-filter="{{ key }}"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg whitespace-nowrap
+                           transition
+                           {% if key == 'all' %}
+                               bg-purple-500/20 text-purple-300 border border-purple-500/40
+                           {% else %}
+                               bg-slate-900 text-slate-400 border border-slate-800
+                               hover:text-white
+                           {% endif %}">
+                {{ label }}
+                <span class="opacity-60 ml-0.5">({{ count }})</span>
+            </button>
+            {% endfor %}
+        </div>
+
+        {# Sort dropdown #}
+        <div class="shrink-0">
+            <label for="file-sort" class="sr-only">Sort files</label>
+            <div class="relative">
+                <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
+                          text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                <select id="file-sort"
+                        class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
+                               bg-slate-900 border border-slate-800
+                               text-xs font-mono text-slate-200 cursor-pointer
+                               focus:outline-none focus:border-purple-400 transition">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="name">Name (A–Z)</option>
+                    <option value="size">Largest first</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
+                          text-slate-500 text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{# ============================================================
+   FILES GRID
+============================================================ #}
+<div id="files-grid"
+     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+
+    {% for d in deliverables %}
+        {% set name = d.get('name', '') %}
+        {% set ext = name.rsplit('.', 1)[-1]|lower if '.' in name else '' %}
+        {% set meta = category_map.get(ext, {'category': 'other', 'color': 'slate', 'icon': 'fa-regular fa-file'}) %}
+        {% set color = meta.color %}
+        {% set is_new = not d.get('reviewed', False) %}
+        {% set url = url_for('download_file', filename=d.stored_filename) if d.get('stored_filename') else d.get('url', '#') %}
+        {% set ts = d.created_at.timestamp() if d.created_at and d.created_at.strftime is defined else 0 %}
+        {% set size_bytes = d.get('size_bytes', 0) %}
+
+        <article class="file-card glass-card rounded-2xl border border-slate-800
+                        overflow-hidden hover:border-{{ color }}-500/40
+                        transition-colors group flex flex-col"
+                 data-category="{{ meta.category }}"
+                 data-name="{{ name|lower }}"
+                 data-timestamp="{{ ts }}"
+                 data-size="{{ size_bytes }}">
+
+            {# ---------- PREVIEW / HEADER ---------- #}
+            <div class="relative aspect-video overflow-hidden
+                        bg-gradient-to-br from-slate-900 to-slate-950
+                        border-b border-slate-800
+                        flex items-center justify-center">
+
+                {# Thumbnail for images #}
+                {% if meta.category == 'image' and url != '#' %}
+                <img src="{{ url }}"
+                     alt="{{ name }}"
+                     loading="lazy"
+                     class="w-full h-full object-cover
+                            group-hover:scale-105 transition-transform duration-500"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="absolute inset-0 hidden items-center justify-center">
+                    <i class="fa-solid {{ meta.icon }} text-4xl text-{{ color }}-400/60"
+                       aria-hidden="true"></i>
+                </div>
+                {% else %}
+                {# Icon for non-images #}
+                <i class="fa-solid {{ meta.icon }} text-4xl sm:text-5xl
+                          text-{{ color }}-400/60 group-hover:scale-110
+                          transition-transform"
+                   aria-hidden="true"></i>
+                {% endif %}
+
+                {# New badge #}
+                {% if is_new %}
+                <div class="absolute top-2 left-2 px-2 py-0.5 rounded-md
+                            bg-amber-500/90 backdrop-blur-sm
+                            text-[9px] font-mono font-bold uppercase
+                            text-slate-950">
+                    <i class="fa-solid fa-circle text-[5px] mr-1 animate-pulse"
+                       aria-hidden="true"></i>
+                    New
+                </div>
+                {% endif %}
+
+                {# Extension badge #}
+                {% if ext %}
+                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-md
+                            bg-slate-950/85 backdrop-blur-sm
+                            text-[9px] font-mono uppercase
+                            text-slate-300 border border-slate-700">
+                    {{ ext }}
+                </div>
+                {% endif %}
+
+            </div>
+
+            {# ---------- BODY ---------- #}
+            <div class="p-3.5 sm:p-4 flex-1 flex flex-col min-w-0">
+                <h3 class="text-xs sm:text-sm font-semibold text-white
+                           leading-tight line-clamp-2 min-h-[2.2em]"
+                    title="{{ name }}">
+                    {{ name }}
+                </h3>
+
+                <div class="mt-2 flex items-center gap-2 flex-wrap text-[10px] font-mono">
+                    <span class="text-slate-400">
+                        <i class="fa-solid fa-database mr-1" aria-hidden="true"></i>
+                        {{ d.get('size', '—') }}
+                    </span>
+                    <span class="text-slate-600" aria-hidden="true">·</span>
+                    <span class="text-slate-500">
+                        {% if d.created_at and d.created_at.strftime is defined %}
+                            {{ d.created_at.strftime('%b %d, %Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </span>
+                </div>
+
+                {% if is_new %}
+                <p class="mt-2 text-[10px] font-mono text-amber-400 flex items-center gap-1">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    Awaiting your review
+                </p>
+                {% else %}
+                <p class="mt-2 text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    Reviewed
+                </p>
+                {% endif %}
+            </div>
+
+            {# ---------- FOOTER: ACTIONS ---------- #}
+            <div class="p-3.5 sm:p-4 pt-0">
+                <div class="flex items-center gap-2">
+                    {% if d.get('stored_filename') %}
+                    <a href="{{ url_for('download_file', filename=d.stored_filename) }}"
+                       class="flex-1 inline-flex items-center justify-center gap-1.5
+                              px-3 py-2.5 rounded-lg
+                              text-[11px] font-mono font-bold
+                              bg-gradient-to-r from-{{ color }}-500/20 to-{{ color }}-400/20
+                              text-{{ color }}-300 border border-{{ color }}-500/30
+                              hover:from-{{ color }}-500/30 hover:to-{{ color }}-400/30
+                              transition active:scale-[0.98]"
+                       aria-label="Download {{ name }}">
+                        <i class="fa-solid fa-download text-xs" aria-hidden="true"></i>
+                        Download
+                    </a>
+                    {% elif d.get('url') %}
+                    <a href="{{ d.get('url') }}" target="_blank" rel="noopener noreferrer"
+                       class="flex-1 inline-flex items-center justify-center gap-1.5
+                              px-3 py-2.5 rounded-lg
+                              text-[11px] font-mono font-bold
+                              bg-gradient-to-r from-{{ color }}-500/20 to-{{ color }}-400/20
+                              text-{{ color }}-300 border border-{{ color }}-500/30
+                              hover:from-{{ color }}-500/30 hover:to-{{ color }}-400/30
+                              transition active:scale-[0.98]"
+                       aria-label="Open {{ name }} in new tab">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
+                        Open
+                    </a>
+                    {% else %}
+                    <span class="flex-1 inline-flex items-center justify-center gap-1.5
+                                 px-3 py-2.5 rounded-lg
+                                 text-[11px] font-mono
+                                 bg-slate-900 text-slate-600 border border-slate-800">
+                        <i class="fa-solid fa-ban text-xs" aria-hidden="true"></i>
+                        Unavailable
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+        </article>
+    {% endfor %}
+</div>
+
+{# No results #}
+<div id="no-results"
+     class="hidden glass-card rounded-2xl border border-slate-800 p-12 text-center">
+    <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
+       aria-hidden="true"></i>
+    <p class="text-slate-400 text-xs font-mono">No files match your search.</p>
+    <button type="button"
+            onclick="resetFilters()"
+            class="mt-3 text-[10px] font-mono text-purple-400 hover:text-purple-300 transition">
+        Clear filters
+    </button>
+</div>
+
 {% endif %}
+
+<script>
+// ============================================================
+// SEARCH + FILTER + SORT
+// ============================================================
+let currentFilter = 'all';
+let currentSearch = '';
+let currentSort = 'newest';
+
+function applyFilters() {
+    const cards = document.querySelectorAll('.file-card');
+    const noResults = document.getElementById('no-results');
+    let visible = 0;
+
+    cards.forEach(card => {
+        const category = card.dataset.category || '';
+        const name = card.dataset.name || '';
+
+        const matchesFilter = (currentFilter === 'all' || category === currentFilter);
+        const matchesSearch = (!currentSearch || name.includes(currentSearch));
+
+        if (matchesFilter && matchesSearch) {
+            card.style.display = '';
+            visible++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    if (noResults) {
+        noResults.classList.toggle('hidden', visible > 0);
+    }
+}
+
+function sortFiles(order) {
+    const grid = document.getElementById('files-grid');
+    if (!grid) return;
+
+    const cards = Array.from(grid.querySelectorAll('.file-card'));
+
+    cards.sort((a, b) => {
+        const tsA = parseFloat(a.dataset.timestamp) || 0;
+        const tsB = parseFloat(b.dataset.timestamp) || 0;
+        const nameA = a.dataset.name || '';
+        const nameB = b.dataset.name || '';
+        const sizeA = parseFloat(a.dataset.size) || 0;
+        const sizeB = parseFloat(b.dataset.size) || 0;
+
+        switch (order) {
+            case 'oldest': return tsA - tsB;
+            case 'name':   return nameA.localeCompare(nameB);
+            case 'size':   return sizeB - sizeA;
+            case 'newest':
+            default:       return tsB - tsA;
+        }
+    });
+
+    cards.forEach(card => grid.appendChild(card));
+}
+
+function filterFiles(filter) {
+    currentFilter = filter;
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-purple-500/20', isActive);
+        btn.classList.toggle('text-purple-300', isActive);
+        btn.classList.toggle('border-purple-500/40', isActive);
+        btn.classList.toggle('bg-slate-900', !isActive);
+        btn.classList.toggle('text-slate-400', !isActive);
+        btn.classList.toggle('border-slate-800', !isActive);
+    });
+
+    applyFilters();
+}
+
+function resetFilters() {
+    currentSearch = '';
+    const searchInput = document.getElementById('file-search');
+    if (searchInput) searchInput.value = '';
+    filterFiles('all');
+}
+
+// Search input
+const searchInput = document.getElementById('file-search');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        currentSearch = (e.target.value || '').toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+// Sort select
+const sortSelect = document.getElementById('file-sort');
+if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        sortFiles(currentSort);
+    });
+    // Apply initial sort on load
+    sortFiles(currentSort);
+}
+</script>
+
+<style>
+    /* Line clamp utilities */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Focus-visible ring for a11y */
+    *:focus-visible {
+        outline: 2px solid rgba(121, 40, 202, 0.6);
+        outline-offset: 2px;
+    }
+
+    /* Smooth transitions */
+    .file-card {
+        transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+</style>
+
 {% endblock %}

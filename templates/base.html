@@ -1,14 +1,98 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth" prefix="og: https://ogp.me/ns#">
 <head>
+    <!-- ============================================================
+         BASIC META
+    ============================================================ -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}The Media Scientist | Opoku Kwadwo Incredible{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+    <!-- ============================================================
+         SEO: TITLE & DESCRIPTION
+    ============================================================ -->
+    <title>{% block seo_title %}{{ site_settings.site_title if site_settings else 'The Media Scientist' }} | {{ site_settings.owner_name if site_settings else 'Opoku Kwadwo Incredible' }} — Photographer, Videographer & Developer{% endblock %}</title>
+
+    <meta name="description" content="{% block seo_description %}The Media Scientist — Opoku Kwadwo Incredible. Professional photographer, videographer, photo & video editor, retoucher, colorist, motion graphics animator, graphic designer, software developer & digital marketer based in Kumasi, Ghana. Available worldwide.{% endblock %}">
+
+    <meta name="keywords" content="{% block seo_keywords %}The Media Scientist, Opoku Kwadwo Incredible, photographer Ghana, videographer Kumasi, photo editor, video editor, retoucher, colorist, motion graphics, animator, graphic designer, software developer, digital marketer, media production Ghana, creative agency Kumasi, brand identity Ghana{% endblock %}">
+
+    <meta name="author" content="Opoku Kwadwo Incredible">
+    <meta name="publisher" content="The Media Scientist">
+    <meta name="copyright" content="The Media Scientist">
+    <meta name="language" content="English">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="bingbot" content="index, follow">
+    <meta name="revisit-after" content="3 days">
+    <meta name="rating" content="general">
+    <meta name="distribution" content="global">
+    <meta name="theme-color" content="#0B0E17">
+    <meta name="color-scheme" content="dark">
+
+    <!-- ============================================================
+         CANONICAL & ALTERNATES
+    ============================================================ -->
+    <link rel="canonical" href="{{ request.url }}">
+    <link rel="alternate" hreflang="en" href="{{ request.url }}">
+    <link rel="alternate" hreflang="x-default" href="{{ request.url }}">
+
+    <!-- ============================================================
+         OPEN GRAPH
+    ============================================================ -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="{{ site_settings.site_title if site_settings else 'The Media Scientist' }}">
+    <meta property="og:title" content="{% block og_title %}{{ site_settings.site_title if site_settings else 'The Media Scientist' }} — {{ site_settings.owner_name if site_settings else 'Opoku Kwadwo Incredible' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Creative media production, video editing, photo retouching, graphic design, motion graphics, web development & digital marketing — all under one roof in Kumasi, Ghana.{% endblock %}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:image" content="{% block og_image %}https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&h=630&q=80{% endblock %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="The Media Scientist — Opoku Kwadwo Incredible">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="en_GH">
+
+    <!-- ============================================================
+         TWITTER / X CARD
+    ============================================================ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@themediasci">
+    <meta name="twitter:creator" content="@themediasci">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_settings.site_title if site_settings else 'The Media Scientist' }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Professional photo, video, design, motion & code — one creative studio.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&h=630&q=80{% endblock %}">
+    <meta name="twitter:image:alt" content="The Media Scientist — Opoku Kwadwo Incredible">
+
+    <!-- ============================================================
+         FAVICON & APP ICONS
+    ============================================================ -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2300F2FE'/%3E%3Cstop offset='100%25' stop-color='%237928CA'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='%230B0E17'/%3E%3Ctext x='50' y='68' font-family='Arial Black' font-size='52' fill='url(%23g)' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230B0E17'/%3E%3Ctext x='50' y='68' font-family='Arial Black' font-size='52' fill='%2300F2FE' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="The Media Scientist">
+    <meta name="application-name" content="The Media Scientist">
+    <meta name="msapplication-TileColor" content="#0B0E17">
+
+    <!-- ============================================================
+         PERFORMANCE HINTS
+    ============================================================ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+
+    <!-- ============================================================
+         THIRD-PARTY ASSETS
+    ============================================================ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ============================================================
+         TAILWIND CONFIG
+    ============================================================ -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -29,6 +113,10 @@
             }
         }
     </script>
+
+    <!-- ============================================================
+         GLOBAL STYLES
+    ============================================================ -->
     <style>
         body { background-color:#0B0E17; color:#F9FAFB; font-family:'Inter',sans-serif; overflow-x:hidden; }
         .font-mono-heading { font-family:'Space Grotesk',monospace; }
@@ -45,20 +133,169 @@
         ::-webkit-scrollbar-thumb:hover { background:#00F2FE; }
         .flash-msg { animation: slideDown .4s ease; }
         @keyframes slideDown { from { opacity:0; transform: translateY(-10px);} to {opacity:1; transform: translateY(0);} }
+
+        .skip-to-content {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 999;
+            padding: 12px 20px;
+            background: #00F2FE;
+            color: #0B0E17;
+            font-weight: 700;
+            border-radius: 0 0 8px 0;
+        }
+        .skip-to-content:focus { left: 0; }
+
+        .sr-only-seo {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
     </style>
+
+    <!-- ============================================================
+         JSON-LD STRUCTURED DATA
+    ============================================================ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "{{ config.SITE_URL }}#website",
+          "url": "{{ config.SITE_URL }}",
+          "name": "{{ site_settings.site_title if site_settings else 'The Media Scientist' }}",
+          "description": "Creative media production, video editing, photo retouching, graphic design, motion graphics, web development & digital marketing.",
+          "publisher": { "@id": "{{ config.SITE_URL }}#organization" },
+          "inLanguage": "en-US"
+        },
+        {
+          "@type": "Organization",
+          "@id": "{{ config.SITE_URL }}#organization",
+          "name": "The Media Scientist",
+          "alternateName": "The Media Scientist Studio",
+          "url": "{{ config.SITE_URL }}",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "{{ config.SITE_URL }}/static/logo.png",
+            "width": 512,
+            "height": 512
+          },
+          "founder": { "@id": "{{ config.SITE_URL }}#person" },
+          "foundingDate": "2018",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Kumasi",
+            "addressCountry": "GH",
+            "addressRegion": "Ashanti Region"
+          },
+          "sameAs": [
+            "https://instagram.com/themediascientist_",
+            "https://tiktok.com/@themediascientist",
+            "https://youtube.com/@themediascientist",
+            "https://github.com/themediascientist"
+          ]
+        },
+        {
+          "@type": "Person",
+          "@id": "{{ config.SITE_URL }}#person",
+          "name": "Opoku Kwadwo Incredible",
+          "alternateName": "The Media Scientist",
+          "url": "{{ config.SITE_URL }}/about",
+          "jobTitle": "Creative Media Professional & Software Developer",
+          "worksFor": { "@id": "{{ config.SITE_URL }}#organization" },
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Kumasi",
+            "addressCountry": "GH"
+          },
+          "knowsLanguage": ["en", "tw"]
+        },
+        {
+          "@type": "LocalBusiness",
+          "@id": "{{ config.SITE_URL }}#localbusiness",
+          "name": "The Media Scientist",
+          "url": "{{ config.SITE_URL }}",
+          "telephone": "+233 55 123 4567",
+          "priceRange": "GH₵₵",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Kumasi",
+            "addressRegion": "Ashanti Region",
+            "addressCountry": "GH"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 6.6885,
+            "longitude": -1.6244
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5.0",
+            "reviewCount": "24",
+            "bestRating": "5",
+            "worstRating": "1"
+          }
+        }{% block structured_data_extra %}{% endblock %},
+        {
+          "@type": "BreadcrumbList",
+          "@id": "{{ request.url }}#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "{{ config.SITE_URL }}"
+            }{% block breadcrumb_extra %}{% endblock %}
+          ]
+        }
+      ]
+    }
+    </script>
+
+    {% if config.SITE_URL.startswith('https') %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX', {
+        'anonymize_ip': true,
+        'cookie_flags': 'SameSite=None;Secure'
+      });
+    </script>
+    {% endif %}
+
     {% block extra_head %}{% endblock %}
 </head>
 <body class="tech-grid-bg min-h-screen relative text-slate-100 selection:bg-cyan-500 selection:text-black">
 
-<canvas id="bg-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
+<a href="#main-content" class="skip-to-content">Skip to main content</a>
 
-<!-- Header -->
-<header class="sticky top-0 z-50 glass-card border-b border-slate-800/80 px-4 lg:px-8 py-3">
+<canvas id="bg-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40" aria-hidden="true"></canvas>
+
+<header class="sticky top-0 z-50 glass-card border-b border-slate-800/80 px-4 lg:px-8 py-3" role="banner">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <a href="{{ url_for('index') }}" class="flex items-center space-x-3 group">
+        <a href="{{ url_for('index') }}" class="flex items-center space-x-3 group" aria-label="The Media Scientist — Home">
             <div class="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 p-[1px] shadow-lg shadow-cyan-500/20">
                 <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
-                    <i class="fa-solid fa-camera text-cyan-400"></i>
+                    <i class="fa-solid fa-camera text-cyan-400" aria-hidden="true"></i>
                 </div>
             </div>
             <div>
@@ -69,7 +306,7 @@
             </div>
         </a>
 
-        <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
+        <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300" role="navigation" aria-label="Primary navigation">
             <a href="{{ url_for('about') }}" class="hover:text-cyan-400 transition-colors">About Me</a>
             <a href="{{ url_for('services') }}" class="hover:text-cyan-400 transition-colors">Services & Packages</a>
             <a href="{{ url_for('portfolio') }}" class="hover:text-cyan-400 transition-colors">Portfolio</a>
@@ -87,12 +324,12 @@
             </a>
         </div>
 
-        <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-300 hover:text-white">
-            <i class="fa-solid fa-bars-staggered text-xl"></i>
+        <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-300 hover:text-white" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+            <i class="fa-solid fa-bars-staggered text-xl" aria-hidden="true"></i>
         </button>
     </div>
 
-    <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full glass-card border-b border-slate-800 p-6 flex-col space-y-4 shadow-2xl">
+    <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full glass-card border-b border-slate-800 p-6 flex-col space-y-4 shadow-2xl" role="navigation" aria-label="Mobile navigation">
         <a href="{{ url_for('about') }}" class="mobile-link text-slate-300 hover:text-cyan-400 py-1">About Me</a>
         <a href="{{ url_for('services') }}" class="mobile-link text-slate-300 hover:text-cyan-400 py-1">Services & Packages</a>
         <a href="{{ url_for('portfolio') }}" class="mobile-link text-slate-300 hover:text-cyan-400 py-1">Portfolio & Recent Work</a>
@@ -100,13 +337,12 @@
     </div>
 </header>
 
-<!-- Flash messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div class="max-w-4xl mx-auto px-4 pt-4 relative z-20">
+    <div class="max-w-4xl mx-auto px-4 pt-4 relative z-20" role="alert" aria-live="polite">
       {% for category, msg in messages %}
         <div class="flash-msg mb-2 p-4 rounded-xl font-mono text-xs flex items-start gap-3 {% if category == 'error' %}bg-red-950/60 border border-red-500/40 text-red-200{% else %}bg-emerald-950/60 border border-emerald-500/40 text-emerald-200{% endif %}">
-          <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} mt-0.5"></i>
+          <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} mt-0.5" aria-hidden="true"></i>
           <span>{{ msg }}</span>
         </div>
       {% endfor %}
@@ -115,21 +351,22 @@
 {% endwith %}
 
 {% if error_code %}
-<main class="relative z-10 max-w-3xl mx-auto py-32 px-4 text-center">
+<main id="main-content" class="relative z-10 max-w-3xl mx-auto py-32 px-4 text-center" role="main">
     <h1 class="text-7xl font-mono-heading font-bold text-gradient-cyan">{{ error_code }}</h1>
     <p class="text-slate-300 mt-4 text-lg">{{ error_msg }}</p>
     <a href="{{ url_for('index') }}" class="inline-block mt-8 px-6 py-3 rounded-xl font-mono text-xs font-bold bg-cyan-400 text-slate-950">Back Home</a>
 </main>
 {% else %}
-{% block content %}{% endblock %}
+<main id="main-content" role="main">
+    {% block content %}{% endblock %}
+</main>
 {% endif %}
 
-<!-- Footer -->
-<footer class="border-t border-slate-800/80 bg-slate-950/90 py-10 px-4 relative z-10 font-mono text-xs">
+<footer class="border-t border-slate-800/80 bg-slate-950/90 py-10 px-4 relative z-10 font-mono text-xs" role="contentinfo">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="flex items-center space-x-3">
             <div class="w-8 h-8 rounded-lg bg-slate-900 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                <i class="fa-solid fa-camera text-xs"></i>
+                <i class="fa-solid fa-camera text-xs" aria-hidden="true"></i>
             </div>
             <div>
                 <span class="font-bold text-white tracking-wider">{{ site_settings.site_title|upper if site_settings else 'THE MEDIA SCIENTIST' }}</span>
@@ -137,11 +374,11 @@
             </div>
         </div>
         <div class="text-slate-400 text-[11px] text-center">STATUS: {{ site_settings.status if site_settings else 'OPEN FOR NEW PROJECTS' }}</div>
-        <div class="flex items-center space-x-4 text-slate-400 text-sm">
-            <a href="#" class="hover:text-cyan-400"><i class="fa-brands fa-instagram"></i></a>
-            <a href="#" class="hover:text-cyan-400"><i class="fa-brands fa-tiktok"></i></a>
-            <a href="#" class="hover:text-cyan-400"><i class="fa-brands fa-youtube"></i></a>
-            <a href="#" class="hover:text-cyan-400"><i class="fa-brands fa-github"></i></a>
+        <div class="flex items-center space-x-4 text-slate-400 text-sm" aria-label="Social media links">
+            <a href="https://instagram.com/themediascientist_" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400" aria-label="Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>
+            <a href="https://tiktok.com/@themediascientist" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400" aria-label="TikTok"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></a>
+            <a href="https://youtube.com/@themediascientist" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400" aria-label="YouTube"><i class="fa-brands fa-youtube" aria-hidden="true"></i></a>
+            <a href="https://github.com/themediascientist" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400" aria-label="GitHub"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
         </div>
     </div>
 </footer>
@@ -179,8 +416,19 @@ if (canvas) {
 
 const mmBtn = document.getElementById('mobile-menu-btn');
 const mm = document.getElementById('mobile-menu');
-if (mmBtn) mmBtn.addEventListener('click',()=>{ mm.classList.toggle('hidden'); mm.classList.toggle('flex'); });
-document.querySelectorAll('.mobile-link').forEach(l=>l.addEventListener('click',()=>{ mm.classList.add('hidden'); mm.classList.remove('flex'); }));
+if (mmBtn && mm) {
+    mmBtn.addEventListener('click', () => {
+        mm.classList.toggle('hidden');
+        mm.classList.toggle('flex');
+        const isOpen = !mm.classList.contains('hidden');
+        mmBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+}
+document.querySelectorAll('.mobile-link').forEach(l => l.addEventListener('click', () => {
+    mm.classList.add('hidden');
+    mm.classList.remove('flex');
+    mmBtn.setAttribute('aria-expanded', 'false');
+}));
 </script>
 {% block extra_scripts %}{% endblock %}
 </body>

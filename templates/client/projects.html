@@ -5,145 +5,397 @@
 
 {% block content %}
 
+{# ============================================================
+   SAFE STATS + COUNTS
+============================================================ #}
+{% set ns = namespace(
+    total=0,
+    in_progress=0,
+    review=0,
+    completed=0,
+    on_hold=0
+) %}
+
 {% if projects %}
-
-<!-- Filter Tabs -->
-<div class="mb-6 flex flex-wrap gap-2 text-xs font-mono">
-    <button onclick="filterProjects('all')" data-filter="all"
-            class="filter-btn active px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold transition">
-        All <span class="opacity-70">({{ projects|length }})</span>
-    </button>
-    <button onclick="filterProjects('in_progress')" data-filter="in_progress"
-            class="filter-btn px-4 py-2 rounded-xl glass-card text-slate-300 hover:text-white transition">
-        In Progress
-    </button>
-    <button onclick="filterProjects('review')" data-filter="review"
-            class="filter-btn px-4 py-2 rounded-xl glass-card text-slate-300 hover:text-white transition">
-        In Review
-    </button>
-    <button onclick="filterProjects('completed')" data-filter="completed"
-            class="filter-btn px-4 py-2 rounded-xl glass-card text-slate-300 hover:text-white transition">
-        Completed
-    </button>
-    <button onclick="filterProjects('on_hold')" data-filter="on_hold"
-            class="filter-btn px-4 py-2 rounded-xl glass-card text-slate-300 hover:text-white transition">
-        On Hold
-    </button>
-</div>
-
-<!-- Projects Grid -->
-<div id="projects-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     {% for p in projects %}
-    <div class="project-card glass-card rounded-2xl p-6 border border-slate-800 hover:border-cyan-500/40 transition-colors"
-         data-status="{{ p.get('status','on_hold') }}">
-
-        <!-- Header -->
-        <div class="flex justify-between items-start gap-4 mb-5">
-            <div class="min-w-0 flex-1">
-                <h3 class="font-mono-heading font-bold text-lg text-white truncate">{{ p.title }}</h3>
-                <div class="flex items-center gap-3 mt-1 text-[10px] font-mono text-slate-500">
-                    <span><i class="fa-solid fa-hashtag"></i> {{ p._id|string|truncate(8, True, '') }}</span>
-                    {% if p.created_at %}
-                    <span><i class="fa-regular fa-calendar"></i> {{ p.created_at.strftime('%b %d, %Y') }}</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% if p.get('status') == 'in_progress' %}
-            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> Active
-            </span>
-            {% elif p.get('status') == 'review' %}
-            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                <i class="fa-solid fa-clock"></i> Review
-            </span>
-            {% elif p.get('status') == 'completed' %}
-            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <i class="fa-solid fa-check"></i> Done
-            </span>
-            {% else %}
-            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">
-                <i class="fa-solid fa-pause"></i> Hold
-            </span>
-            {% endif %}
-        </div>
-
-        <!-- Meta Grid -->
-        <div class="grid grid-cols-3 gap-3 mb-5">
-            <div class="p-3 rounded-lg bg-black/30 border border-white/5">
-                <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">Service</p>
-                <p class="text-xs text-white font-mono truncate">{{ p.get('service','—') }}</p>
-            </div>
-            <div class="p-3 rounded-lg bg-black/30 border border-white/5">
-                <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">Timeline</p>
-                <p class="text-xs text-white font-mono truncate">{{ p.get('timeline','—') }}</p>
-            </div>
-            <div class="p-3 rounded-lg bg-black/30 border border-white/5">
-                <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">Stage</p>
-                <p class="text-xs text-cyan-400 font-mono truncate">{{ p.get('stage_label','—') }}</p>
-            </div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div>
-            <div class="flex justify-between text-xs mb-2">
-                <span class="text-slate-400 font-mono uppercase tracking-wider text-[10px]">Overall Progress</span>
-                <span class="text-cyan-400 font-bold font-mono">{{ p.get('progress',0) }}%</span>
-            </div>
-            <div class="w-full bg-slate-800 rounded-full h-2.5 border border-slate-700 overflow-hidden">
-                <div class="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 h-full rounded-full transition-all duration-500"
-                     style="width: {{ p.get('progress',0) }}%"></div>
-            </div>
-        </div>
-    </div>
+        {% set st = p.get('status', 'on_hold') if p is mapping else (p.status if p.status is defined else 'on_hold') %}
+        {% set ns.total = ns.total + 1 %}
+        {% if st == 'in_progress' %}{% set ns.in_progress = ns.in_progress + 1 %}
+        {% elif st == 'review' %}{% set ns.review = ns.review + 1 %}
+        {% elif st == 'completed' %}{% set ns.completed = ns.completed + 1 %}
+        {% else %}{% set ns.on_hold = ns.on_hold + 1 %}
+        {% endif %}
     {% endfor %}
-</div>
+{% endif %}
 
-<!-- Empty filter state (hidden by default) -->
-<div id="no-results" class="hidden glass-card rounded-2xl p-12 text-center border border-slate-800">
-    <i class="fa-solid fa-filter-circle-xmark text-5xl text-slate-600 mb-4"></i>
-    <p class="text-slate-400 text-sm font-mono">No projects match this filter.</p>
-</div>
-
-{% else %}
-<!-- Empty state -->
-<div class="glass-card rounded-2xl p-16 text-center border border-slate-800">
-    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-6">
-        <i class="fa-solid fa-folder-open text-3xl text-cyan-400"></i>
+{# ============================================================
+   EMPTY STATE (no projects at all)
+============================================================ #}
+{% if not projects %}
+<div class="glass-card rounded-2xl p-12 sm:p-16 text-center border border-slate-800">
+    <div class="w-20 h-20 rounded-full
+                bg-gradient-to-br from-cyan-500/20 to-purple-500/20
+                border border-cyan-500/30
+                flex items-center justify-center mx-auto mb-6">
+        <i class="fa-solid fa-folder-open text-3xl text-cyan-400"
+           aria-hidden="true"></i>
     </div>
-    <h3 class="font-mono-heading font-bold text-white text-lg mb-2">No Projects Yet</h3>
-    <p class="text-slate-400 text-sm font-mono max-w-md mx-auto">
+    <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
+        No Projects Yet
+    </h3>
+    <p class="text-slate-400 text-sm font-mono max-w-md mx-auto leading-relaxed">
         Your active and past projects will appear here once your project manager assigns them.
         In the meantime, feel free to send us a message.
     </p>
     <a href="{{ url_for('client_messages') }}"
-       class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl text-xs font-mono font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:brightness-110 transition">
-        <i class="fa-solid fa-comments"></i> Contact Support
+       class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl
+              text-xs font-mono font-bold
+              bg-gradient-to-r from-cyan-400 to-emerald-400
+              text-slate-950 hover:brightness-110 transition active:scale-[0.98]">
+        <i class="fa-solid fa-comments" aria-hidden="true"></i>
+        Contact Support
     </a>
 </div>
+
+{% else %}
+
+{# ============================================================
+   SUMMARY STATS
+============================================================ #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-6">
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
+                    uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-layer-group text-cyan-400" aria-hidden="true"></i>
+            Total
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.total }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
+                    uppercase tracking-wider mb-1">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"
+                  aria-hidden="true"></span>
+            Active
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.in_progress }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
+                    uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-check text-emerald-400" aria-hidden="true"></i>
+            Completed
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.completed }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
+                    uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-hourglass-half text-orange-400" aria-hidden="true"></i>
+            Review
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.review }}
+        </div>
+    </div>
+
+</div>
+
+{# ============================================================
+   TOOLBAR: SEARCH + FILTER + SORT
+============================================================ #}
+<div class="glass-card rounded-2xl border border-slate-800 p-3 sm:p-4 mb-5 sm:mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
+
+        {# Search #}
+        <div class="relative flex-1 lg:max-w-md">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
+                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+            <input type="text"
+                   id="project-search"
+                   placeholder="Search by title, service, or stage..."
+                   autocomplete="off"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
+                          bg-slate-900 border border-slate-800
+                          text-sm text-white placeholder-slate-500
+                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                          transition">
+        </div>
+
+        {# Filter tabs #}
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
+                    overflow-x-auto pb-1 lg:pb-0
+                    -mx-3 px-3 lg:mx-0 lg:px-0 lg:flex-1
+                    scrollbar-thin">
+            {% set filters = [
+                ('all',         'All',         ns.total),
+                ('in_progress', 'Active',      ns.in_progress),
+                ('review',      'Review',      ns.review),
+                ('completed',   'Completed',   ns.completed),
+                ('on_hold',     'On Hold',     ns.on_hold)
+            ] %}
+            {% for key, label, count in filters %}
+            <button type="button"
+                    onclick="filterProjects('{{ key }}')"
+                    data-filter="{{ key }}"
+                    class="filter-btn shrink-0 px-3 py-2 rounded-lg whitespace-nowrap
+                           transition
+                           {% if key == 'all' %}
+                               bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                           {% else %}
+                               bg-slate-900 text-slate-400 border border-slate-800
+                               hover:text-white
+                           {% endif %}">
+                {{ label }}
+                <span class="opacity-60 ml-0.5">({{ count }})</span>
+            </button>
+            {% endfor %}
+        </div>
+
+        {# Sort #}
+        <div class="shrink-0">
+            <label for="project-sort" class="sr-only">Sort projects</label>
+            <div class="relative">
+                <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
+                          text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                <select id="project-sort"
+                        class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
+                               bg-slate-900 border border-slate-800
+                               text-xs font-mono text-slate-200 cursor-pointer
+                               focus:outline-none focus:border-cyan-400 transition">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="progress">Most progress</option>
+                    <option value="name">Name (A–Z)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
+                          text-slate-500 text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{# ============================================================
+   PROJECTS GRID
+============================================================ #}
+<div id="projects-grid"
+     class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+
+    {% for p in projects %}
+        {# ---- Safe field access ---- #}
+        {% set st = p.get('status', 'on_hold') if p is mapping else (p.status if p.status is defined else 'on_hold') %}
+        {% set title = (p.get('title', 'Untitled') if p is mapping else (p.title if p.title is defined else 'Untitled'))|string %}
+        {% set service = (p.get('service', '') if p is mapping else (p.service if p.service is defined else ''))|string %}
+        {% set timeline = (p.get('timeline', '') if p is mapping else (p.timeline if p.timeline is defined else ''))|string %}
+        {% set stage_label = (p.get('stage_label', '') if p is mapping else (p.stage_label if p.stage_label is defined else ''))|string %}
+        {% set progress = (p.get('progress', 0) if p is mapping else (p.progress if p.progress is defined else 0)) or 0 %}
+        {% set created_at = (p.get('created_at') if p is mapping else (p.created_at if p.created_at is defined else none)) %}
+        {% set p_id = p._id if p._id is defined else p.get('_id') if p is mapping else '' %}
+
+        {# Numeric coercion — critical for inline style #}
+        {% set progress_num = progress|int if progress is number else 0 %}
+        {% set progress_num = 0 if progress_num < 0 else (100 if progress_num > 100 else progress_num) %}
+
+        {# Timestamp for sorting #}
+        {% set created_ts = created_at.timestamp() if created_at and created_at.strftime is defined else 0 %}
+        {% set created_display = created_at.strftime('%b %d, %Y') if created_at and created_at.strftime is defined else '' %}
+
+        {# Short id #}
+        {% set id_str = p_id|string %}
+        {% set id_short = id_str[:8] %}
+
+        <article class="project-card glass-card rounded-2xl p-5 sm:p-6
+                        border border-slate-800
+                        hover:border-cyan-500/40 hover:shadow-lg hover:shadow-cyan-500/5
+                        hover:-translate-y-0.5
+                        transition-all duration-200
+                        flex flex-col"
+                 data-status="{{ st }}"
+                 data-search="{{ (title ~ ' ' ~ service ~ ' ' ~ stage_label)|lower }}"
+                 data-timestamp="{{ created_ts }}"
+                 data-progress="{{ progress_num }}"
+                 data-name="{{ title|lower }}">
+
+            {# ---------- HEADER ---------- #}
+            <header class="flex items-start justify-between gap-3 mb-4">
+                <div class="min-w-0 flex-1">
+                    <h3 class="font-mono-heading font-bold text-base sm:text-lg text-white
+                               line-clamp-2 leading-tight"
+                        title="{{ title }}">
+                        {{ title }}
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1
+                                mt-1.5 text-[10px] font-mono text-slate-500">
+                        {% if id_short %}
+                        <span class="inline-flex items-center gap-1">
+                            <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
+                            {{ id_short }}
+                        </span>
+                        {% endif %}
+                        {% if created_display %}
+                        <span class="inline-flex items-center gap-1">
+                            <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                            {{ created_display }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Status badge #}
+                {% if st == 'in_progress' %}
+                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                             text-[10px] font-bold uppercase whitespace-nowrap
+                             bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                          aria-hidden="true"></span>
+                    Active
+                </span>
+                {% elif st == 'review' %}
+                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                             text-[10px] font-bold uppercase whitespace-nowrap
+                             bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                    <i class="fa-solid fa-clock text-[8px]" aria-hidden="true"></i>
+                    Review
+                </span>
+                {% elif st == 'completed' %}
+                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                             text-[10px] font-bold uppercase whitespace-nowrap
+                             bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+                    Done
+                </span>
+                {% else %}
+                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                             text-[10px] font-bold uppercase whitespace-nowrap
+                             bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                    <i class="fa-solid fa-pause text-[8px]" aria-hidden="true"></i>
+                    Hold
+                </span>
+                {% endif %}
+            </header>
+
+            {# ---------- META GRID ---------- #}
+            <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+                <div class="p-2.5 sm:p-3 rounded-lg bg-black/30 border border-white/5 min-w-0">
+                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">
+                        Service
+                    </p>
+                    <p class="text-xs text-white font-mono truncate"
+                       title="{{ service or '—' }}">
+                        {{ service or '—' }}
+                    </p>
+                </div>
+                <div class="p-2.5 sm:p-3 rounded-lg bg-black/30 border border-white/5 min-w-0">
+                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">
+                        Timeline
+                    </p>
+                    <p class="text-xs text-white font-mono truncate"
+                       title="{{ timeline or '—' }}">
+                        {{ timeline or '—' }}
+                    </p>
+                </div>
+                <div class="p-2.5 sm:p-3 rounded-lg bg-black/30 border border-white/5 min-w-0">
+                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">
+                        Stage
+                    </p>
+                    <p class="text-xs text-cyan-400 font-mono truncate"
+                       title="{{ stage_label or '—' }}">
+                        {{ stage_label or '—' }}
+                    </p>
+                </div>
+            </div>
+
+            {# ---------- PROGRESS ---------- #}
+            <div class="mt-auto">
+                <div class="flex justify-between text-xs mb-2 gap-2">
+                    <span class="text-slate-400 font-mono uppercase tracking-wider text-[10px]">
+                        Overall Progress
+                    </span>
+                    <span class="text-cyan-400 font-bold font-mono shrink-0">
+                        {{ progress_num }}%
+                    </span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2.5 border border-slate-700
+                            overflow-hidden"
+                     role="progressbar"
+                     aria-valuenow="{{ progress_num }}"
+                     aria-valuemin="0"
+                     aria-valuemax="100"
+                     aria-label="{{ title }} progress">
+                    <div class="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500
+                                h-full rounded-full transition-all duration-500"
+                         style="width: {{ progress_num }}%"></div>
+                </div>
+            </div>
+
+        </article>
+    {% endfor %}
+
+</div>
+
+{# ============================================================
+   NO RESULTS (hidden by default)
+============================================================ #}
+<div id="no-results"
+     class="hidden glass-card rounded-2xl p-10 sm:p-12 text-center
+            border border-slate-800">
+    <div class="w-16 h-16 rounded-full mx-auto mb-4
+                bg-slate-900 border border-slate-800
+                flex items-center justify-center">
+        <i class="fa-solid fa-magnifying-glass text-2xl text-slate-500"
+           aria-hidden="true"></i>
+    </div>
+    <h3 class="font-mono-heading font-bold text-white text-sm mb-1">
+        No Projects Match
+    </h3>
+    <p class="text-slate-400 text-xs font-mono mb-4">
+        Try adjusting your search or filter.
+    </p>
+    <button type="button"
+            onclick="resetFilters()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl
+                   text-[11px] font-mono font-bold
+                   bg-cyan-500/15 text-cyan-300 border border-cyan-500/30
+                   hover:bg-cyan-500/25 transition">
+        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+        Clear Filters
+    </button>
+</div>
+
 {% endif %}
 
 <script>
-function filterProjects(status) {
+// ============================================================
+// FILTER + SEARCH + SORT
+// ============================================================
+let currentFilter = 'all';
+let currentSearch = '';
+let currentSort = 'newest';
+
+function applyFilters() {
     const cards = document.querySelectorAll('.project-card');
-    const buttons = document.querySelectorAll('.filter-btn');
     const noResults = document.getElementById('no-results');
-
-    // Toggle button styles
-    buttons.forEach(btn => {
-        if (btn.dataset.filter === status) {
-            btn.classList.add('bg-cyan-500', 'text-slate-950', 'font-bold', 'active');
-            btn.classList.remove('glass-card', 'text-slate-300');
-        } else {
-            btn.classList.remove('bg-cyan-500', 'text-slate-950', 'font-bold', 'active');
-            btn.classList.add('glass-card', 'text-slate-300');
-        }
-    });
-
-    // Filter cards
     let visible = 0;
+
     cards.forEach(card => {
-        const cardStatus = card.dataset.status;
-        if (status === 'all' || cardStatus === status) {
+        const status = card.dataset.status || '';
+        const haystack = card.dataset.search || '';
+
+        const matchesFilter = (currentFilter === 'all' || status === currentFilter);
+        const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
+
+        if (matchesFilter && matchesSearch) {
             card.style.display = '';
             visible++;
         } else {
@@ -151,16 +403,103 @@ function filterProjects(status) {
         }
     });
 
-    // Show empty state if nothing matches
+    // Toggle no-results
     if (noResults) {
-        noResults.classList.toggle('hidden', visible > 0 || status === 'all');
-        // Hide grid if no visible items (safety)
-        const grid = document.getElementById('projects-grid');
-        if (grid) {
-            grid.classList.toggle('hidden', visible === 0 && status !== 'all');
-        }
+        noResults.classList.toggle('hidden', visible > 0);
     }
 }
+
+function filterProjects(status) {
+    currentFilter = status;
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === status;
+        btn.classList.toggle('bg-cyan-500/20', isActive);
+        btn.classList.toggle('text-cyan-300', isActive);
+        btn.classList.toggle('border-cyan-500/40', isActive);
+        btn.classList.toggle('bg-slate-900', !isActive);
+        btn.classList.toggle('text-slate-400', !isActive);
+        btn.classList.toggle('border-slate-800', !isActive);
+    });
+
+    applyFilters();
+}
+
+function resetFilters() {
+    currentSearch = '';
+    const searchInput = document.getElementById('project-search');
+    if (searchInput) searchInput.value = '';
+    filterProjects('all');
+}
+
+function sortProjects(order) {
+    const grid = document.getElementById('projects-grid');
+    if (!grid) return;
+
+    const cards = Array.from(grid.querySelectorAll('.project-card'));
+
+    cards.sort((a, b) => {
+        const tsA = parseFloat(a.dataset.timestamp) || 0;
+        const tsB = parseFloat(b.dataset.timestamp) || 0;
+        const progA = parseFloat(a.dataset.progress) || 0;
+        const progB = parseFloat(b.dataset.progress) || 0;
+        const nameA = a.dataset.name || '';
+        const nameB = b.dataset.name || '';
+
+        switch (order) {
+            case 'oldest':   return tsA - tsB;
+            case 'progress': return progB - progA;
+            case 'name':     return nameA.localeCompare(nameB);
+            case 'newest':
+            default:         return tsB - tsA;
+        }
+    });
+
+    cards.forEach(card => grid.appendChild(card));
+}
+
+// Wire up search
+const searchInput = document.getElementById('project-search');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        currentSearch = (e.target.value || '').toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+// Wire up sort
+const sortSelect = document.getElementById('project-sort');
+if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        sortProjects(currentSort);
+    });
+}
 </script>
+
+<style>
+    /* Line clamp utility */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Focus-visible ring */
+    *:focus-visible {
+        outline: 2px solid rgba(0, 242, 254, 0.6);
+        outline-offset: 2px;
+    }
+
+    /* Thin scrollbar for filter tabs */
+    .scrollbar-thin::-webkit-scrollbar {
+        height: 4px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.3);
+        border-radius: 2px;
+    }
+</style>
 
 {% endblock %}

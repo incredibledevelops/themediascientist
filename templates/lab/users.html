@@ -1,69 +1,901 @@
 {% extends 'lab/base.html' %}
 {% block title %}Users{% endblock %}
 {% block page_title %}User Management{% endblock %}
-{% block page_subtitle %}Manage admin accounts.{% endblock %}
+{% block page_subtitle %}Manage admin and client accounts.{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-1">
-        <div class="glass-card rounded-2xl border border-slate-800 p-6">
-            <h3 class="font-mono-heading font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-user-plus text-cyan-400"></i> Add Admin User
-            </h3>
-            <form method="POST" action="{{ url_for('lab_user_create') }}" class="space-y-3">
-                <input type="text" name="name" required placeholder="Full Name" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <input type="email" name="email" required placeholder="Email" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <input type="password" name="password" required placeholder="Password" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <select name="role" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
-                    <option value="admin">Admin</option>
-                    <option value="client">Client</option>
-                </select>
-                <button type="submit" class="w-full py-2.5 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">CREATE USER</button>
-            </form>
+
+{# ============================================================
+   SUMMARY STATS
+============================================================ #}
+{% set ns = namespace(admins=0, clients=0, active=0) %}
+{% for u in users %}
+    {% if u.get('role') == 'client' %}
+        {% set ns.clients = ns.clients + 1 %}
+    {% else %}
+        {% set ns.admins = ns.admins + 1 %}
+    {% endif %}
+    {% if u.get('is_active', True) %}
+        {% set ns.active = ns.active + 1 %}
+    {% endif %}
+{% endfor %}
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-users text-cyan-400" aria-hidden="true"></i>
+            Total
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ users|length }}
         </div>
     </div>
-    <div class="lg:col-span-2">
-        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-            <div class="p-5 border-b border-slate-800 bg-slate-900/50">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-users text-cyan-400"></i> All Users
-                </h3>
-            </div>
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
-                        <th class="py-3 px-5">Name</th>
-                        <th class="py-3 px-5">Email</th>
-                        <th class="py-3 px-5">Role</th>
-                        <th class="py-3 px-5 text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for u in users %}
-                    <tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
-                        <td class="py-4 px-5 text-xs text-white font-semibold">{{ u.name }}</td>
-                        <td class="py-4 px-5 text-xs text-slate-300 font-mono">{{ u.email }}</td>
-                        <td class="py-4 px-5">
-                            {% if u.get('role') == 'client' %}
-                            <span class="text-[10px] font-mono px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">CLIENT</span>
-                            {% else %}
-                            <span class="text-[10px] font-mono px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">ADMIN</span>
-                            {% endif %}
-                        </td>
-                        <td class="py-4 px-5 text-right">
-                            {% if u._id|string != current_user.id|string %}
-                            <form method="POST" action="{{ url_for('lab_user_delete', user_id=u._id) }}" onsubmit="return confirm('Delete user?');">
-                                <button type="submit" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
-                            </form>
-                            {% else %}
-                            <span class="text-[10px] font-mono text-cyan-400">YOU</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-user-shield text-cyan-400" aria-hidden="true"></i>
+            Admins
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.admins }}
         </div>
     </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-user-tie text-purple-400" aria-hidden="true"></i>
+            Clients
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.clients }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>
+            Active
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
+            {{ ns.active }}
+        </div>
+    </div>
+
 </div>
+
+{# ============================================================
+   MAIN GRID: Form (left) + List (right)
+============================================================ #}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    {# ==========================================================
+       LEFT: CREATE USER FORM
+    ========================================================== #}
+    <aside class="lg:col-span-1">
+
+        <details class="lg:!block group glass-card rounded-2xl border border-slate-800
+                        lg:sticky lg:top-24"
+                 {% if not users %}open{% endif %}>
+
+            {# Mobile toggle #}
+            <summary class="lg:!hidden p-4 cursor-pointer flex items-center justify-between gap-3
+                            border-b border-slate-800 list-none">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-user-plus text-cyan-400" aria-hidden="true"></i>
+                    Create New User
+                </h3>
+                <i class="fa-solid fa-chevron-down text-slate-400 text-xs
+                          group-open:rotate-180 transition-transform" aria-hidden="true"></i>
+            </summary>
+
+            {# Desktop header #}
+            <header class="hidden lg:block p-5 border-b border-slate-800">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-user-plus text-cyan-400" aria-hidden="true"></i>
+                    Create New User
+                </h3>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    Password can be changed by the user after first login.
+                </p>
+            </header>
+
+            <form method="POST"
+                  action="{{ url_for('lab_user_create') }}"
+                  id="create-user-form"
+                  class="p-4 sm:p-5 space-y-3.5">
+
+                {# Name #}
+                <div>
+                    <label for="new-user-name"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider mb-1.5">
+                        Full Name <span class="text-cyan-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                        <input type="text"
+                               id="new-user-name"
+                               name="name"
+                               required
+                               maxlength="80"
+                               autocomplete="name"
+                               placeholder="e.g. Jane Mensah"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                    </div>
+                </div>
+
+                {# Email #}
+                <div>
+                    <label for="new-user-email"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider mb-1.5">
+                        Email Address <span class="text-cyan-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                        <input type="email"
+                               id="new-user-email"
+                               name="email"
+                               required
+                               maxlength="120"
+                               autocomplete="email"
+                               inputmode="email"
+                               spellcheck="false"
+                               placeholder="user@example.com"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                    </div>
+                </div>
+
+                {# Password #}
+                <div>
+                    <label for="new-user-password"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider mb-1.5">
+                        Password <span class="text-cyan-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                        <input type="password"
+                               id="new-user-password"
+                               name="password"
+                               required
+                               minlength="6"
+                               autocomplete="new-password"
+                               placeholder="At least 6 characters"
+                               oninput="updatePasswordStrength(this.value); updateConfirmMatch();"
+                               class="w-full pl-10 pr-12 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                        <button type="button"
+                                onclick="togglePassword('new-user-password', this)"
+                                class="absolute right-2 top-1/2 -translate-y-1/2
+                                       w-9 h-9 rounded-lg flex items-center justify-center
+                                       text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition"
+                                aria-label="Show password">
+                            <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    {# Strength meter #}
+                    <div class="mt-2">
+                        <div class="flex gap-1 h-1">
+                            <div class="strength-bar flex-1 rounded-full bg-slate-800 transition-colors"
+                                 data-strength="1"></div>
+                            <div class="strength-bar flex-1 rounded-full bg-slate-800 transition-colors"
+                                 data-strength="2"></div>
+                            <div class="strength-bar flex-1 rounded-full bg-slate-800 transition-colors"
+                                 data-strength="3"></div>
+                            <div class="strength-bar flex-1 rounded-full bg-slate-800 transition-colors"
+                                 data-strength="4"></div>
+                        </div>
+                        <p class="text-[10px] font-mono text-slate-500 mt-1.5"
+                           id="strength-label">
+                            Minimum 6 characters
+                        </p>
+                    </div>
+                </div>
+
+                {# Confirm Password #}
+                <div>
+                    <label for="new-user-confirm"
+                           class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider mb-1.5">
+                        Confirm Password <span class="text-cyan-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2
+                                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                        <input type="password"
+                               id="new-user-confirm"
+                               name="confirm_password"
+                               required
+                               autocomplete="new-password"
+                               placeholder="Re-enter password"
+                               oninput="updateConfirmMatch()"
+                               class="w-full pl-10 pr-12 py-3 rounded-xl
+                                      bg-slate-900 border border-slate-800
+                                      text-sm text-white placeholder-slate-500
+                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                      transition">
+                        <span id="confirm-match-icon"
+                              class="absolute right-4 top-1/2 -translate-y-1/2
+                                     text-slate-600 text-sm hidden">
+                            <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <p id="confirm-match-msg"
+                       class="hidden text-[10px] font-mono text-red-400 mt-1.5
+                              flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        <span>Passwords do not match.</span>
+                    </p>
+                </div>
+
+                {# Role selector — radio cards #}
+                <div>
+                    <label class="block text-[10px] font-mono text-slate-400
+                                  uppercase tracking-wider mb-2">
+                        Role
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+
+                        <label class="role-card cursor-pointer">
+                            <input type="radio" name="role" value="admin" checked class="sr-only">
+                            <div class="role-inner p-3 rounded-xl border-2 border-slate-800 bg-slate-900/70
+                                        flex flex-col items-center gap-1.5 text-center
+                                        transition-all">
+                                <i class="fa-solid fa-user-shield text-cyan-400 text-lg
+                                          role-icon transition-transform" aria-hidden="true"></i>
+                                <span class="text-[10px] font-mono font-bold text-white uppercase">
+                                    Admin
+                                </span>
+                                <span class="text-[9px] text-slate-500 leading-tight">
+                                    Full access
+                                </span>
+                            </div>
+                        </label>
+
+                        <label class="role-card cursor-pointer">
+                            <input type="radio" name="role" value="client" class="sr-only">
+                            <div class="role-inner p-3 rounded-xl border-2 border-slate-800 bg-slate-900/70
+                                        flex flex-col items-center gap-1.5 text-center
+                                        transition-all">
+                                <i class="fa-solid fa-user-tie text-purple-400 text-lg
+                                          role-icon transition-transform" aria-hidden="true"></i>
+                                <span class="text-[10px] font-mono font-bold text-white uppercase">
+                                    Client
+                                </span>
+                                <span class="text-[9px] text-slate-500 leading-tight">
+                                    Portal only
+                                </span>
+                            </div>
+                        </label>
+
+                    </div>
+                    <p class="text-[10px] font-mono text-slate-500 mt-2">
+                        Admins can manage the site. Clients only see their portal.
+                    </p>
+                </div>
+
+                <button type="submit"
+                        id="create-user-btn"
+                        class="w-full py-3 rounded-xl text-xs font-mono font-bold
+                               text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
+                               hover:brightness-110 transition active:scale-[0.98]
+                               inline-flex items-center justify-center gap-2
+                               disabled:opacity-70 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                    <span id="create-user-label">Create User</span>
+                </button>
+            </form>
+        </details>
+    </aside>
+
+    {# ==========================================================
+       RIGHT: USERS LIST
+    ========================================================== #}
+    <section class="lg:col-span-2">
+
+        {# ---------- SEARCH + FILTER ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 p-4 mb-4">
+            <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
+                              text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                    <input type="text"
+                           id="user-search"
+                           placeholder="Search by name or email..."
+                           autocomplete="off"
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                  transition">
+                </div>
+
+                <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono">
+                    <button type="button"
+                            onclick="filterUsers('all')"
+                            data-filter="all"
+                            class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
+                                   bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                                   transition whitespace-nowrap">
+                        All
+                    </button>
+                    <button type="button"
+                            onclick="filterUsers('admin')"
+                            data-filter="admin"
+                            class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
+                                   bg-slate-900 text-slate-400 border border-slate-800
+                                   hover:text-white transition whitespace-nowrap">
+                        Admins
+                    </button>
+                    <button type="button"
+                            onclick="filterUsers('client')"
+                            data-filter="client"
+                            class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
+                                   bg-slate-900 text-slate-400 border border-slate-800
+                                   hover:text-white transition whitespace-nowrap">
+                        Clients
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# ---------- USERS CARD ---------- #}
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+
+            <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+                           flex items-center justify-between gap-3">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-users text-cyan-400" aria-hidden="true"></i>
+                    All Users
+                    <span class="text-[10px] font-mono font-normal text-slate-500"
+                          id="users-count">
+                        ({{ users|length }})
+                    </span>
+                </h3>
+            </header>
+
+            {# ============================================================
+               DESKTOP TABLE (hidden below lg)
+            ============================================================ #}
+            <div class="hidden lg:block overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
+                                   uppercase bg-slate-900/30">
+                            <th class="py-3 px-5">User</th>
+                            <th class="py-3 px-5">Role</th>
+                            <th class="py-3 px-5">Created</th>
+                            <th class="py-3 px-5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        {% for u in users %}
+                        {% set is_self = (u._id|string == current_user.id|string) %}
+                        {% set role = u.get('role') or 'admin' %}
+                        <tr class="user-row border-b border-slate-800/50 hover:bg-slate-800/30 transition"
+                            data-role="{{ role }}"
+                            data-search="{{ (u.name ~ ' ' ~ u.email)|lower }}">
+
+                            {# Name + email #}
+                            <td class="py-4 px-5 max-w-xs">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 shrink-0 rounded-full
+                                                bg-gradient-to-br from-cyan-500 to-purple-600
+                                                flex items-center justify-center
+                                                text-white font-bold text-xs">
+                                        {{ u.name[0]|upper if u.name else 'U' }}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-semibold text-white text-xs truncate">
+                                                {{ u.name }}
+                                            </p>
+                                            {% if is_self %}
+                                            <span class="shrink-0 text-[9px] font-mono px-1.5 py-0.5
+                                                         rounded bg-cyan-500/20 text-cyan-300
+                                                         border border-cyan-500/30">
+                                                YOU
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-[10px] font-mono text-slate-400 truncate mt-0.5">
+                                            {{ u.email }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            {# Role badge #}
+                            <td class="py-4 px-5">
+                                {% if role == 'client' %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1
+                                             rounded-full text-[10px] font-mono uppercase
+                                             bg-purple-500/20 text-purple-300
+                                             border border-purple-500/30">
+                                    <i class="fa-solid fa-user-tie text-[9px]" aria-hidden="true"></i>
+                                    Client
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1
+                                             rounded-full text-[10px] font-mono uppercase
+                                             bg-cyan-500/20 text-cyan-300
+                                             border border-cyan-500/30">
+                                    <i class="fa-solid fa-user-shield text-[9px]" aria-hidden="true"></i>
+                                    Admin
+                                </span>
+                                {% endif %}
+                            </td>
+
+                            {# Created #}
+                            <td class="py-4 px-5 text-[10px] font-mono text-slate-400 whitespace-nowrap">
+                                {% if u.created_at %}
+                                <time datetime="{{ u.created_at.isoformat() }}"
+                                      title="{{ u.created_at.strftime('%b %d, %Y at %H:%M') }}">
+                                    {{ u.created_at.strftime('%b %d, %Y') }}
+                                </time>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+
+                            {# Action #}
+                            <td class="py-4 px-5 text-right">
+                                {% if not is_self %}
+                                <form method="POST"
+                                      action="{{ url_for('lab_user_delete', user_id=u._id) }}"
+                                      onsubmit="return confirm('⚠️ Delete user &quot;{{ u.name }}&quot; ({{ u.email }})?\n\nThis cannot be undone.');">
+                                    <button type="submit"
+                                            class="w-9 h-9 rounded-lg
+                                                   bg-red-950/50 border border-red-500/30
+                                                   inline-flex items-center justify-center
+                                                   text-red-400
+                                                   hover:bg-red-500/20 hover:border-red-500/50
+                                                   transition"
+                                            title="Delete user"
+                                            aria-label="Delete {{ u.name }}">
+                                        <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1
+                                             rounded-full text-[10px] font-mono
+                                             bg-slate-800 text-slate-500
+                                             border border-slate-700"
+                                      title="You cannot delete your own account">
+                                    <i class="fa-solid fa-lock text-[9px]" aria-hidden="true"></i>
+                                    Protected
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="py-16 text-center">
+                                <i class="fa-solid fa-users text-4xl text-slate-700 mb-3"
+                                   aria-hidden="true"></i>
+                                <p class="text-slate-400 text-xs font-mono">No users yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# ============================================================
+               MOBILE CARD LIST (hidden lg and up)
+            ============================================================ #}
+            <div class="lg:hidden divide-y divide-slate-800/60">
+                {% for u in users %}
+                {% set is_self = (u._id|string == current_user.id|string) %}
+                {% set role = u.get('role') or 'admin' %}
+                <div class="user-row p-4 space-y-3"
+                     data-role="{{ role }}"
+                     data-search="{{ (u.name ~ ' ' ~ u.email)|lower }}">
+
+                    {# Row 1: avatar + name + role #}
+                    <div class="flex items-start gap-3">
+                        <div class="w-11 h-11 shrink-0 rounded-full
+                                    bg-gradient-to-br from-cyan-500 to-purple-600
+                                    flex items-center justify-center
+                                    text-white font-bold text-sm">
+                            {{ u.name[0]|upper if u.name else 'U' }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <p class="font-semibold text-white text-sm truncate">
+                                    {{ u.name }}
+                                </p>
+                                {% if is_self %}
+                                <span class="shrink-0 text-[9px] font-mono px-1.5 py-0.5
+                                             rounded bg-cyan-500/20 text-cyan-300
+                                             border border-cyan-500/30">
+                                    YOU
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5">
+                                {{ u.email }}
+                            </p>
+                            <div class="mt-1.5 flex flex-wrap items-center gap-2">
+                                {% if role == 'client' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5
+                                             rounded-full text-[9px] font-mono uppercase
+                                             bg-purple-500/20 text-purple-300
+                                             border border-purple-500/30">
+                                    <i class="fa-solid fa-user-tie text-[8px]" aria-hidden="true"></i>
+                                    Client
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5
+                                             rounded-full text-[9px] font-mono uppercase
+                                             bg-cyan-500/20 text-cyan-300
+                                             border border-cyan-500/30">
+                                    <i class="fa-solid fa-user-shield text-[8px]" aria-hidden="true"></i>
+                                    Admin
+                                </span>
+                                {% endif %}
+                                {% if u.created_at %}
+                                <span class="text-[9px] font-mono text-slate-500">
+                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                    {{ u.created_at.strftime('%b %d, %Y') }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Row 2: Delete (only if not self) #}
+                    {% if not is_self %}
+                    <form method="POST"
+                          action="{{ url_for('lab_user_delete', user_id=u._id) }}"
+                          onsubmit="return confirm('⚠️ Delete user &quot;{{ u.name }}&quot;?');">
+                        <button type="submit"
+                                class="w-full inline-flex items-center justify-center gap-1.5
+                                       px-3 py-2.5 rounded-lg
+                                       bg-red-500/15 border border-red-500/30
+                                       text-xs font-mono font-bold text-red-300
+                                       hover:bg-red-500/25 transition active:scale-[0.98]">
+                            <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                            Delete User
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="w-full inline-flex items-center justify-center gap-1.5
+                                px-3 py-2.5 rounded-lg
+                                bg-slate-800/60 border border-slate-700
+                                text-[10px] font-mono text-slate-500">
+                        <i class="fa-solid fa-lock text-[10px]" aria-hidden="true"></i>
+                        You cannot delete your own account
+                    </div>
+                    {% endif %}
+
+                </div>
+                {% else %}
+                <div class="p-12 text-center">
+                    <i class="fa-solid fa-users text-4xl text-slate-700 mb-3"
+                       aria-hidden="true"></i>
+                    <p class="text-slate-400 text-xs font-mono">No users yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# No results #}
+            <div id="no-results" class="hidden p-12 text-center">
+                <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
+                   aria-hidden="true"></i>
+                <p class="text-slate-400 text-xs font-mono">No users match your search.</p>
+                <button type="button"
+                        onclick="resetFilters()"
+                        class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+                    Clear filters
+                </button>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+<script>
+// ============================================================
+// SEARCH + FILTER
+// ============================================================
+let currentFilter = 'all';
+let currentSearch = '';
+
+function applyFilters() {
+    const rows = document.querySelectorAll('.user-row');
+    let visible = 0;
+
+    rows.forEach(row => {
+        const role = row.dataset.role || '';
+        const haystack = row.dataset.search || '';
+
+        const matchesFilter = (currentFilter === 'all' || role === currentFilter);
+        const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
+
+        if (matchesFilter && matchesSearch) {
+            row.style.display = '';
+            visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const countEl = document.getElementById('users-count');
+    if (countEl) {
+        const total = rows.length;
+        countEl.textContent = (visible === total)
+            ? `(${total})`
+            : `(${visible} of ${total})`;
+    }
+
+    const noResults = document.getElementById('no-results');
+    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+}
+
+function filterUsers(filter) {
+    currentFilter = filter;
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-cyan-500/20', isActive);
+        btn.classList.toggle('text-cyan-300', isActive);
+        btn.classList.toggle('border-cyan-500/40', isActive);
+        btn.classList.toggle('bg-slate-900', !isActive);
+        btn.classList.toggle('text-slate-400', !isActive);
+        btn.classList.toggle('border-slate-800', !isActive);
+    });
+
+    applyFilters();
+}
+
+function resetFilters() {
+    currentSearch = '';
+    const searchInput = document.getElementById('user-search');
+    if (searchInput) searchInput.value = '';
+    filterUsers('all');
+}
+
+const searchInput = document.getElementById('user-search');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        currentSearch = (e.target.value || '').toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+// ============================================================
+// PASSWORD VISIBILITY TOGGLE
+// ============================================================
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    const icon = btn.querySelector('i');
+    if (icon) {
+        icon.className = isPassword
+            ? 'fa-solid fa-eye-slash text-sm'
+            : 'fa-solid fa-eye text-sm';
+    }
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+}
+
+// ============================================================
+// PASSWORD STRENGTH METER
+// ============================================================
+function updatePasswordStrength(value) {
+    const bars = document.querySelectorAll('.strength-bar');
+    const label = document.getElementById('strength-label');
+    if (!bars.length || !label) return;
+
+    const len = (value || '').length;
+
+    // Score 0–4
+    let score = 0;
+    if (len >= 6) score++;
+    if (len >= 10) score++;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+    if (/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) score++;
+
+    // Colors per score
+    const colors = {
+        0: 'bg-slate-800',
+        1: 'bg-red-500',
+        2: 'bg-orange-500',
+        3: 'bg-amber-400',
+        4: 'bg-emerald-400'
+    };
+
+    const labels = {
+        0: 'Minimum 6 characters',
+        1: 'Weak password',
+        2: 'Fair password',
+        3: 'Good password',
+        4: 'Strong password'
+    };
+
+    const labelColors = {
+        0: 'text-slate-500',
+        1: 'text-red-400',
+        2: 'text-orange-400',
+        3: 'text-amber-400',
+        4: 'text-emerald-400'
+    };
+
+    bars.forEach(bar => {
+        const barScore = parseInt(bar.dataset.strength, 10);
+        // Reset
+        Object.values(colors).forEach(c => bar.classList.remove(c));
+        // Apply
+        bar.classList.add(barScore <= score ? colors[score] : colors[0]);
+    });
+
+    label.textContent = labels[score];
+    label.className = 'text-[10px] font-mono mt-1.5 ' + labelColors[score];
+}
+
+// ============================================================
+// CONFIRM PASSWORD MATCH
+// ============================================================
+function updateConfirmMatch() {
+    const pwd = document.getElementById('new-user-password');
+    const confirm = document.getElementById('new-user-confirm');
+    const msg = document.getElementById('confirm-match-msg');
+    const icon = document.getElementById('confirm-match-icon');
+    if (!pwd || !confirm || !msg || !icon) return;
+
+    const val1 = pwd.value || '';
+    const val2 = confirm.value || '';
+
+    if (!val2) {
+        msg.classList.add('hidden');
+        icon.classList.add('hidden');
+        return;
+    }
+
+    if (val1 === val2) {
+        msg.classList.add('hidden');
+        icon.classList.remove('hidden');
+        icon.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 text-sm';
+        icon.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
+    } else {
+        msg.classList.remove('hidden');
+        icon.classList.remove('hidden');
+        icon.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-red-400 text-sm';
+        icon.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+    }
+}
+
+// ============================================================
+// ROLE CARD HIGHLIGHT
+// ============================================================
+function updateRoleCards() {
+    document.querySelectorAll('.role-card').forEach(card => {
+        const input = card.querySelector('input[type="radio"]');
+        const inner = card.querySelector('.role-inner');
+        const icon = card.querySelector('.role-icon');
+        if (!input || !inner) return;
+
+        const selected = input.checked;
+        const isClient = input.value === 'client';
+        const accentColor = isClient ? 'purple' : 'cyan';
+
+        // Remove old colors
+        inner.classList.remove(
+            'border-cyan-500/60', 'bg-cyan-500/10', 'shadow-lg', 'shadow-cyan-500/10',
+            'border-purple-500/60', 'bg-purple-500/10', 'shadow-purple-500/10'
+        );
+
+        if (selected) {
+            inner.classList.add(
+                `border-${accentColor}-500/60`,
+                `bg-${accentColor}-500/10`,
+                'shadow-lg',
+                `shadow-${accentColor}-500/10`
+            );
+            if (icon) icon.classList.add('scale-110');
+        } else {
+            inner.classList.add('border-slate-800');
+            if (icon) icon.classList.remove('scale-110');
+        }
+    });
+}
+
+document.querySelectorAll('input[name="role"]').forEach(input => {
+    input.addEventListener('change', updateRoleCards);
+});
+updateRoleCards();
+
+// ============================================================
+// CREATE USER SUBMIT FEEDBACK
+// ============================================================
+const createForm = document.getElementById('create-user-form');
+const createBtn = document.getElementById('create-user-btn');
+const createLabel = document.getElementById('create-user-label');
+
+if (createForm && createBtn && createLabel) {
+    createForm.addEventListener('submit', (e) => {
+        // Client-side validation: passwords match
+        const pwd = document.getElementById('new-user-password');
+        const confirm = document.getElementById('new-user-confirm');
+        if (pwd && confirm && pwd.value !== confirm.value) {
+            e.preventDefault();
+            confirm.focus();
+            return;
+        }
+
+        if (!createForm.checkValidity()) return;
+
+        createBtn.disabled = true;
+        createBtn.classList.add('opacity-70', 'cursor-not-allowed');
+        createBtn.innerHTML = `
+            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+            <span>Creating user...</span>
+        `;
+    });
+}
+</script>
+
+<style>
+    /* Hide default <details> marker */
+    details summary::-webkit-details-marker { display: none; }
+    details summary::marker { content: ''; }
+
+    /* Force the <details> open on desktop */
+    @media (min-width: 1024px) {
+        details[open] > summary,
+        details > summary {
+            display: none;
+        }
+        details > *:not(summary) {
+            display: revert !important;
+        }
+    }
+
+    /* Hide default radio but keep it focusable */
+    .role-card input[type="radio"].sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* Focus ring on role card when its hidden input is focused */
+    .role-card input[type="radio"]:focus + .role-inner,
+    .role-card input[type="radio"]:focus-visible + .role-inner {
+        outline: 2px solid rgba(0, 242, 254, 0.5);
+        outline-offset: 2px;
+    }
+
+    /* Smooth transitions */
+    input, textarea, button, .role-inner {
+        transition: border-color 0.15s ease, background-color 0.15s ease,
+                    color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+</style>
+
 {% endblock %}

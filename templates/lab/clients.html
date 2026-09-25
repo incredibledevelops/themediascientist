@@ -4,98 +4,649 @@
 {% block page_subtitle %}Create client accounts, reset passwords, and manage access.{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-1">
-        <div class="glass-card rounded-2xl border border-slate-800 p-6">
-            <h3 class="font-mono-heading font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-user-plus text-cyan-400"></i> Add New Client
-            </h3>
-            <form method="POST" action="{{ url_for('lab_client_create') }}" class="space-y-3">
-                <input type="text" name="name" required placeholder="Client Full Name" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <input type="email" name="email" required placeholder="client@email.com" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <label class="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
-                    <input type="checkbox" name="send_email" checked class="accent-cyan-400">
-                    <span>Email login credentials automatically</span>
-                </label>
-                <p class="text-[10px] font-mono text-slate-500">
-                    A random 10-char password will be generated and sent to the client.
-                </p>
-                <button type="submit" class="w-full py-2.5 rounded-lg font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition">CREATE CLIENT</button>
-            </form>
+
+{# ============================================================
+   STATS + SEARCH BAR
+============================================================ #}
+{% set ns = namespace(active=0, inactive=0, total_pending=0) %}
+{% for c in clients %}
+    {% if c.is_active %}
+        {% set ns.active = ns.active + 1 %}
+    {% else %}
+        {% set ns.inactive = ns.inactive + 1 %}
+    {% endif %}
+    {% set ns.total_pending = ns.total_pending + (c.pending_total or 0) %}
+{% endfor %}
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-users text-cyan-400" aria-hidden="true"></i>
+            Total
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white">
+            {{ clients|length }}
         </div>
     </div>
 
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>
+            Active
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white">
+            {{ ns.active }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-circle-pause text-red-400" aria-hidden="true"></i>
+            Inactive
+        </div>
+        <div class="text-xl sm:text-2xl font-bold font-mono text-white">
+            {{ ns.inactive }}
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl border border-slate-800 col-span-2 lg:col-span-1">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-wallet text-orange-400" aria-hidden="true"></i>
+            Total Pending
+        </div>
+        <div class="text-base sm:text-xl font-bold font-mono text-white truncate">
+            GH₵ {{ '%.2f' % ns.total_pending }}
+        </div>
+    </div>
+
+</div>
+
+{# ============================================================
+   SEARCH + FILTER BAR
+============================================================ #}
+<div class="glass-card rounded-2xl border border-slate-800 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+
+        {# Search input #}
+        <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
+                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+            <input type="text"
+                   id="client-search"
+                   placeholder="Search by name, email, or code..."
+                   autocomplete="off"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
+                          bg-slate-900 border border-slate-800
+                          text-sm text-white placeholder-slate-500
+                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                          transition">
+        </div>
+
+        {# Filter tabs #}
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono">
+            <button type="button"
+                    onclick="filterClients('all')"
+                    data-filter="all"
+                    class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
+                           bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                           transition whitespace-nowrap">
+                All
+            </button>
+            <button type="button"
+                    onclick="filterClients('active')"
+                    data-filter="active"
+                    class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
+                           bg-slate-900 text-slate-400 border border-slate-800
+                           hover:text-white transition whitespace-nowrap">
+                Active
+            </button>
+            <button type="button"
+                    onclick="filterClients('inactive')"
+                    data-filter="inactive"
+                    class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
+                           bg-slate-900 text-slate-400 border border-slate-800
+                           hover:text-white transition whitespace-nowrap">
+                Inactive
+            </button>
+        </div>
+
+    </div>
+</div>
+
+{# ============================================================
+   MAIN GRID: Form (left) + List (right)
+============================================================ #}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    {# ==========================================================
+       LEFT: Add New Client Form
+    ========================================================== #}
+    <div class="lg:col-span-1">
+
+        {# Mobile: collapsible. Desktop: always visible #}
+        <details class="lg:!block group glass-card rounded-2xl border border-slate-800"
+                 {% if not clients %}open{% endif %}>
+
+            <summary class="lg:!hidden p-4 cursor-pointer flex items-center justify-between gap-3
+                            border-b border-slate-800 list-none">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-user-plus text-cyan-400" aria-hidden="true"></i>
+                    Add New Client
+                </h3>
+                <i class="fa-solid fa-chevron-down text-slate-400 text-xs
+                          group-open:rotate-180 transition-transform" aria-hidden="true"></i>
+            </summary>
+
+            <div class="p-4 sm:p-5 border-b border-slate-800 hidden lg:block">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-user-plus text-cyan-400" aria-hidden="true"></i>
+                    Add New Client
+                </h3>
+                <p class="text-[10px] font-mono text-slate-500 mt-1">
+                    Sends credentials to the email automatically.
+                </p>
+            </div>
+
+            <form method="POST"
+                  action="{{ url_for('lab_client_create') }}"
+                  id="create-client-form"
+                  class="p-4 sm:p-5 space-y-3.5">
+
+                <div>
+                    <label for="new-client-name" class="block text-[10px] font-mono text-slate-400
+                                                         uppercase tracking-wider mb-1.5">
+                        Client Name <span class="text-cyan-400">*</span>
+                    </label>
+                    <input type="text"
+                           id="new-client-name"
+                           name="name"
+                           required
+                           maxlength="80"
+                           autocomplete="name"
+                           placeholder="e.g. STBM E-Commerce"
+                           class="w-full px-3.5 py-2.5 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                  transition">
+                </div>
+
+                <div>
+                    <label for="new-client-email" class="block text-[10px] font-mono text-slate-400
+                                                          uppercase tracking-wider mb-1.5">
+                        Email Address <span class="text-cyan-400">*</span>
+                    </label>
+                    <input type="email"
+                           id="new-client-email"
+                           name="email"
+                           required
+                           maxlength="120"
+                           autocomplete="email"
+                           placeholder="client@email.com"
+                           class="w-full px-3.5 py-2.5 rounded-xl
+                                  bg-slate-900 border border-slate-800
+                                  text-sm text-white placeholder-slate-500
+                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
+                                  transition">
+                </div>
+
+                <label class="flex items-start gap-2.5 p-3 rounded-xl
+                              bg-slate-900/70 border border-slate-800
+                              hover:border-cyan-500/30 transition cursor-pointer">
+                    <input type="checkbox"
+                           name="send_email"
+                           checked
+                           class="mt-0.5 accent-cyan-400 w-4 h-4 shrink-0">
+                    <span class="text-xs font-mono text-slate-300 leading-snug">
+                        Email login credentials automatically
+                    </span>
+                </label>
+
+                <div class="flex items-start gap-2 p-3 rounded-xl
+                            bg-cyan-950/30 border border-cyan-500/20">
+                    <i class="fa-solid fa-circle-info text-cyan-400 text-xs mt-0.5 shrink-0"
+                       aria-hidden="true"></i>
+                    <p class="text-[10px] font-mono text-cyan-300 leading-relaxed">
+                        A random 10-character password will be generated and sent to the client via email.
+                        They can change it after first login.
+                    </p>
+                </div>
+
+                <button type="submit"
+                        id="create-client-btn"
+                        class="w-full py-3 rounded-xl text-xs font-mono font-bold
+                               text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
+                               hover:brightness-110 transition active:scale-[0.98]
+                               inline-flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                    <span id="create-client-label">Create Client</span>
+                </button>
+
+            </form>
+        </details>
+
+    </div>
+
+    {# ==========================================================
+       RIGHT: Clients List
+    ========================================================== #}
     <div class="lg:col-span-2">
         <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-            <div class="p-5 border-b border-slate-800 bg-slate-900/50">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-user-group text-cyan-400"></i> All Clients ({{ clients|length }})
+
+            {# Header #}
+            <div class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+                        flex items-center justify-between gap-3">
+                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-user-group text-cyan-400" aria-hidden="true"></i>
+                    All Clients
+                    <span class="text-[10px] font-mono font-normal text-slate-500"
+                          id="clients-count">
+                        ({{ clients|length }})
+                    </span>
                 </h3>
             </div>
-            <div class="overflow-x-auto">
+
+            {# ============================================================
+               DESKTOP TABLE (hidden below lg)
+            ============================================================ #}
+            <div class="hidden lg:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase bg-slate-900/30">
+                        <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
+                                   uppercase bg-slate-900/30">
                             <th class="py-3 px-5">Client</th>
                             <th class="py-3 px-5">Code</th>
-                            <th class="py-3 px-5">Projects</th>
-                            <th class="py-3 px-5">Pending</th>
-                            <th class="py-3 px-5">Status</th>
+                            <th class="py-3 px-5 text-center">Projects</th>
+                            <th class="py-3 px-5 text-right">Pending</th>
+                            <th class="py-3 px-5 text-center">Status</th>
                             <th class="py-3 px-5 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm">
                         {% for c in clients %}
-                        <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
-                            <td class="py-4 px-5">
-                                <div class="font-semibold text-white text-xs">{{ c.name }}</div>
-                                <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ c.email }}</div>
+                        <tr class="client-row border-b border-slate-800/50
+                                   hover:bg-slate-800/30 transition"
+                            data-status="{{ 'active' if c.is_active else 'inactive' }}"
+                            data-search="{{ (c.name ~ ' ' ~ c.email ~ ' ' ~ (c.client_code or ''))|lower }}">
+
+                            <td class="py-4 px-5 max-w-xs">
+                                <div class="font-semibold text-white text-xs truncate">{{ c.name }}</div>
+                                <div class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
+                                    {{ c.email }}
+                                </div>
                             </td>
+
                             <td class="py-4 px-5">
-                                <span class="text-[10px] font-mono px-2 py-1 rounded bg-purple-950/40 text-purple-300 border border-purple-500/30">
-                                    {{ c.client_code or '—' }}
+                                {% if c.client_code %}
+                                <span class="text-[10px] font-mono px-2 py-1 rounded
+                                             bg-purple-950/40 text-purple-300 border border-purple-500/30
+                                             whitespace-nowrap">
+                                    {{ c.client_code }}
                                 </span>
-                            </td>
-                            <td class="py-4 px-5 text-xs text-cyan-300 font-mono">{{ c.project_count }}</td>
-                            <td class="py-4 px-5 text-xs text-emeraldMint font-mono">GH₵ {{ '%.2f' % (c.pending_total or 0) }}</td>
-                            <td class="py-4 px-5">
-                                {% if c.is_active %}
-                                <span class="text-[10px] font-mono px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ACTIVE</span>
                                 {% else %}
-                                <span class="text-[10px] font-mono px-2 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">INACTIVE</span>
+                                <span class="text-slate-600 text-xs">—</span>
                                 {% endif %}
                             </td>
+
+                            <td class="py-4 px-5 text-xs text-cyan-300 font-mono text-center">
+                                {{ c.project_count }}
+                            </td>
+
+                            <td class="py-4 px-5 text-xs text-emeraldMint font-mono text-right whitespace-nowrap">
+                                GH₵ {{ '%.2f' % (c.pending_total or 0) }}
+                            </td>
+
+                            <td class="py-4 px-5 text-center">
+                                {% if c.is_active %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full
+                                             text-[10px] font-mono uppercase
+                                             bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                                          aria-hidden="true"></span>
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full
+                                             text-[10px] font-mono uppercase
+                                             bg-red-500/20 text-red-300 border border-red-500/30">
+                                    <i class="fa-solid fa-pause text-[8px]" aria-hidden="true"></i>
+                                    Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+
                             <td class="py-4 px-5">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ url_for('lab_client_projects', client_id=c._id) }}" class="w-8 h-8 rounded-lg bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center text-cyan-400 hover:bg-cyan-500/20 transition" title="Manage Projects">
-                                        <i class="fa-solid fa-folder-open text-xs"></i>
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a href="{{ url_for('lab_client_projects', client_id=c._id) }}"
+                                       class="w-9 h-9 rounded-lg bg-cyan-950/50 border border-cyan-500/30
+                                              flex items-center justify-center text-cyan-400
+                                              hover:bg-cyan-500/20 hover:border-cyan-500/50 transition"
+                                       title="Manage Projects"
+                                       aria-label="Manage projects for {{ c.name }}">
+                                        <i class="fa-solid fa-folder-open text-xs" aria-hidden="true"></i>
                                     </a>
-                                    <form method="POST" action="{{ url_for('lab_client_reset_password', client_id=c._id) }}" onsubmit="return confirm('Reset password and email new one?');">
+
+                                    <form method="POST"
+                                          action="{{ url_for('lab_client_reset_password', client_id=c._id) }}"
+                                          onsubmit="return confirm('Reset password for {{ c.name }} and email the new one?');">
                                         <input type="hidden" name="send_email" value="on">
-                                        <button type="submit" class="w-8 h-8 rounded-lg bg-amber-950/50 border border-amber-500/30 flex items-center justify-center text-amber-400 hover:bg-amber-500/20 transition" title="Reset Password">
-                                            <i class="fa-solid fa-key text-xs"></i>
+                                        <button type="submit"
+                                                class="w-9 h-9 rounded-lg bg-amber-950/50 border border-amber-500/30
+                                                       flex items-center justify-center text-amber-400
+                                                       hover:bg-amber-500/20 hover:border-amber-500/50 transition"
+                                                title="Reset Password"
+                                                aria-label="Reset password for {{ c.name }}">
+                                            <i class="fa-solid fa-key text-xs" aria-hidden="true"></i>
                                         </button>
                                     </form>
-                                    <form method="POST" action="{{ url_for('lab_client_toggle', client_id=c._id) }}">
-                                        <button type="submit" class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:bg-slate-700 transition" title="Toggle Active">
-                                            <i class="fa-solid {% if c.is_active %}fa-toggle-on text-emerald-400{% else %}fa-toggle-off{% endif %} text-xs"></i>
+
+                                    <form method="POST"
+                                          action="{{ url_for('lab_client_toggle', client_id=c._id) }}"
+                                          onsubmit="return confirm('{{ 'Deactivate' if c.is_active else 'Activate' }} {{ c.name }}?');">
+                                        <button type="submit"
+                                                class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700
+                                                       flex items-center justify-center
+                                                       hover:bg-slate-700 hover:border-slate-600 transition"
+                                                title="{{ 'Deactivate' if c.is_active else 'Activate' }}"
+                                                aria-label="{{ 'Deactivate' if c.is_active else 'Activate' }} {{ c.name }}">
+                                            <i class="fa-solid {% if c.is_active %}fa-toggle-on text-emerald-400{% else %}fa-toggle-off text-slate-400{% endif %} text-xs"
+                                               aria-hidden="true"></i>
                                         </button>
                                     </form>
-                                    <form method="POST" action="{{ url_for('lab_client_delete', client_id=c._id) }}" onsubmit="return confirm('Delete this client permanently?');">
-                                        <button type="submit" class="w-8 h-8 rounded-lg bg-red-950/50 border border-red-500/30 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition" title="Delete">
-                                            <i class="fa-solid fa-trash text-xs"></i>
+
+                                    <form method="POST"
+                                          action="{{ url_for('lab_client_delete', client_id=c._id) }}"
+                                          onsubmit="return confirm('⚠️ Delete {{ c.name }} permanently? This will remove their account. Projects and invoices will remain in the database.');">
+                                        <button type="submit"
+                                                class="w-9 h-9 rounded-lg bg-red-950/50 border border-red-500/30
+                                                       flex items-center justify-center text-red-400
+                                                       hover:bg-red-500/20 hover:border-red-500/50 transition"
+                                                title="Delete"
+                                                aria-label="Delete {{ c.name }}">
+                                            <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
                                         </button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="6" class="py-8 text-center text-slate-400 text-xs font-mono">No clients yet. Create one to get started.</td></tr>
+                        <tr>
+                            <td colspan="6" class="py-16 text-center">
+                                <i class="fa-solid fa-user-group text-4xl text-slate-700 mb-3"
+                                   aria-hidden="true"></i>
+                                <p class="text-slate-400 text-xs font-mono">No clients yet.</p>
+                                <p class="text-slate-500 text-[10px] font-mono mt-1">
+                                    Create your first client to get started.
+                                </p>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+
+            {# ============================================================
+               MOBILE CARD LIST (hidden lg and up)
+            ============================================================ #}
+            <div class="lg:hidden divide-y divide-slate-800/60">
+                {% for c in clients %}
+                <div class="client-row p-4 space-y-3"
+                     data-status="{{ 'active' if c.is_active else 'inactive' }}"
+                     data-search="{{ (c.name ~ ' ' ~ c.email ~ ' ' ~ (c.client_code or ''))|lower }}">
+
+                    {# Row 1: Name + Status #}
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-semibold text-white text-sm truncate">{{ c.name }}</h4>
+                            <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5">
+                                {{ c.email }}
+                            </p>
+                        </div>
+                        {% if c.is_active %}
+                        <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
+                                     text-[10px] font-mono uppercase
+                                     bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                                  aria-hidden="true"></span>
+                            Active
+                        </span>
+                        {% else %}
+                        <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
+                                     text-[10px] font-mono uppercase
+                                     bg-red-500/20 text-red-300 border border-red-500/30">
+                            <i class="fa-solid fa-pause text-[8px]" aria-hidden="true"></i>
+                            Inactive
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {# Row 2: Meta grid #}
+                    <div class="grid grid-cols-3 gap-2 text-[10px] font-mono">
+                        <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800 min-w-0">
+                            <p class="text-slate-500 uppercase tracking-wider text-[8px] mb-0.5">Code</p>
+                            <p class="text-purple-300 truncate">{{ c.client_code or '—' }}</p>
+                        </div>
+                        <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800 min-w-0">
+                            <p class="text-slate-500 uppercase tracking-wider text-[8px] mb-0.5">Projects</p>
+                            <p class="text-cyan-300">{{ c.project_count }}</p>
+                        </div>
+                        <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800 min-w-0">
+                            <p class="text-slate-500 uppercase tracking-wider text-[8px] mb-0.5">Pending</p>
+                            <p class="text-emeraldMint truncate">GH₵ {{ '%.0f' % (c.pending_total or 0) }}</p>
+                        </div>
+                    </div>
+
+                    {# Row 3: Actions (2-col grid on mobile) #}
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="{{ url_for('lab_client_projects', client_id=c._id) }}"
+                           class="inline-flex items-center justify-center gap-1.5
+                                  px-3 py-2.5 rounded-lg
+                                  bg-cyan-500/15 border border-cyan-500/30
+                                  text-xs font-mono font-bold text-cyan-300
+                                  hover:bg-cyan-500/25 transition active:scale-[0.98]">
+                            <i class="fa-solid fa-folder-open text-xs" aria-hidden="true"></i>
+                            Manage
+                        </a>
+
+                        <form method="POST"
+                              action="{{ url_for('lab_client_reset_password', client_id=c._id) }}"
+                              onsubmit="return confirm('Reset password for {{ c.name }} and email the new one?');">
+                            <input type="hidden" name="send_email" value="on">
+                            <button type="submit"
+                                    class="w-full inline-flex items-center justify-center gap-1.5
+                                           px-3 py-2.5 rounded-lg
+                                           bg-amber-500/15 border border-amber-500/30
+                                           text-xs font-mono font-bold text-amber-300
+                                           hover:bg-amber-500/25 transition active:scale-[0.98]">
+                                <i class="fa-solid fa-key text-xs" aria-hidden="true"></i>
+                                Reset
+                            </button>
+                        </form>
+
+                        <form method="POST"
+                              action="{{ url_for('lab_client_toggle', client_id=c._id) }}"
+                              onsubmit="return confirm('{{ 'Deactivate' if c.is_active else 'Activate' }} {{ c.name }}?');">
+                            <button type="submit"
+                                    class="w-full inline-flex items-center justify-center gap-1.5
+                                           px-3 py-2.5 rounded-lg
+                                           bg-slate-800 border border-slate-700
+                                           text-xs font-mono font-bold
+                                           {% if c.is_active %}text-slate-300{% else %}text-emerald-300{% endif %}
+                                           hover:bg-slate-700 transition active:scale-[0.98]">
+                                <i class="fa-solid {% if c.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %} text-xs"
+                                   aria-hidden="true"></i>
+                                {{ 'Deactivate' if c.is_active else 'Activate' }}
+                            </button>
+                        </form>
+
+                        <form method="POST"
+                              action="{{ url_for('lab_client_delete', client_id=c._id) }}"
+                              onsubmit="return confirm('⚠️ Delete {{ c.name }} permanently? This will remove their account.');">
+                            <button type="submit"
+                                    class="w-full inline-flex items-center justify-center gap-1.5
+                                           px-3 py-2.5 rounded-lg
+                                           bg-red-500/15 border border-red-500/30
+                                           text-xs font-mono font-bold text-red-300
+                                           hover:bg-red-500/25 transition active:scale-[0.98]">
+                                <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+                {% else %}
+                <div class="p-12 text-center">
+                    <i class="fa-solid fa-user-group text-4xl text-slate-700 mb-3"
+                       aria-hidden="true"></i>
+                    <p class="text-slate-400 text-xs font-mono">No clients yet.</p>
+                    <p class="text-slate-500 text-[10px] font-mono mt-1">
+                        Create your first client to get started.
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# ============================================================
+               NO RESULTS (shown when filter/search returns nothing)
+            ============================================================ #}
+            <div id="no-results" class="hidden p-12 text-center">
+                <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
+                   aria-hidden="true"></i>
+                <p class="text-slate-400 text-xs font-mono">No clients match your search.</p>
+                <button type="button"
+                        onclick="resetFilters()"
+                        class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+                    Clear filters
+                </button>
+            </div>
+
         </div>
     </div>
 </div>
+
+<script>
+// ============================================================
+// SEARCH + FILTER
+// ============================================================
+let currentFilter = 'all';
+let currentSearch = '';
+
+function applyFilters() {
+    const rows = document.querySelectorAll('.client-row');
+    let visible = 0;
+
+    rows.forEach(row => {
+        const status = row.dataset.status || '';
+        const haystack = row.dataset.search || '';
+
+        const matchesFilter = (currentFilter === 'all' || status === currentFilter);
+        const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
+
+        if (matchesFilter && matchesSearch) {
+            row.style.display = '';
+            visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Update count
+    const countEl = document.getElementById('clients-count');
+    if (countEl) {
+        const total = rows.length;
+        countEl.textContent = (visible === total)
+            ? `(${total})`
+            : `(${visible} of ${total})`;
+    }
+
+    // No-results state
+    const noResults = document.getElementById('no-results');
+    if (noResults) {
+        noResults.classList.toggle('hidden', visible > 0);
+    }
+}
+
+function filterClients(filter) {
+    currentFilter = filter;
+
+    // Update active button style
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-cyan-500/20', isActive);
+        btn.classList.toggle('text-cyan-300', isActive);
+        btn.classList.toggle('border-cyan-500/40', isActive);
+        btn.classList.toggle('bg-slate-900', !isActive);
+        btn.classList.toggle('text-slate-400', !isActive);
+        btn.classList.toggle('border-slate-800', !isActive);
+    });
+
+    applyFilters();
+}
+
+function resetFilters() {
+    currentSearch = '';
+    const searchInput = document.getElementById('client-search');
+    if (searchInput) searchInput.value = '';
+    filterClients('all');
+}
+
+// Wire up the search input
+const searchInput = document.getElementById('client-search');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        currentSearch = (e.target.value || '').toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+// ============================================================
+// SUBMIT FEEDBACK ON "CREATE CLIENT"
+// ============================================================
+const createForm = document.getElementById('create-client-form');
+const createBtn = document.getElementById('create-client-btn');
+const createLabel = document.getElementById('create-client-label');
+
+if (createForm && createBtn) {
+    createForm.addEventListener('submit', () => {
+        createBtn.disabled = true;
+        createBtn.classList.add('opacity-70', 'cursor-not-allowed');
+        if (createLabel) {
+            createLabel.textContent = 'Creating...';
+        }
+        createBtn.innerHTML = `
+            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+            <span>Sending credentials...</span>
+        `;
+    });
+}
+</script>
+
+<style>
+    /* Hide default <details> marker */
+    details summary::-webkit-details-marker { display: none; }
+    details summary::marker { content: ''; }
+
+    /* Force the <details> open on desktop — pure CSS override */
+    @media (min-width: 1024px) {
+        details[open] > summary,
+        details > summary {
+            display: none;
+        }
+        details > *:not(summary) {
+            display: revert !important;
+        }
+    }
+
+    /* Smooth reveal on open */
+    details[open] > *:not(summary) {
+        animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
 {% endblock %}
