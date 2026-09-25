@@ -5,7 +5,6 @@
 
 {% block content %}
 
-<!-- Metric Cards -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <div class="glass-card p-5 relative overflow-hidden group">
         <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl"></div>
@@ -57,7 +56,6 @@
     </div>
 </div>
 
-<!-- Projects Table -->
 <div class="glass-card mb-8 overflow-hidden">
     <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
         <h3 class="font-mono-heading text-lg font-semibold text-white">Active & Recent Projects</h3>
@@ -79,7 +77,7 @@
                 <tr class="hover:bg-white/5 transition-colors">
                     <td class="p-4 pl-6">
                         <p class="font-semibold text-white">{{ p.title }}</p>
-                        <p class="text-xs text-slate-400">ID: {{ str(p._id)[:8] }}</p>
+                        <p class="text-xs text-slate-400">ID: {{ p._id|string|truncate(8, True, '') }}</p>
                     </td>
                     <td class="p-4 text-slate-300">
                         <div class="flex items-center gap-2">
@@ -122,7 +120,6 @@
     </div>
 </div>
 
-<!-- Side by side: Deliverables & Invoices -->
 <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
     <div class="glass-card flex flex-col h-full">
         <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
@@ -147,9 +144,15 @@
                             <p class="text-xs text-slate-400">{{ d.get('size','—') }}</p>
                         </div>
                     </div>
-                    <a href="{{ d.get('url','#') }}" class="w-8 h-8 rounded-full bg-white/5 hover:bg-purple-500/20 text-slate-300 hover:text-purple-400 flex items-center justify-center transition-colors">
+                    {% if d.get('stored_filename') %}
+                    <a href="{{ url_for('download_file', filename=d.stored_filename) }}" class="w-8 h-8 rounded-full bg-white/5 hover:bg-purple-500/20 text-slate-300 hover:text-purple-400 flex items-center justify-center transition-colors">
                         <i class="fa-solid fa-download"></i>
                     </a>
+                    {% elif d.get('url') %}
+                    <a href="{{ d.get('url') }}" target="_blank" class="w-8 h-8 rounded-full bg-white/5 hover:bg-purple-500/20 text-slate-300 hover:text-purple-400 flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-download"></i>
+                    </a>
+                    {% endif %}
                 </li>
                 {% else %}
                 <p class="text-center text-slate-400 text-xs font-mono py-6">No deliverables yet.</p>

@@ -4,27 +4,39 @@
 {% block page_subtitle %}Direct line to your project team.{% endblock %}
 
 {% block content %}
-<div class="glass-card rounded-2xl border border-slate-800 overflow-hidden flex flex-col" style="height: calc(100vh - 260px);">
-    <div class="p-5 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-white">
+<div class="glass-card rounded-2xl border border-slate-800 flex flex-col
+            h-[calc(100vh-220px)] lg:h-[calc(100vh-220px)] min-h-[500px] overflow-hidden">
+
+    <!-- Chat Header -->
+    <div class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3 shrink-0">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-white shrink-0">
             <i class="fa-solid fa-headset"></i>
         </div>
-        <div>
-            <p class="font-bold text-white text-sm">The Media Scientist Support</p>
+        <div class="min-w-0 flex-1">
+            <p class="font-bold text-white text-sm truncate">The Media Scientist Support</p>
             <p class="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Typically replies within 24 hours
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Typically replies within 24 hours
             </p>
         </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-6 space-y-4" id="messages-container">
+    <!-- Messages Scroll Area -->
+    <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 bg-black/10"
+         id="messages-container">
         {% for m in messages %}
         <div class="flex {% if m.from_role == 'client' %}justify-end{% else %}justify-start{% endif %}">
-            <div class="max-w-md p-4 rounded-2xl {% if m.from_role == 'client' %}bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-white{% else %}bg-slate-900 border border-slate-800 text-slate-100{% endif %}">
-                <div class="text-[10px] font-mono uppercase mb-1 {% if m.from_role == 'client' %}text-cyan-300{% else %}text-purple-400{% endif %}">
+            <div class="max-w-[85%] sm:max-w-md p-4 rounded-2xl
+                        {% if m.from_role == 'client' %}
+                            bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-white rounded-br-md
+                        {% else %}
+                            bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-md
+                        {% endif %}">
+                <div class="text-[10px] font-mono uppercase mb-1
+                            {% if m.from_role == 'client' %}text-cyan-300{% else %}text-purple-400{% endif %}">
                     {{ m.from_name or m.from_role }}
                 </div>
-                <p class="text-sm leading-relaxed">{{ m.body }}</p>
+                <p class="text-sm leading-relaxed break-words whitespace-pre-wrap">{{ m.body }}</p>
                 <div class="text-[10px] font-mono text-slate-500 mt-2 text-right">
                     {{ m.created_at.strftime('%b %d, %H:%M') if m.created_at else '' }}
                 </div>
@@ -38,17 +50,35 @@
         {% endfor %}
     </div>
 
-    <form method="POST" action="{{ url_for('client_messages') }}" class="p-4 border-t border-slate-800 bg-slate-900/50 flex gap-2">
-        <input type="text" name="message" required placeholder="Type your message..." autocomplete="off"
-               class="flex-1 px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-cyan-400 transition">
-        <button type="submit" class="px-5 py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-purple-500 hover:brightness-110 transition">
+    <!-- Message Input -->
+    <form method="POST" action="{{ url_for('client_messages') }}"
+          class="p-3 sm:p-4 border-t border-slate-800 bg-slate-900/70 backdrop-blur flex gap-2 shrink-0">
+        <input type="text" name="message" required placeholder="Type your message..."
+               autocomplete="off"
+               class="flex-1 min-w-0 px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition">
+        <button type="submit"
+                class="shrink-0 px-4 sm:px-5 py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-purple-500 hover:brightness-110 transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-paper-plane"></i>
+            <span class="hidden sm:inline">Send</span>
         </button>
     </form>
 </div>
 
 <script>
-const box = document.getElementById('messages-container');
-if (box) box.scrollTop = box.scrollHeight;
+// Auto-scroll to latest message on load
+document.addEventListener('DOMContentLoaded', function () {
+    const box = document.getElementById('messages-container');
+    if (box) {
+        box.scrollTop = box.scrollHeight;
+    }
+});
+
+// Optional: keep scrolled to bottom after a new send (form reload)
+window.addEventListener('pageshow', function () {
+    const box = document.getElementById('messages-container');
+    if (box) {
+        box.scrollTop = box.scrollHeight;
+    }
+});
 </script>
 {% endblock %}

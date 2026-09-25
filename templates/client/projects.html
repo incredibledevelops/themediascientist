@@ -4,57 +4,163 @@
 {% block page_subtitle %}All projects assigned to you.{% endblock %}
 
 {% block content %}
+
 {% if projects %}
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+<!-- Filter Tabs -->
+<div class="mb-6 flex flex-wrap gap-2 text-xs font-mono">
+    <button onclick="filterProjects('all')" data-filter="all"
+            class="filter-btn active px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold transition">
+        All <span class="opacity-70">({{ projects|length }})</span>
+    </button>
+    <button onclick="filterProjects('in_progress')" data-filter="in_progress"
+            class="filter-btn px-4 py-2 rounded-xl glass-card text-slate-300 hover:text-white transition">
+        In Progress
+    </button>
+    <button onclick="filterProjects('review')" data-filter="review"
+            class="filter-btn px-4 py-2 rounded-xl glass-card text-slate-300 hover:text-white transition">
+        In Review
+    </button>
+    <button onclick="filterProjects('completed')" data-filter="completed"
+            class="filter-btn px-4 py-2 rounded-xl glass-card text-slate-300 hover:text-white transition">
+        Completed
+    </button>
+    <button onclick="filterProjects('on_hold')" data-filter="on_hold"
+            class="filter-btn px-4 py-2 rounded-xl glass-card text-slate-300 hover:text-white transition">
+        On Hold
+    </button>
+</div>
+
+<!-- Projects Grid -->
+<div id="projects-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     {% for p in projects %}
-    <div class="glass-card rounded-2xl p-6 border border-slate-800">
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <h3 class="font-mono-heading font-bold text-lg text-white">{{ p.title }}</h3>
-                <p class="text-xs text-slate-500 font-mono mt-1">ID: {{ str(p._id)[:10] }}</p>
+    <div class="project-card glass-card rounded-2xl p-6 border border-slate-800 hover:border-cyan-500/40 transition-colors"
+         data-status="{{ p.get('status','on_hold') }}">
+
+        <!-- Header -->
+        <div class="flex justify-between items-start gap-4 mb-5">
+            <div class="min-w-0 flex-1">
+                <h3 class="font-mono-heading font-bold text-lg text-white truncate">{{ p.title }}</h3>
+                <div class="flex items-center gap-3 mt-1 text-[10px] font-mono text-slate-500">
+                    <span><i class="fa-solid fa-hashtag"></i> {{ p._id|string|truncate(8, True, '') }}</span>
+                    {% if p.created_at %}
+                    <span><i class="fa-regular fa-calendar"></i> {{ p.created_at.strftime('%b %d, %Y') }}</span>
+                    {% endif %}
+                </div>
             </div>
             {% if p.get('status') == 'in_progress' %}
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">In Progress</span>
+            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> Active
+            </span>
             {% elif p.get('status') == 'review' %}
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400 border border-orange-500/20">Review</span>
+            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                <i class="fa-solid fa-clock"></i> Review
+            </span>
             {% elif p.get('status') == 'completed' %}
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Completed</span>
+            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <i class="fa-solid fa-check"></i> Done
+            </span>
             {% else %}
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">On Hold</span>
+            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                <i class="fa-solid fa-pause"></i> Hold
+            </span>
             {% endif %}
         </div>
 
-        <div class="space-y-3 text-xs">
-            <div class="flex justify-between">
-                <span class="text-slate-400">Service:</span>
-                <span class="text-white font-mono">{{ p.get('service','—') }}</span>
+        <!-- Meta Grid -->
+        <div class="grid grid-cols-3 gap-3 mb-5">
+            <div class="p-3 rounded-lg bg-black/30 border border-white/5">
+                <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">Service</p>
+                <p class="text-xs text-white font-mono truncate">{{ p.get('service','—') }}</p>
             </div>
-            <div class="flex justify-between">
-                <span class="text-slate-400">Timeline:</span>
-                <span class="text-white font-mono">{{ p.get('timeline','—') }}</span>
+            <div class="p-3 rounded-lg bg-black/30 border border-white/5">
+                <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">Timeline</p>
+                <p class="text-xs text-white font-mono truncate">{{ p.get('timeline','—') }}</p>
             </div>
-            <div class="flex justify-between">
-                <span class="text-slate-400">Stage:</span>
-                <span class="text-cyan-400 font-mono">{{ p.get('stage_label','—') }}</span>
+            <div class="p-3 rounded-lg bg-black/30 border border-white/5">
+                <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">Stage</p>
+                <p class="text-xs text-cyan-400 font-mono truncate">{{ p.get('stage_label','—') }}</p>
             </div>
         </div>
 
-        <div class="mt-5">
-            <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Overall Progress</span>
-                <span class="text-cyan-400 font-bold">{{ p.get('progress',0) }}%</span>
+        <!-- Progress Bar -->
+        <div>
+            <div class="flex justify-between text-xs mb-2">
+                <span class="text-slate-400 font-mono uppercase tracking-wider text-[10px]">Overall Progress</span>
+                <span class="text-cyan-400 font-bold font-mono">{{ p.get('progress',0) }}%</span>
             </div>
-            <div class="w-full bg-slate-800 rounded-full h-2 border border-slate-700">
-                <div class="bg-gradient-to-r from-cyan-400 to-purple-500 h-2 rounded-full transition-all" style="width: {{ p.get('progress',0) }}%"></div>
+            <div class="w-full bg-slate-800 rounded-full h-2.5 border border-slate-700 overflow-hidden">
+                <div class="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 h-full rounded-full transition-all duration-500"
+                     style="width: {{ p.get('progress',0) }}%"></div>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
+
+<!-- Empty filter state (hidden by default) -->
+<div id="no-results" class="hidden glass-card rounded-2xl p-12 text-center border border-slate-800">
+    <i class="fa-solid fa-filter-circle-xmark text-5xl text-slate-600 mb-4"></i>
+    <p class="text-slate-400 text-sm font-mono">No projects match this filter.</p>
+</div>
+
 {% else %}
-<div class="glass-card rounded-2xl p-12 text-center border border-slate-800">
-    <i class="fa-solid fa-folder-open text-5xl text-slate-600 mb-4"></i>
-    <p class="text-slate-400 text-sm font-mono">No projects assigned yet.</p>
+<!-- Empty state -->
+<div class="glass-card rounded-2xl p-16 text-center border border-slate-800">
+    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-6">
+        <i class="fa-solid fa-folder-open text-3xl text-cyan-400"></i>
+    </div>
+    <h3 class="font-mono-heading font-bold text-white text-lg mb-2">No Projects Yet</h3>
+    <p class="text-slate-400 text-sm font-mono max-w-md mx-auto">
+        Your active and past projects will appear here once your project manager assigns them.
+        In the meantime, feel free to send us a message.
+    </p>
+    <a href="{{ url_for('client_messages') }}"
+       class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl text-xs font-mono font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:brightness-110 transition">
+        <i class="fa-solid fa-comments"></i> Contact Support
+    </a>
 </div>
 {% endif %}
+
+<script>
+function filterProjects(status) {
+    const cards = document.querySelectorAll('.project-card');
+    const buttons = document.querySelectorAll('.filter-btn');
+    const noResults = document.getElementById('no-results');
+
+    // Toggle button styles
+    buttons.forEach(btn => {
+        if (btn.dataset.filter === status) {
+            btn.classList.add('bg-cyan-500', 'text-slate-950', 'font-bold', 'active');
+            btn.classList.remove('glass-card', 'text-slate-300');
+        } else {
+            btn.classList.remove('bg-cyan-500', 'text-slate-950', 'font-bold', 'active');
+            btn.classList.add('glass-card', 'text-slate-300');
+        }
+    });
+
+    // Filter cards
+    let visible = 0;
+    cards.forEach(card => {
+        const cardStatus = card.dataset.status;
+        if (status === 'all' || cardStatus === status) {
+            card.style.display = '';
+            visible++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Show empty state if nothing matches
+    if (noResults) {
+        noResults.classList.toggle('hidden', visible > 0 || status === 'all');
+        // Hide grid if no visible items (safety)
+        const grid = document.getElementById('projects-grid');
+        if (grid) {
+            grid.classList.toggle('hidden', visible === 0 && status !== 'all');
+        }
+    }
+}
+</script>
+
 {% endblock %}
