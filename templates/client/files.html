@@ -1,55 +1,51 @@
 {% extends 'client/base.html' %}
 {% block title %}Files & Deliverables{% endblock %}
-{% block page_title %}Files & Deliverables{% endblock %}
-{% block page_subtitle %}All files shared with you by The Media Scientist.{% endblock %}
-
-{% block content %}
+{% block breadcrumb %}Files{% endblock %}
 
 {# ============================================================
    FILE CATEGORY MAP
    Maps file extensions → { category, color, icon }
+   Must be defined BEFORE page_title/page_subtitle blocks
 ============================================================ #}
 {% set category_map = {
-    'png':    {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
-    'jpg':    {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
-    'jpeg':   {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
-    'gif':    {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
-    'webp':   {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
-    'svg':    {'category': 'image', 'color': 'cyan',   'icon': 'fa-regular fa-image'},
-    'mp4':    {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
-    'mov':    {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
-    'avi':    {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
-    'mkv':    {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
-    'webm':   {'category': 'video', 'color': 'purple', 'icon': 'fa-solid fa-file-video'},
-    'pdf':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-pdf'},
-    'doc':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-word'},
-    'docx':   {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-word'},
-    'xls':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-excel'},
-    'xlsx':   {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-excel'},
-    'csv':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-csv'},
-    'ppt':    {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-powerpoint'},
-    'pptx':   {'category': 'doc',   'color': 'orange', 'icon': 'fa-solid fa-file-powerpoint'},
-    'zip':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-zipper'},
-    'rar':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-zipper'},
-    '7z':     {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-zipper'},
-    'psd':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-palette'},
-    'ai':     {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-palette'},
-    'fig':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-palette'},
-    'sketch': {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-palette'},
-    'mp3':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-audio'},
-    'wav':    {'category': 'other', 'color': 'emerald','icon': 'fa-solid fa-file-audio'}
+    'png':    {'category': 'image', 'color': 'electric', 'icon': 'fa-regular fa-image'},
+    'jpg':    {'category': 'image', 'color': 'electric', 'icon': 'fa-regular fa-image'},
+    'jpeg':   {'category': 'image', 'color': 'electric', 'icon': 'fa-regular fa-image'},
+    'gif':    {'category': 'image', 'color': 'electric', 'icon': 'fa-regular fa-image'},
+    'webp':   {'category': 'image', 'color': 'electric', 'icon': 'fa-regular fa-image'},
+    'svg':    {'category': 'image', 'color': 'electric', 'icon': 'fa-regular fa-image'},
+    'mp4':    {'category': 'video', 'color': 'orange',   'icon': 'fa-solid fa-file-video'},
+    'mov':    {'category': 'video', 'color': 'orange',   'icon': 'fa-solid fa-file-video'},
+    'avi':    {'category': 'video', 'color': 'orange',   'icon': 'fa-solid fa-file-video'},
+    'mkv':    {'category': 'video', 'color': 'orange',   'icon': 'fa-solid fa-file-video'},
+    'webm':   {'category': 'video', 'color': 'orange',   'icon': 'fa-solid fa-file-video'},
+    'pdf':    {'category': 'doc',   'color': 'teal',     'icon': 'fa-solid fa-file-pdf'},
+    'doc':    {'category': 'doc',   'color': 'teal',     'icon': 'fa-solid fa-file-word'},
+    'docx':   {'category': 'doc',   'color': 'teal',     'icon': 'fa-solid fa-file-word'},
+    'xls':    {'category': 'doc',   'color': 'teal',     'icon': 'fa-solid fa-file-excel'},
+    'xlsx':   {'category': 'doc',   'color': 'teal',     'icon': 'fa-solid fa-file-excel'},
+    'csv':    {'category': 'doc',   'color': 'teal',     'icon': 'fa-solid fa-file-csv'},
+    'ppt':    {'category': 'doc',   'color': 'teal',     'icon': 'fa-solid fa-file-powerpoint'},
+    'pptx':   {'category': 'doc',   'color': 'teal',     'icon': 'fa-solid fa-file-powerpoint'},
+    'zip':    {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-file-zipper'},
+    'rar':    {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-file-zipper'},
+    '7z':     {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-file-zipper'},
+    'psd':    {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-palette'},
+    'ai':     {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-palette'},
+    'fig':    {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-palette'},
+    'sketch': {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-palette'},
+    'mp3':    {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-file-audio'},
+    'wav':    {'category': 'other', 'color': 'muted',    'icon': 'fa-solid fa-file-audio'}
 } %}
 
-{# ---------- Compute per-file display data ---------- #}
-{% set enriched = [] %}
+{# ---------- Compute per-file counts ---------- #}
 {% set ns = namespace(images=0, videos=0, docs=0, others=0, unreviewed=0) %}
 
 {% for d in deliverables %}
     {% set name = d.get('name', '') %}
     {% set ext = name.rsplit('.', 1)[-1]|lower if '.' in name else '' %}
-    {% set meta = category_map.get(ext, {'category': 'other', 'color': 'slate', 'icon': 'fa-regular fa-file'}) %}
+    {% set meta = category_map.get(ext, {'category': 'other', 'color': 'muted', 'icon': 'fa-regular fa-file'}) %}
 
-    {# Update counts #}
     {% if meta.category == 'image' %}{% set ns.images = ns.images + 1 %}
     {% elif meta.category == 'video' %}{% set ns.videos = ns.videos + 1 %}
     {% elif meta.category == 'doc' %}{% set ns.docs = ns.docs + 1 %}
@@ -61,32 +57,65 @@
     {% endif %}
 {% endfor %}
 
+{% block page_title %}Files & Deliverables{% endblock %}
+{% block page_subtitle %}
+    {% if deliverables %}
+        {{ deliverables|length }} file{% if deliverables|length != 1 %}s{% endif %}
+        {% if ns.unreviewed > 0 %}
+            · {{ ns.unreviewed }} awaiting your review
+        {% else %}
+            · all reviewed
+        {% endif %}
+    {% else %}
+        Files shared with you by The Media Scientist.
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+{% if deliverables %}
+<button type="button"
+        onclick="toggleBulkMode()"
+        id="bulk-toggle"
+        class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+               text-[12px] font-medium
+               text-muted bg-canvas dark:bg-gray-800
+               border border-line dark:border-gray-700
+               hover:text-electric hover:border-electric/40 transition"
+        title="Select multiple files">
+    <i class="fa-regular fa-square-check text-[10px]" aria-hidden="true"></i>
+    <span>Select</span>
+</button>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
 {# ============================================================
    EMPTY STATE
 ============================================================ #}
 {% if not deliverables %}
-<div class="glass-card rounded-2xl p-12 sm:p-16 text-center border border-slate-800">
-    <div class="w-20 h-20 rounded-full
-                bg-gradient-to-br from-purple-500/20 to-cyan-500/20
-                border border-purple-500/30
-                flex items-center justify-center mx-auto mb-6">
-        <i class="fa-solid fa-folder-open text-3xl text-purple-400"
+<div class="card p-12 sm:p-16 text-center">
+    <div class="w-20 h-20 mx-auto rounded-full
+                bg-electric/10 border border-electric/20
+                flex items-center justify-center mb-6">
+        <i class="fa-solid fa-folder-open text-3xl text-electric"
            aria-hidden="true"></i>
     </div>
-    <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
-        No Files Yet
+    <h3 class="text-lg font-semibold text-ink dark:text-surface tracking-tight mb-2">
+        No files yet
     </h3>
-    <p class="text-slate-400 text-sm font-mono max-w-md mx-auto leading-relaxed">
-        Files shared with you will appear here. Your project manager uploads deliverables as
-        each milestone is completed.
+    <p class="text-muted text-sm max-w-md mx-auto leading-relaxed">
+        Files shared with you will appear here. Your project manager
+        uploads deliverables as each milestone is completed.
     </p>
     <a href="{{ url_for('client_messages') }}"
-       class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl
-              text-xs font-mono font-bold
-              bg-cyan-500/15 text-cyan-300 border border-cyan-500/30
-              hover:bg-cyan-500/25 transition">
-        <i class="fa-solid fa-comments" aria-hidden="true"></i>
-        Ask a Question
+       class="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-full
+              text-sm font-medium text-white
+              bg-ink dark:bg-white dark:text-ink
+              hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+              transition-colors">
+        <i class="fa-solid fa-comments text-[11px]" aria-hidden="true"></i>
+        Ask a question
     </a>
 </div>
 {% else %}
@@ -94,125 +123,278 @@
 {# ============================================================
    SUMMARY STATS
 ============================================================ #}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-6">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
-                    uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-folder text-purple-400" aria-hidden="true"></i>
-            Total Files
+    {# Total #}
+    <button type="button"
+            onclick="filterFiles('all')"
+            data-kpi="all"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Total</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ deliverables|length }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-folder text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ deliverables|length }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">All files</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
-                    uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-circle-exclamation text-amber-400" aria-hidden="true"></i>
-            New
+    {# New #}
+    <button type="button"
+            onclick="filterFiles('unreviewed')"
+            data-kpi="unreviewed"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">New</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.unreviewed }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-orange-500/10 border border-orange-500/20 text-orange-500
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-circle-exclamation text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.unreviewed }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">
+            {% if ns.unreviewed > 0 %}Awaiting review{% else %}All caught up{% endif %}
+        </p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
-                    uppercase tracking-wider mb-1">
-            <i class="fa-regular fa-image text-cyan-400" aria-hidden="true"></i>
-            Images
+    {# Images #}
+    <button type="button"
+            onclick="filterFiles('image')"
+            data-kpi="image"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Images</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.images }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-regular fa-image text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.images }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">Photos & graphics</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
-                    uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-file-video text-purple-400" aria-hidden="true"></i>
-            Videos
+    {# Videos #}
+    <button type="button"
+            onclick="filterFiles('video')"
+            data-kpi="video"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Videos</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.videos }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-orange-500/10 border border-orange-500/20 text-orange-500
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-file-video text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.videos }}
-        </div>
-    </div>
-
+        <p class="text-[10px] font-mono text-muted">Motion & film</p>
+    </button>
 </div>
 
 {# ============================================================
-   TOOLBAR: SEARCH + FILTERS + SORT
+   BULK ACTION BAR
 ============================================================ #}
-<div class="glass-card rounded-2xl border border-slate-800 p-3 sm:p-4 mb-5 sm:mb-6">
+<div id="bulk-bar"
+     class="hidden card p-3 mb-4
+            bg-electric/[0.03] dark:bg-electric/[0.06]
+            border-electric/30
+            flex items-center gap-3 flex-wrap">
+    <span class="inline-flex items-center gap-2 text-xs font-mono text-electric">
+        <i class="fa-solid fa-check-square" aria-hidden="true"></i>
+        <span id="bulk-count">0 selected</span>
+    </span>
+
+    <div class="flex-1"></div>
+
+    <button type="button"
+            onclick="downloadSelected()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full
+                   text-[11px] font-medium text-white
+                   bg-ink dark:bg-white dark:text-ink
+                   hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                   transition-colors">
+        <i class="fa-solid fa-download text-[10px]" aria-hidden="true"></i>
+        Download Selected
+    </button>
+    <button type="button"
+            onclick="clearSelection()"
+            class="w-7 h-7 rounded-full flex items-center justify-center
+                   text-muted hover:text-ink dark:hover:text-surface
+                   hover:bg-surface dark:hover:bg-gray-800 transition"
+            aria-label="Clear selection">
+        <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+    </button>
+</div>
+
+{# ============================================================
+   TOOLBAR
+============================================================ #}
+<div class="card p-4 mb-6 sticky top-0 lg:top-20 z-20
+            bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md">
     <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
 
         {# Search #}
         <div class="relative flex-1 lg:max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
-                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                      text-muted text-xs pointer-events-none" aria-hidden="true"></i>
             <input type="text"
                    id="file-search"
-                   placeholder="Search by filename..."
+                   placeholder="Search by filename…"
                    autocomplete="off"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
-                          bg-slate-900 border border-slate-800
-                          text-sm text-white placeholder-slate-500
-                          focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30
-                          transition">
+                   spellcheck="false"
+                   aria-label="Search files"
+                   class="w-full pl-10 pr-10 py-2.5 rounded-xl
+                          bg-canvas dark:bg-gray-800/50
+                          border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface placeholder-muted
+                          focus:outline-none focus:border-electric
+                          focus:ring-2 focus:ring-electric/20 transition">
+            <button type="button"
+                    id="search-clear"
+                    onclick="clearSearch()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2
+                           w-7 h-7 rounded-md flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-surface dark:hover:bg-gray-700 transition"
+                    aria-label="Clear search">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
         </div>
 
-        {# Filter tabs #}
+        {# Filter chips #}
         <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
-                    overflow-x-auto pb-1 lg:pb-0
-                    -mx-3 px-3 lg:mx-0 lg:px-0 lg:flex-1">
+                    overflow-x-auto scrollbar-none
+                    -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-1"
+             role="tablist"
+             aria-label="Filter files">
             {% set filters = [
-                ('all',    'All',    deliverables|length),
-                ('image',  'Images', ns.images),
-                ('video',  'Videos', ns.videos),
-                ('doc',    'Docs',   ns.docs),
-                ('other',  'Other',  ns.others)
+                ('all',        'All',    deliverables|length),
+                ('unreviewed', 'New',    ns.unreviewed),
+                ('image',      'Images', ns.images),
+                ('video',      'Videos', ns.videos),
+                ('doc',        'Docs',   ns.docs),
+                ('other',      'Other',  ns.others)
             ] %}
             {% for key, label, count in filters %}
+            {% if count > 0 or key == 'all' %}
             <button type="button"
                     onclick="filterFiles('{{ key }}')"
                     data-filter="{{ key }}"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg whitespace-nowrap
-                           transition
+                    role="tab"
+                    aria-selected="{% if key == 'all' %}true{% else %}false{% endif %}"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
                            {% if key == 'all' %}
-                               bg-purple-500/20 text-purple-300 border border-purple-500/40
+                               bg-ink dark:bg-white text-white dark:text-ink
                            {% else %}
-                               bg-slate-900 text-slate-400 border border-slate-800
-                               hover:text-white
+                               bg-canvas dark:bg-gray-800 text-muted
+                               border border-line dark:border-gray-700
+                               hover:text-ink dark:hover:text-surface
                            {% endif %}">
                 {{ label }}
-                <span class="opacity-60 ml-0.5">({{ count }})</span>
+                <span class="opacity-70 tabular-nums ml-1">{{ count }}</span>
             </button>
+            {% endif %}
             {% endfor %}
         </div>
 
-        {# Sort dropdown #}
-        <div class="shrink-0">
-            <label for="file-sort" class="sr-only">Sort files</label>
+        {# Sort + View toggle #}
+        <div class="flex items-center gap-2 shrink-0">
+
             <div class="relative">
+                <label for="file-sort" class="sr-only">Sort files</label>
                 <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
-                          text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                          text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                 <select id="file-sort"
                         class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
-                               bg-slate-900 border border-slate-800
-                               text-xs font-mono text-slate-200 cursor-pointer
-                               focus:outline-none focus:border-purple-400 transition">
+                               bg-canvas dark:bg-gray-800/50
+                               border border-line dark:border-gray-700
+                               text-xs font-mono text-ink dark:text-surface cursor-pointer
+                               focus:outline-none focus:border-electric transition">
                     <option value="newest">Newest first</option>
                     <option value="oldest">Oldest first</option>
                     <option value="name">Name (A–Z)</option>
                     <option value="size">Largest first</option>
                 </select>
                 <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
-                          text-slate-500 text-[10px] pointer-events-none" aria-hidden="true"></i>
+                          text-muted text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+
+            {# Grid / List toggle #}
+            <div class="hidden sm:inline-flex items-center rounded-full p-0.5
+                        bg-canvas dark:bg-gray-800
+                        border border-line dark:border-gray-700">
+                <button type="button"
+                        onclick="setView('grid')"
+                        data-view-btn="grid"
+                        class="view-btn w-8 h-8 rounded-full flex items-center justify-center
+                               text-electric bg-white dark:bg-gray-900 shadow-sm
+                               transition"
+                        aria-label="Grid view"
+                        title="Grid view">
+                    <i class="fa-solid fa-grip text-xs" aria-hidden="true"></i>
+                </button>
+                <button type="button"
+                        onclick="setView('list')"
+                        data-view-btn="list"
+                        class="view-btn w-8 h-8 rounded-full flex items-center justify-center
+                               text-muted hover:text-ink dark:hover:text-surface
+                               transition"
+                        aria-label="List view"
+                        title="List view">
+                    <i class="fa-solid fa-list text-xs" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
+    </div>
 
+    {# Hint row #}
+    <div class="mt-3 pt-3 border-t border-line dark:border-gray-700
+                text-[10px] font-mono text-muted flex items-center gap-2 flex-wrap">
+        <i class="fa-solid fa-circle-info text-electric shrink-0" aria-hidden="true"></i>
+        <span>
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">/</kbd>
+            search ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">A</kbd>
+            select all ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Enter</kbd>
+            open ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Esc</kbd>
+            clear
+        </span>
     </div>
 </div>
 
@@ -225,53 +407,96 @@
     {% for d in deliverables %}
         {% set name = d.get('name', '') %}
         {% set ext = name.rsplit('.', 1)[-1]|lower if '.' in name else '' %}
-        {% set meta = category_map.get(ext, {'category': 'other', 'color': 'slate', 'icon': 'fa-regular fa-file'}) %}
+        {% set meta = category_map.get(ext, {'category': 'other', 'color': 'muted', 'icon': 'fa-regular fa-file'}) %}
         {% set color = meta.color %}
         {% set is_new = not d.get('reviewed', False) %}
         {% set url = url_for('download_file', filename=d.stored_filename) if d.get('stored_filename') else d.get('url', '#') %}
         {% set ts = d.created_at.timestamp() if d.created_at and d.created_at.strftime is defined else 0 %}
         {% set size_bytes = d.get('size_bytes', 0) %}
+        {% set file_id = d.get('_id') or d.get('id') or loop.index %}
 
-        <article class="file-card glass-card rounded-2xl border border-slate-800
-                        overflow-hidden hover:border-{{ color }}-500/40
-                        transition-colors group flex flex-col"
+        {% if color == 'electric' %}
+            {% set badge_classes = 'bg-electric/10 text-electric border-electric/30' %}
+            {% set icon_color = 'text-electric' %}
+            {% set btn_classes = 'bg-electric/10 text-electric border-electric/30 hover:bg-electric/20' %}
+            {% set glow_classes = 'group-hover:border-electric/40' %}
+        {% elif color == 'orange' %}
+            {% set badge_classes = 'bg-orange-500/10 text-orange-500 border-orange-500/30' %}
+            {% set icon_color = 'text-orange-500' %}
+            {% set btn_classes = 'bg-orange-500/10 text-orange-500 border-orange-500/30 hover:bg-orange-500/20' %}
+            {% set glow_classes = 'group-hover:border-orange-500/40' %}
+        {% elif color == 'teal' %}
+            {% set badge_classes = 'bg-teal/10 text-teal border-teal/30' %}
+            {% set icon_color = 'text-teal' %}
+            {% set btn_classes = 'bg-teal/10 text-teal border-teal/30 hover:bg-teal/20' %}
+            {% set glow_classes = 'group-hover:border-teal/40' %}
+        {% else %}
+            {% set badge_classes = 'bg-muted/10 text-muted border-line dark:border-gray-700' %}
+            {% set icon_color = 'text-muted' %}
+            {% set btn_classes = 'bg-canvas dark:bg-gray-800 text-ink dark:text-surface border-line dark:border-gray-700 hover:border-ink dark:hover:border-surface' %}
+            {% set glow_classes = 'group-hover:border-muted/40' %}
+        {% endif %}
+
+        <article class="file-card card overflow-hidden flex flex-col
+                        transition-colors {{ glow_classes }}"
                  data-category="{{ meta.category }}"
                  data-name="{{ name|lower }}"
                  data-timestamp="{{ ts }}"
-                 data-size="{{ size_bytes }}">
+                 data-size="{{ size_bytes }}"
+                 data-reviewed="{{ '1' if not is_new else '0' }}"
+                 data-file-id="{{ file_id }}"
+                 data-file-url="{{ url }}"
+                 data-file-ext="{{ ext }}">
 
-            {# ---------- PREVIEW / HEADER ---------- #}
+            {# ---------- PREVIEW ---------- #}
             <div class="relative aspect-video overflow-hidden
-                        bg-gradient-to-br from-slate-900 to-slate-950
-                        border-b border-slate-800
+                        bg-canvas dark:bg-gray-800
+                        border-b border-line dark:border-gray-700
                         flex items-center justify-center">
+
+                {# Bulk selection checkbox #}
+                {% if not is_new or true %}
+                <div class="bulk-checkbox-wrapper hidden absolute top-2 left-2 z-10">
+                    <input type="checkbox"
+                           class="file-checkbox w-5 h-5 rounded
+                                  border-2 border-white dark:border-gray-900
+                                  accent-electric cursor-pointer shadow-lg"
+                           data-id="{{ file_id }}"
+                           aria-label="Select {{ name }}">
+                </div>
+                {% endif %}
 
                 {# Thumbnail for images #}
                 {% if meta.category == 'image' and url != '#' %}
-                <img src="{{ url }}"
-                     alt="{{ name }}"
-                     loading="lazy"
-                     class="w-full h-full object-cover
-                            group-hover:scale-105 transition-transform duration-500"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="absolute inset-0 hidden items-center justify-center">
-                    <i class="fa-solid {{ meta.icon }} text-4xl text-{{ color }}-400/60"
+                <button type="button"
+                        onclick="openPreview('{{ url }}', '{{ name|e }}')"
+                        class="w-full h-full block cursor-zoom-in"
+                        aria-label="Preview {{ name }}">
+                    <img src="{{ url }}"
+                         alt="{{ name }}"
+                         loading="lazy"
+                         class="w-full h-full object-cover
+                                group-hover:scale-105 transition-transform duration-500"
+                         onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-icon').style.display='flex';">
+                </button>
+                <div class="fallback-icon absolute inset-0 hidden items-center justify-center pointer-events-none">
+                    <i class="fa-solid {{ meta.icon }} text-4xl {{ icon_color }}/60"
                        aria-hidden="true"></i>
                 </div>
                 {% else %}
                 {# Icon for non-images #}
                 <i class="fa-solid {{ meta.icon }} text-4xl sm:text-5xl
-                          text-{{ color }}-400/60 group-hover:scale-110
+                          {{ icon_color }}/60 group-hover:scale-110
                           transition-transform"
                    aria-hidden="true"></i>
                 {% endif %}
 
                 {# New badge #}
                 {% if is_new %}
-                <div class="absolute top-2 left-2 px-2 py-0.5 rounded-md
-                            bg-amber-500/90 backdrop-blur-sm
+                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full
+                            bg-orange-500 text-white
                             text-[9px] font-mono font-bold uppercase
-                            text-slate-950">
+                            shadow-md">
                     <i class="fa-solid fa-circle text-[5px] mr-1 animate-pulse"
                        aria-hidden="true"></i>
                     New
@@ -280,31 +505,30 @@
 
                 {# Extension badge #}
                 {% if ext %}
-                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-md
-                            bg-slate-950/85 backdrop-blur-sm
-                            text-[9px] font-mono uppercase
-                            text-slate-300 border border-slate-700">
+                <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md
+                            bg-black/70 dark:bg-black/80 backdrop-blur-sm
+                            text-[9px] font-mono uppercase text-white
+                            border border-white/10">
                     {{ ext }}
                 </div>
                 {% endif %}
-
             </div>
 
             {# ---------- BODY ---------- #}
             <div class="p-3.5 sm:p-4 flex-1 flex flex-col min-w-0">
-                <h3 class="text-xs sm:text-sm font-semibold text-white
+                <h3 class="text-xs sm:text-sm font-medium text-ink dark:text-surface
                            leading-tight line-clamp-2 min-h-[2.2em]"
                     title="{{ name }}">
                     {{ name }}
                 </h3>
 
                 <div class="mt-2 flex items-center gap-2 flex-wrap text-[10px] font-mono">
-                    <span class="text-slate-400">
-                        <i class="fa-solid fa-database mr-1" aria-hidden="true"></i>
+                    <span class="text-muted">
+                        <i class="fa-solid fa-database mr-1 text-[9px]" aria-hidden="true"></i>
                         {{ d.get('size', '—') }}
                     </span>
-                    <span class="text-slate-600" aria-hidden="true">·</span>
-                    <span class="text-slate-500">
+                    <span class="text-muted/40" aria-hidden="true">·</span>
+                    <span class="text-muted">
                         {% if d.created_at and d.created_at.strftime is defined %}
                             {{ d.created_at.strftime('%b %d, %Y') }}
                         {% else %}
@@ -314,12 +538,12 @@
                 </div>
 
                 {% if is_new %}
-                <p class="mt-2 text-[10px] font-mono text-amber-400 flex items-center gap-1">
+                <p class="mt-2 text-[10px] font-mono text-orange-500 flex items-center gap-1">
                     <i class="fa-solid fa-eye" aria-hidden="true"></i>
                     Awaiting your review
                 </p>
                 {% else %}
-                <p class="mt-2 text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                <p class="mt-2 text-[10px] font-mono text-teal flex items-center gap-1">
                     <i class="fa-solid fa-check" aria-hidden="true"></i>
                     Reviewed
                 </p>
@@ -331,69 +555,222 @@
                 <div class="flex items-center gap-2">
                     {% if d.get('stored_filename') %}
                     <a href="{{ url_for('download_file', filename=d.stored_filename) }}"
+                       download
                        class="flex-1 inline-flex items-center justify-center gap-1.5
-                              px-3 py-2.5 rounded-lg
-                              text-[11px] font-mono font-bold
-                              bg-gradient-to-r from-{{ color }}-500/20 to-{{ color }}-400/20
-                              text-{{ color }}-300 border border-{{ color }}-500/30
-                              hover:from-{{ color }}-500/30 hover:to-{{ color }}-400/30
+                              px-3 py-2.5 rounded-full
+                              text-[11px] font-medium
+                              border {{ btn_classes }}
                               transition active:scale-[0.98]"
                        aria-label="Download {{ name }}">
-                        <i class="fa-solid fa-download text-xs" aria-hidden="true"></i>
+                        <i class="fa-solid fa-download text-[10px]" aria-hidden="true"></i>
                         Download
                     </a>
                     {% elif d.get('url') %}
                     <a href="{{ d.get('url') }}" target="_blank" rel="noopener noreferrer"
                        class="flex-1 inline-flex items-center justify-center gap-1.5
-                              px-3 py-2.5 rounded-lg
-                              text-[11px] font-mono font-bold
-                              bg-gradient-to-r from-{{ color }}-500/20 to-{{ color }}-400/20
-                              text-{{ color }}-300 border border-{{ color }}-500/30
-                              hover:from-{{ color }}-500/30 hover:to-{{ color }}-400/30
+                              px-3 py-2.5 rounded-full
+                              text-[11px] font-medium
+                              border {{ btn_classes }}
                               transition active:scale-[0.98]"
                        aria-label="Open {{ name }} in new tab">
-                        <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]" aria-hidden="true"></i>
                         Open
                     </a>
                     {% else %}
                     <span class="flex-1 inline-flex items-center justify-center gap-1.5
-                                 px-3 py-2.5 rounded-lg
+                                 px-3 py-2.5 rounded-full
                                  text-[11px] font-mono
-                                 bg-slate-900 text-slate-600 border border-slate-800">
-                        <i class="fa-solid fa-ban text-xs" aria-hidden="true"></i>
+                                 bg-canvas dark:bg-gray-800
+                                 text-muted border border-line dark:border-gray-700">
+                        <i class="fa-solid fa-ban text-[10px]" aria-hidden="true"></i>
                         Unavailable
                     </span>
                     {% endif %}
+
+                    <button type="button"
+                            onclick="copyText('{{ name|e }}', 'Filename')"
+                            class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center
+                                   text-muted hover:text-electric
+                                   hover:bg-electric/5 border border-line dark:border-gray-700
+                                   transition"
+                            aria-label="Copy filename"
+                            title="Copy filename">
+                        <i class="fa-regular fa-copy text-[10px]" aria-hidden="true"></i>
+                    </button>
                 </div>
             </div>
-
         </article>
     {% endfor %}
 </div>
 
 {# No results #}
 <div id="no-results"
-     class="hidden glass-card rounded-2xl border border-slate-800 p-12 text-center">
-    <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
-       aria-hidden="true"></i>
-    <p class="text-slate-400 text-xs font-mono">No files match your search.</p>
+     class="hidden card p-12 text-center">
+    <div class="w-14 h-14 mx-auto rounded-full
+                bg-canvas dark:bg-gray-800
+                border border-line dark:border-gray-700
+                flex items-center justify-center mb-3">
+        <i class="fa-solid fa-magnifying-glass text-xl text-muted"
+           aria-hidden="true"></i>
+    </div>
+    <p class="text-ink dark:text-surface text-sm font-medium">No matches</p>
+    <p class="text-muted text-xs font-mono mt-1">
+        Try a different search or filter.
+    </p>
     <button type="button"
             onclick="resetFilters()"
-            class="mt-3 text-[10px] font-mono text-purple-400 hover:text-purple-300 transition">
+            class="mt-4 inline-flex items-center gap-1.5
+                   px-4 py-2 rounded-full text-xs font-medium
+                   bg-canvas dark:bg-gray-800
+                   text-ink dark:text-surface
+                   border border-line dark:border-gray-700
+                   hover:border-ink dark:hover:border-surface transition">
+        <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
         Clear filters
     </button>
 </div>
 
 {% endif %}
 
+{# ============================================================
+   IMAGE PREVIEW MODAL
+============================================================ #}
+<div id="preview-modal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="preview-title">
+    <div class="absolute inset-0 bg-black/85 backdrop-blur-sm"
+         onclick="closePreview()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-4xl">
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <h3 id="preview-title"
+                class="text-sm font-medium text-white truncate flex-1">
+                Preview
+            </h3>
+            <button type="button"
+                    onclick="closePreview()"
+                    class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center
+                           text-white/70 hover:text-white hover:bg-white/10 transition"
+                    aria-label="Close preview">
+                <i class="fa-solid fa-xmark text-base" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="rounded-2xl overflow-hidden bg-black">
+            <img id="preview-image"
+                 src=""
+                 alt=""
+                 class="w-full max-h-[80vh] object-contain">
+        </div>
+        <p class="mt-3 text-center text-[11px] font-mono text-white/60">
+            Press <kbd class="px-1.5 py-0.5 rounded bg-white/10 border border-white/20">Esc</kbd> to close
+        </p>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[110] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// SEARCH + FILTER + SORT
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2600) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    if (!text) return;
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => announce(true), () => announce(false));
+        return;
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) { announce(false); }
+}
+
+/* ============================================================
+   STATE
+============================================================ */
 let currentFilter = 'all';
 let currentSearch = '';
 let currentSort = 'newest';
+let currentView = 'grid';
+let bulkMode = false;
+let selectedIds = new Set();
 
+/* ============================================================
+   FILTER / SORT
+============================================================ */
 function applyFilters() {
     const cards = document.querySelectorAll('.file-card');
     const noResults = document.getElementById('no-results');
@@ -402,8 +779,13 @@ function applyFilters() {
     cards.forEach(card => {
         const category = card.dataset.category || '';
         const name = card.dataset.name || '';
+        const isUnreviewed = card.dataset.reviewed === '0';
 
-        const matchesFilter = (currentFilter === 'all' || category === currentFilter);
+        let matchesFilter = false;
+        if (currentFilter === 'all') matchesFilter = true;
+        else if (currentFilter === 'unreviewed') matchesFilter = isUnreviewed;
+        else matchesFilter = (category === currentFilter);
+
         const matchesSearch = (!currentSearch || name.includes(currentSearch));
 
         if (matchesFilter && matchesSearch) {
@@ -414,9 +796,20 @@ function applyFilters() {
         }
     });
 
-    if (noResults) {
-        noResults.classList.toggle('hidden', visible > 0);
+    const countEl = document.getElementById('files-count');
+    if (countEl) {
+        const total = cards.length;
+        countEl.textContent = (visible === total) ? `(${total})` : `(${visible} of ${total})`;
     }
+
+    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+
+    // Sync KPI ring
+    document.querySelectorAll('[data-kpi]').forEach(kpi => {
+        const isActive = kpi.dataset.kpi === currentFilter;
+        kpi.classList.toggle('ring-2', isActive);
+        kpi.classList.toggle('ring-electric/30', isActive);
+    });
 }
 
 function sortFiles(order) {
@@ -437,7 +830,6 @@ function sortFiles(order) {
             case 'oldest': return tsA - tsB;
             case 'name':   return nameA.localeCompare(nameB);
             case 'size':   return sizeB - sizeA;
-            case 'newest':
             default:       return tsB - tsA;
         }
     });
@@ -450,12 +842,17 @@ function filterFiles(filter) {
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         const isActive = btn.dataset.filter === filter;
-        btn.classList.toggle('bg-purple-500/20', isActive);
-        btn.classList.toggle('text-purple-300', isActive);
-        btn.classList.toggle('border-purple-500/40', isActive);
-        btn.classList.toggle('bg-slate-900', !isActive);
-        btn.classList.toggle('text-slate-400', !isActive);
-        btn.classList.toggle('border-slate-800', !isActive);
+        btn.classList.toggle('bg-ink', isActive);
+        btn.classList.toggle('dark:bg-white', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('dark:text-ink', isActive);
+        btn.classList.toggle('bg-canvas', !isActive);
+        btn.classList.toggle('dark:bg-gray-800', !isActive);
+        btn.classList.toggle('text-muted', !isActive);
+        btn.classList.toggle('border', !isActive);
+        btn.classList.toggle('border-line', !isActive);
+        btn.classList.toggle('dark:border-gray-700', !isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     applyFilters();
@@ -465,32 +862,251 @@ function resetFilters() {
     currentSearch = '';
     const searchInput = document.getElementById('file-search');
     if (searchInput) searchInput.value = '';
+    updateClearButton();
     filterFiles('all');
 }
 
-// Search input
+function clearSearch() {
+    const searchInput = document.getElementById('file-search');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    currentSearch = '';
+    updateClearButton();
+    applyFilters();
+}
+
+function updateClearButton() {
+    const searchInput = document.getElementById('file-search');
+    const clearBtn = document.getElementById('search-clear');
+    if (!searchInput || !clearBtn) return;
+    clearBtn.classList.toggle('hidden', !searchInput.value);
+}
+
+/* ============================================================
+   VIEW TOGGLE
+============================================================ */
+function setView(view) {
+    currentView = view;
+
+    const grid = document.getElementById('files-grid');
+    if (!grid) return;
+
+    if (view === 'list') {
+        grid.classList.remove('grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'xl:grid-cols-4');
+        grid.classList.add('grid-cols-1');
+    } else {
+        grid.classList.remove('grid-cols-1');
+        grid.classList.add('sm:grid-cols-2', 'lg:grid-cols-3', 'xl:grid-cols-4');
+    }
+
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        const isActive = btn.dataset.viewBtn === view;
+        btn.classList.toggle('bg-white', isActive);
+        btn.classList.toggle('dark:bg-gray-900', isActive);
+        btn.classList.toggle('text-electric', isActive);
+        btn.classList.toggle('shadow-sm', isActive);
+        btn.classList.toggle('text-muted', !isActive);
+    });
+
+    try { localStorage.setItem('client-files-view', view); } catch (e) {}
+}
+
+/* ============================================================
+   BULK SELECTION
+============================================================ */
+function toggleBulkMode() {
+    bulkMode = !bulkMode;
+    const bar = document.getElementById('bulk-bar');
+    const toggle = document.getElementById('bulk-toggle');
+
+    document.querySelectorAll('.bulk-checkbox-wrapper').forEach(el => {
+        el.classList.toggle('hidden', !bulkMode);
+    });
+
+    if (bulkMode) {
+        bar?.classList.remove('hidden');
+        bar?.classList.add('flex');
+        if (toggle) toggle.innerHTML = '<i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i><span>Done</span>';
+    } else {
+        bar?.classList.add('hidden');
+        bar?.classList.remove('flex');
+        if (toggle) toggle.innerHTML = '<i class="fa-regular fa-square-check text-[10px]" aria-hidden="true"></i><span>Select</span>';
+        clearSelection();
+    }
+}
+
+document.querySelectorAll('.file-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+        if (cb.checked) selectedIds.add(cb.dataset.id);
+        else selectedIds.delete(cb.dataset.id);
+        updateBulkBar();
+    });
+});
+
+function updateBulkBar() {
+    const countEl = document.getElementById('bulk-count');
+    if (countEl) {
+        countEl.textContent = `${selectedIds.size} selected`;
+    }
+}
+
+function clearSelection() {
+    selectedIds.clear();
+    document.querySelectorAll('.file-checkbox').forEach(cb => cb.checked = false);
+    updateBulkBar();
+}
+
+function downloadSelected() {
+    if (selectedIds.size === 0) {
+        if (typeof showToast === 'function') showToast('Select files first', 'info', 1600);
+        return;
+    }
+
+    selectedIds.forEach((id, i) => {
+        const card = document.querySelector(`.file-card[data-file-id="${id}"]`);
+        if (!card) return;
+        const url = card.dataset.fileUrl;
+        if (!url || url === '#') return;
+
+        // Stagger to avoid browser throttling
+        setTimeout(() => {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }, i * 250);
+    });
+
+    if (typeof showToast === 'function') {
+        showToast(`Downloading ${selectedIds.size} file${selectedIds.size === 1 ? '' : 's'}…`, 'info', 2600);
+    }
+}
+
+/* ============================================================
+   PREVIEW MODAL
+============================================================ */
+function openPreview(url, name) {
+    const modal = document.getElementById('preview-modal');
+    const img = document.getElementById('preview-image');
+    const title = document.getElementById('preview-title');
+    if (!modal || !img) return;
+
+    img.src = url;
+    img.alt = name;
+    if (title) title.textContent = name;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.querySelector('button')?.focus(), 50);
+}
+
+function closePreview() {
+    const modal = document.getElementById('preview-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+    const img = document.getElementById('preview-image');
+    if (img) img.src = '';
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    if (e.key === 'Escape') {
+        const previewM = document.getElementById('preview-modal');
+        if (previewM && !previewM.classList.contains('hidden')) {
+            closePreview();
+            return;
+        }
+
+        if (document.activeElement === searchInput) {
+            searchInput.blur();
+        } else if (currentSearch || currentFilter !== 'all') {
+            resetFilters();
+        }
+        return;
+    }
+
+    if (isTyping || cmd || e.altKey) return;
+
+    if (e.key === '/') {
+        e.preventDefault();
+        searchInput?.focus();
+        return;
+    }
+
+    if (e.key.toLowerCase() === 'a' && bulkMode) {
+        e.preventDefault();
+        const cards = document.querySelectorAll('.file-card');
+        cards.forEach(card => {
+            if (card.style.display === 'none') return;
+            const cb = card.querySelector('.file-checkbox');
+            if (cb && !cb.checked) {
+                cb.checked = true;
+                selectedIds.add(cb.dataset.id);
+            }
+        });
+        updateBulkBar();
+    }
+});
+
+/* ============================================================
+   INIT
+============================================================ */
 const searchInput = document.getElementById('file-search');
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
         currentSearch = (e.target.value || '').toLowerCase().trim();
+        updateClearButton();
         applyFilters();
     });
 }
 
-// Sort select
 const sortSelect = document.getElementById('file-sort');
 if (sortSelect) {
     sortSelect.addEventListener('change', (e) => {
         currentSort = e.target.value;
         sortFiles(currentSort);
     });
-    // Apply initial sort on load
     sortFiles(currentSort);
 }
+
+// Restore view preference
+(function restoreView() {
+    try {
+        const saved = localStorage.getItem('client-files-view');
+        if (saved === 'list') setView('list');
+        else setView('grid');
+    } catch (e) { setView('grid'); }
+})();
+
+// Attach checkboxes now that DOM is ready
+document.querySelectorAll('.file-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+        if (cb.checked) selectedIds.add(cb.dataset.id);
+        else selectedIds.delete(cb.dataset.id);
+        updateBulkBar();
+    });
+});
+
+applyFilters();
 </script>
 
 <style>
-    /* Line clamp utilities */
+    /* Line clamp */
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -498,15 +1114,50 @@ if (sortSelect) {
         overflow: hidden;
     }
 
-    /* Focus-visible ring for a11y */
-    *:focus-visible {
-        outline: 2px solid rgba(121, 40, 202, 0.6);
-        outline-offset: 2px;
+    /* Hide scrollbars */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom select arrow */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 12px;
     }
 
-    /* Smooth transitions */
-    .file-card {
-        transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    /* List view tweaks */
+    #files-grid.grid-cols-1 {
+        grid-template-columns: 1fr;
+    }
+    #files-grid.grid-cols-1 .file-card {
+        display: grid;
+        grid-template-columns: 12rem 1fr auto;
+        align-items: center;
+    }
+    #files-grid.grid-cols-1 .file-card > div:first-child {
+        aspect-ratio: auto;
+        height: 100%;
+        min-height: 6rem;
+        border-bottom: 0;
+        border-right: 1px solid;
+    }
+    @media (max-width: 640px) {
+        #files-grid.grid-cols-1 .file-card {
+            grid-template-columns: 1fr;
+        }
+        #files-grid.grid-cols-1 .file-card > div:first-child {
+            aspect-ratio: 16/9;
+            height: auto;
+            border-right: 0;
+            border-bottom: 1px solid;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .animate-pulse { animation: none !important; }
     }
 </style>
 

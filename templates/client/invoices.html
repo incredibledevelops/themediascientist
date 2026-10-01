@@ -1,16 +1,12 @@
 {% extends 'client/base.html' %}
 {% block title %}Invoices{% endblock %}
-{% block page_title %}Invoices & Billing{% endblock %}
-{% block page_subtitle %}View, download, and pay your invoices securely.{% endblock %}
-
-{% block content %}
+{% block breadcrumb %}Invoices{% endblock %}
 
 {# ============================================================
-   SAFE STATS — defensive access
+   SAFE STATS + COUNTS — before page_title/page_subtitle
 ============================================================ #}
 {% set safe_pending_total = pending_total if pending_total is defined and pending_total else 0 %}
 
-{# Compute counts and totals from the invoices list #}
 {% set ns = namespace(
     paid_count=0, paid_total=0,
     pending_count=0, pending_total=0,
@@ -32,25 +28,71 @@
     {% endif %}
 {% endfor %}
 
+{% block page_title %}Invoices &amp; Billing{% endblock %}
+{% block page_subtitle %}
+    {% if ns.overdue_count > 0 %}
+        {{ ns.overdue_count }} overdue · GH₵ {{ '%.2f' % ns.overdue_total }} needs attention
+    {% elif ns.pending_count > 0 %}
+        GH₵ {{ '%.2f' % safe_pending_total }} outstanding
+    {% elif invoices %}
+        All {{ ns.paid_count }} invoice{% if ns.paid_count != 1 %}s{% endif %} settled
+    {% else %}
+        View, download, and pay your invoices securely.
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+{% if invoices %}
+<button type="button"
+        onclick="toggleBulkMode()"
+        id="bulk-toggle"
+        class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+               text-[12px] font-medium
+               text-muted bg-canvas dark:bg-gray-800
+               border border-line dark:border-gray-700
+               hover:text-electric hover:border-electric/40 transition"
+        title="Select multiple invoices">
+    <i class="fa-regular fa-square-check text-[10px]" aria-hidden="true"></i>
+    <span>Select</span>
+</button>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
 {# ============================================================
    OVERDUE ALERT
 ============================================================ #}
 {% if ns.overdue_count > 0 %}
-<div class="mb-6 p-4 sm:p-5 rounded-2xl
-            bg-red-950/40 border border-red-500/40
-            flex items-start gap-3">
-    <div class="w-10 h-10 shrink-0 rounded-lg
-                bg-red-500/20 border border-red-500/40
-                flex items-center justify-center text-red-300">
-        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-    </div>
-    <div class="flex-1 min-w-0">
-        <p class="text-sm font-bold text-red-200">
-            {{ ns.overdue_count }} overdue invoice{% if ns.overdue_count != 1 %}s{% endif %}
-        </p>
-        <p class="text-xs text-red-300/80 mt-0.5 font-mono">
-            Total overdue: GH₵ {{ '%.2f' % ns.overdue_total }} — settle to avoid service interruptions.
-        </p>
+<div class="card p-4 sm:p-5 mb-6
+            bg-red-50/50 dark:bg-red-950/10
+            border-red-500/30">
+    <div class="flex items-start gap-3">
+        <div class="w-10 h-10 shrink-0 rounded-xl
+                    bg-red-500/15 border border-red-500/30
+                    text-red-500 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation text-sm" aria-hidden="true"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-ink dark:text-surface">
+                {{ ns.overdue_count }} overdue invoice{% if ns.overdue_count != 1 %}s{% endif %}
+            </p>
+            <p class="text-[11px] text-muted mt-0.5">
+                Total overdue: <span class="font-mono font-semibold text-red-500">GH₵ {{ '%.2f' % ns.overdue_total }}</span>
+                — settle to avoid service interruptions.
+            </p>
+        </div>
+        <button type="button"
+                onclick="filterInvoices('overdue')"
+                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       text-[11px] font-medium
+                       bg-white dark:bg-gray-900
+                       text-red-600 dark:text-red-400
+                       border border-red-500/30
+                       hover:border-red-500/60 transition">
+            View
+            <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+        </button>
     </div>
 </div>
 {% endif %}
@@ -61,113 +103,147 @@
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
 
     {# Outstanding #}
-    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
-                relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl"
-             aria-hidden="true"></div>
-        <div class="relative z-10 flex justify-between items-start gap-3 mb-3">
+    <button type="button"
+            onclick="filterInvoices('pending')"
+            data-kpi="pending"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start gap-3 mb-2">
             <div class="min-w-0">
-                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                    Total Outstanding
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">
+                    Outstanding
                 </p>
-                <p class="text-2xl sm:text-3xl font-mono-heading font-bold text-white mt-1
-                           tabular-nums truncate">
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight truncate">
                     GH₵ {{ '%.2f' % safe_pending_total }}
-                </p>
-                <p class="text-[10px] font-mono text-slate-500 mt-1">
-                    {{ ns.pending_count }} pending
-                    {% if ns.overdue_count > 0 %}· {{ ns.overdue_count }} overdue{% endif %}
-                </p>
+                </div>
             </div>
-            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
-                        bg-orange-500/20 border border-orange-500/30
-                        flex items-center justify-center text-orange-400">
-                <i class="fa-solid fa-hourglass-half text-base" aria-hidden="true"></i>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        {% if safe_pending_total > 0 %}
+                            bg-orange-500/10 border border-orange-500/20 text-orange-500
+                        {% else %}
+                            bg-teal/10 border border-teal/20 text-teal
+                        {% endif %}
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-hourglass-half text-sm" aria-hidden="true"></i>
             </div>
         </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">
+            {{ ns.pending_count }} pending
+            {% if ns.overdue_count > 0 %}· {{ ns.overdue_count }} overdue{% endif %}
+        </p>
+    </button>
 
     {# Total Paid #}
-    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
-                relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"
-             aria-hidden="true"></div>
-        <div class="relative z-10 flex justify-between items-start gap-3 mb-3">
+    <button type="button"
+            onclick="filterInvoices('paid')"
+            data-kpi="paid"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start gap-3 mb-2">
             <div class="min-w-0">
-                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">
                     Total Paid
                 </p>
-                <p class="text-2xl sm:text-3xl font-mono-heading font-bold text-white mt-1
-                           tabular-nums truncate">
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight truncate">
                     GH₵ {{ '%.2f' % ns.paid_total }}
-                </p>
-                <p class="text-[10px] font-mono text-slate-500 mt-1">
-                    {{ ns.paid_count }} settled invoice{% if ns.paid_count != 1 %}s{% endif %}
-                </p>
+                </div>
             </div>
-            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
-                        bg-emerald-500/20 border border-emerald-500/30
-                        flex items-center justify-center text-emerald-400">
-                <i class="fa-solid fa-circle-check text-base" aria-hidden="true"></i>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-circle-check text-sm" aria-hidden="true"></i>
             </div>
         </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">
+            {{ ns.paid_count }} settled invoice{% if ns.paid_count != 1 %}s{% endif %}
+        </p>
+    </button>
 
     {# Overdue #}
-    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
-                relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-500/10 rounded-full blur-2xl"
-             aria-hidden="true"></div>
-        <div class="relative z-10 flex justify-between items-start gap-3 mb-3">
+    <button type="button"
+            onclick="filterInvoices('overdue')"
+            data-kpi="overdue"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric
+                   {% if ns.overdue_count > 0 %}ring-1 ring-red-500/20{% endif %}">
+        <div class="flex justify-between items-start gap-3 mb-2">
             <div class="min-w-0">
-                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">
                     Overdue
                 </p>
-                <p class="text-2xl sm:text-3xl font-mono-heading font-bold text-white mt-1
-                           tabular-nums truncate">
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight truncate">
                     GH₵ {{ '%.2f' % ns.overdue_total }}
-                </p>
-                <p class="text-[10px] font-mono mt-1
-                          {% if ns.overdue_count > 0 %}text-red-400{% else %}text-slate-500{% endif %}">
-                    {{ ns.overdue_count }} past due
-                </p>
+                </div>
             </div>
-            <div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg
-                        bg-red-500/20 border border-red-500/30
-                        flex items-center justify-center text-red-400">
-                <i class="fa-solid fa-triangle-exclamation text-base" aria-hidden="true"></i>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        {% if ns.overdue_count > 0 %}
+                            bg-red-500/10 border border-red-500/20 text-red-500
+                        {% else %}
+                            bg-teal/10 border border-teal/20 text-teal
+                        {% endif %}
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-triangle-exclamation text-sm" aria-hidden="true"></i>
             </div>
         </div>
-    </div>
-
+        <p class="text-[10px] font-mono
+                  {% if ns.overdue_count > 0 %}text-red-500{% else %}text-muted{% endif %}">
+            {% if ns.overdue_count > 0 %}
+                {{ ns.overdue_count }} past due
+            {% else %}
+                None — nice work
+            {% endif %}
+        </p>
+    </button>
 </div>
 
 {# ============================================================
-   TOOLBAR: SEARCH + FILTER + SORT
+   TOOLBAR
 ============================================================ #}
 {% if invoices %}
-<div class="glass-card rounded-2xl border border-slate-800 p-3 sm:p-4 mb-6">
+<div class="card p-4 mb-6 sticky top-0 lg:top-20 z-20
+            bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md">
     <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
 
         {# Search #}
         <div class="relative flex-1 lg:max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
-                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                      text-muted text-xs pointer-events-none" aria-hidden="true"></i>
             <input type="text"
                    id="invoice-search"
-                   placeholder="Search by invoice number or description..."
+                   placeholder="Search by invoice number or description…"
                    autocomplete="off"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
-                          bg-slate-900 border border-slate-800
-                          text-sm text-white placeholder-slate-500
-                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                          transition">
+                   spellcheck="false"
+                   aria-label="Search invoices"
+                   class="w-full pl-10 pr-10 py-2.5 rounded-xl
+                          bg-canvas dark:bg-gray-800/50
+                          border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface placeholder-muted
+                          focus:outline-none focus:border-electric
+                          focus:ring-2 focus:ring-electric/20 transition">
+            <button type="button"
+                    id="search-clear"
+                    onclick="clearSearch()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2
+                           w-7 h-7 rounded-md flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-surface dark:hover:bg-gray-700 transition"
+                    aria-label="Clear search">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
         </div>
 
-        {# Filter tabs #}
+        {# Filter chips #}
         <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
-                    overflow-x-auto pb-1 lg:pb-0
-                    -mx-3 px-3 lg:mx-0 lg:px-0 lg:flex-1">
+                    overflow-x-auto scrollbar-none
+                    -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-1"
+             role="tablist"
+             aria-label="Filter invoices">
             {% set filters = [
                 ('all',      'All',      invoices|length),
                 ('pending',  'Pending',  ns.pending_count),
@@ -175,20 +251,25 @@
                 ('overdue',  'Overdue',  ns.overdue_count)
             ] %}
             {% for key, label, count in filters %}
+            {% if count > 0 or key == 'all' %}
             <button type="button"
                     onclick="filterInvoices('{{ key }}')"
                     data-filter="{{ key }}"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg whitespace-nowrap
-                           transition
+                    role="tab"
+                    aria-selected="{% if key == 'all' %}true{% else %}false{% endif %}"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
                            {% if key == 'all' %}
-                               bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                               bg-ink dark:bg-white text-white dark:text-ink
                            {% else %}
-                               bg-slate-900 text-slate-400 border border-slate-800
-                               hover:text-white
+                               bg-canvas dark:bg-gray-800 text-muted
+                               border border-line dark:border-gray-700
+                               hover:text-ink dark:hover:text-surface
                            {% endif %}">
                 {{ label }}
-                <span class="opacity-60 ml-0.5">({{ count }})</span>
+                <span class="opacity-70 tabular-nums ml-1">{{ count }}</span>
             </button>
+            {% endif %}
             {% endfor %}
         </div>
 
@@ -197,38 +278,87 @@
             <label for="invoice-sort" class="sr-only">Sort invoices</label>
             <div class="relative">
                 <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
-                          text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                          text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                 <select id="invoice-sort"
                         class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
-                               bg-slate-900 border border-slate-800
-                               text-xs font-mono text-slate-200 cursor-pointer
-                               focus:outline-none focus:border-cyan-400 transition">
+                               bg-canvas dark:bg-gray-800/50
+                               border border-line dark:border-gray-700
+                               text-xs font-mono text-ink dark:text-surface cursor-pointer
+                               focus:outline-none focus:border-electric transition">
                     <option value="newest">Newest first</option>
                     <option value="oldest">Oldest first</option>
                     <option value="amount">Largest amount</option>
                     <option value="number">Invoice #</option>
                 </select>
                 <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
-                          text-slate-500 text-[10px] pointer-events-none" aria-hidden="true"></i>
+                          text-muted text-[10px] pointer-events-none" aria-hidden="true"></i>
             </div>
         </div>
+    </div>
 
+    {# Hint row #}
+    <div class="mt-3 pt-3 border-t border-line dark:border-gray-700
+                text-[10px] font-mono text-muted flex items-center gap-2 flex-wrap">
+        <i class="fa-solid fa-circle-info text-electric shrink-0" aria-hidden="true"></i>
+        <span>
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">/</kbd>
+            search ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">A</kbd>
+            select all ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Esc</kbd>
+            clear
+        </span>
     </div>
 </div>
 {% endif %}
 
 {# ============================================================
+   BULK ACTION BAR
+============================================================ #}
+<div id="bulk-bar"
+     class="hidden card p-3 mb-4
+            bg-electric/[0.03] dark:bg-electric/[0.06]
+            border-electric/30
+            flex items-center gap-3 flex-wrap">
+    <span class="inline-flex items-center gap-2 text-xs font-mono text-electric">
+        <i class="fa-solid fa-check-square" aria-hidden="true"></i>
+        <span id="bulk-count">0 selected</span>
+    </span>
+    <div class="flex-1"></div>
+    <button type="button"
+            onclick="downloadSelectedPDFs()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full
+                   text-[11px] font-medium text-white
+                   bg-ink dark:bg-white dark:text-ink
+                   hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                   transition-colors">
+        <i class="fa-solid fa-file-pdf text-[10px]" aria-hidden="true"></i>
+        Download PDFs
+    </button>
+    <button type="button"
+            onclick="clearSelection()"
+            class="w-7 h-7 rounded-full flex items-center justify-center
+                   text-muted hover:text-ink dark:hover:text-surface
+                   hover:bg-surface dark:hover:bg-gray-800 transition"
+            aria-label="Clear selection">
+        <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+    </button>
+</div>
+
+{# ============================================================
    INVOICES CARD
 ============================================================ #}
-<div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+<div class="card overflow-hidden">
 
-    <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+    <header class="p-4 sm:p-5 border-b border-line dark:border-gray-700
                    flex items-center justify-between gap-3">
-        <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
-            <i class="fa-solid fa-file-invoice text-emerald-400" aria-hidden="true"></i>
+        <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                   flex items-center gap-2 tracking-tight">
+            <i class="fa-solid fa-file-invoice text-teal text-xs" aria-hidden="true"></i>
             All Invoices
-            <span class="text-[10px] font-mono font-normal text-slate-500"
-                  id="invoice-count">
+            <span class="text-[10px] font-mono text-muted font-normal tabular-nums"
+                  id="invoice-count"
+                  aria-live="polite">
                 ({{ invoices|length }})
             </span>
         </h3>
@@ -237,19 +367,28 @@
     {% if invoices %}
 
     {# ============================================================
-       DESKTOP TABLE (hidden below lg)
+       DESKTOP TABLE
     ============================================================ #}
     <div class="hidden lg:block overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse" role="grid">
             <thead>
-                <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
-                           uppercase bg-slate-900/30">
-                    <th class="py-3 px-5">Invoice #</th>
-                    <th class="py-3 px-5">Description</th>
-                    <th class="py-3 px-5">Due Date</th>
-                    <th class="py-3 px-5 text-right">Amount</th>
-                    <th class="py-3 px-5">Status</th>
-                    <th class="py-3 px-5 text-right">Actions</th>
+                <tr class="border-b border-line dark:border-gray-700
+                           text-[10px] font-mono text-muted uppercase
+                           bg-canvas dark:bg-gray-800/40">
+                    <th scope="col" class="w-10 py-3 px-3">
+                        <input type="checkbox"
+                               id="select-all-checkbox"
+                               onchange="toggleSelectAll(this.checked)"
+                               class="rounded border-line dark:border-gray-700
+                                      accent-electric cursor-pointer"
+                               aria-label="Select all invoices">
+                    </th>
+                    <th scope="col" class="py-3 px-4 font-medium">Invoice #</th>
+                    <th scope="col" class="py-3 px-4 font-medium">Description</th>
+                    <th scope="col" class="py-3 px-4 font-medium">Due Date</th>
+                    <th scope="col" class="py-3 px-4 font-medium text-right">Amount</th>
+                    <th scope="col" class="py-3 px-4 font-medium">Status</th>
+                    <th scope="col" class="py-3 px-4 text-right font-medium">Actions</th>
                 </tr>
             </thead>
             <tbody class="text-sm">
@@ -257,66 +396,88 @@
                 {% set st = inv.get('status', 'pending') %}
                 {% set amt = inv.get('amount', 0) or 0 %}
                 {% set created_ts = inv.created_at.timestamp() if inv.created_at and inv.created_at.strftime is defined else 0 %}
-                <tr class="invoice-row border-b border-slate-800/50
-                           hover:bg-slate-800/30 transition"
+                {% set is_paid = st == 'paid' %}
+                {% set is_overdue = st == 'overdue' %}
+
+                <tr class="invoice-row border-b border-line/60 dark:border-gray-800
+                           hover:bg-canvas dark:hover:bg-gray-800/30 transition"
                     data-status="{{ st }}"
                     data-search="{{ (inv.get('number','') ~ ' ' ~ (inv.get('description','') or ''))|lower }}"
                     data-timestamp="{{ created_ts }}"
-                    data-amount="{{ amt }}">
+                    data-amount="{{ amt }}"
+                    data-invoice-id="{{ inv._id }}"
+                    data-pdf-url="{{ url_for('client_invoice_pdf', invoice_id=inv._id) }}"
+                    data-pay-url="{{ url_for('client_invoice_pay', invoice_id=inv._id) }}">
+
+                    <td class="py-4 px-3">
+                        <input type="checkbox"
+                               class="row-checkbox rounded border-line dark:border-gray-700
+                                      accent-electric cursor-pointer bulk-checkbox-wrapper hidden"
+                               data-id="{{ inv._id }}"
+                               aria-label="Select invoice {{ inv.get('number','') }}">
+                    </td>
 
                     {# Number #}
-                    <td class="py-4 px-5 text-xs font-mono text-white font-semibold
-                               whitespace-nowrap max-w-[140px] truncate">
-                        {{ inv.get('number', '—') }}
+                    <td class="py-4 px-4">
+                        <button type="button"
+                                onclick="copyText('{{ inv.get('number','') }}', 'Invoice #')"
+                                class="text-xs font-mono font-semibold text-ink dark:text-surface
+                                       hover:text-electric transition
+                                       inline-flex items-center gap-1 group
+                                       whitespace-nowrap">
+                            <span>{{ inv.get('number', '—') }}</span>
+                            <i class="fa-regular fa-copy text-[9px] opacity-0
+                                      group-hover:opacity-70 transition-opacity"
+                               aria-hidden="true"></i>
+                        </button>
                     </td>
 
                     {# Description #}
-                    <td class="py-4 px-5 text-xs text-slate-400
-                               max-w-xs truncate"
+                    <td class="py-4 px-4 text-xs text-muted max-w-xs truncate"
                         title="{{ inv.get('description', '') }}">
                         {{ inv.get('description', '—') or '—' }}
                     </td>
 
-                    {# Due date with relative hint #}
-                    <td class="py-4 px-5 text-xs whitespace-nowrap">
+                    {# Due date #}
+                    <td class="py-4 px-4 text-xs whitespace-nowrap">
                         {% if inv.get('due_date') %}
-                            <div class="text-slate-300">
-                                {{ inv.get('due_date') }}
-                            </div>
+                        <div class="{% if is_overdue %}text-red-500 font-medium{% else %}text-ink dark:text-surface{% endif %}">
+                            {{ inv.get('due_date') }}
+                        </div>
+                        {% if is_overdue %}
+                        <p class="text-[10px] font-mono text-red-500 mt-0.5">Overdue</p>
+                        {% endif %}
                         {% else %}
-                            <span class="text-slate-500">—</span>
+                        <span class="text-muted">—</span>
                         {% endif %}
                     </td>
 
                     {# Amount #}
-                    <td class="py-4 px-5 text-xs font-mono font-bold
-                               text-white text-right whitespace-nowrap">
+                    <td class="py-4 px-4 text-xs font-mono font-bold
+                               text-ink dark:text-surface text-right whitespace-nowrap tabular-nums">
                         GH₵ {{ '%.2f' % amt }}
                     </td>
 
                     {# Status #}
-                    <td class="py-4 px-5">
-                        {% if st == 'paid' %}
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                                     text-[10px] font-bold uppercase whitespace-nowrap
-                                     bg-emerald-500/20 text-emerald-300
-                                     border border-emerald-500/30">
+                    <td class="py-4 px-4">
+                        {% if is_paid %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-mono uppercase whitespace-nowrap
+                                     bg-teal/10 text-teal border border-teal/30">
                             <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
                             Paid
                         </span>
-                        {% elif st == 'overdue' %}
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                                     text-[10px] font-bold uppercase whitespace-nowrap
-                                     bg-red-500/20 text-red-300
-                                     border border-red-500/30">
+                        {% elif is_overdue %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-mono uppercase whitespace-nowrap
+                                     bg-red-500/10 text-red-500 border border-red-500/30">
                             <i class="fa-solid fa-triangle-exclamation text-[8px]" aria-hidden="true"></i>
                             Overdue
                         </span>
                         {% else %}
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                                     text-[10px] font-bold uppercase whitespace-nowrap
-                                     bg-orange-500/20 text-orange-300
-                                     border border-orange-500/30">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-mono uppercase whitespace-nowrap
+                                     bg-orange-500/10 text-orange-500 border border-orange-500/30">
                             <i class="fa-solid fa-hourglass-half text-[8px]" aria-hidden="true"></i>
                             Pending
                         </span>
@@ -324,31 +485,36 @@
                     </td>
 
                     {# Actions #}
-                    <td class="py-4 px-5">
-                        <div class="flex items-center justify-end gap-2">
+                    <td class="py-4 px-4 text-right">
+                        <div class="inline-flex items-center gap-1.5">
                             <a href="{{ url_for('client_invoice_pdf', invoice_id=inv._id) }}"
-                               class="inline-flex items-center gap-1 px-3 py-2 rounded-lg
-                                      text-[10px] font-mono
-                                      bg-slate-800 hover:bg-slate-700
-                                      text-slate-200 border border-slate-700
-                                      transition whitespace-nowrap"
+                               class="w-9 h-9 rounded-lg
+                                      bg-canvas dark:bg-gray-800
+                                      border border-line dark:border-gray-700
+                                      flex items-center justify-center text-muted
+                                      hover:text-electric hover:border-electric/40 transition"
                                title="Download PDF"
                                aria-label="Download PDF for invoice {{ inv.get('number','') }}">
-                                <i class="fa-solid fa-file-pdf text-cyan-400" aria-hidden="true"></i>
-                                PDF
+                                <i class="fa-solid fa-file-pdf text-xs" aria-hidden="true"></i>
                             </a>
-                            {% if st != 'paid' %}
-                            <a href="{{ url_for('client_invoice_pay', invoice_id=inv._id) }}"
-                               class="inline-flex items-center gap-1 px-3 py-2 rounded-lg
-                                      text-[10px] font-mono font-bold
-                                      bg-gradient-to-r from-cyan-400 to-emerald-400
-                                      text-slate-950 hover:brightness-110
-                                      transition active:scale-[0.98] whitespace-nowrap"
-                               onclick="return confirm('Proceed to Paystack checkout for GH₵ {{ '%.2f' % amt }}?');"
-                               aria-label="Pay invoice {{ inv.get('number','') }} now">
-                                <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
+                            {% if not is_paid %}
+                            <button type="button"
+                                    onclick="requestPay('{{ inv.get('number','') }}', {{ amt }}, '{{ url_for('client_invoice_pay', invoice_id=inv._id) }}', {{ 'true' if is_overdue else 'false' }})"
+                                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full
+                                           text-[11px] font-medium text-white
+                                           {% if is_overdue %}bg-red-500 hover:bg-red-600{% else %}bg-ink dark:bg-white dark:text-ink hover:bg-electric dark:hover:bg-electric dark:hover:text-white{% endif %}
+                                           transition-colors whitespace-nowrap">
+                                <i class="fa-solid fa-credit-card text-[10px]" aria-hidden="true"></i>
                                 Pay Now
-                            </a>
+                            </button>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-2 rounded-full
+                                         text-[10px] font-mono
+                                         bg-teal/10 text-teal border border-teal/20
+                                         whitespace-nowrap">
+                                <i class="fa-solid fa-check text-[9px]" aria-hidden="true"></i>
+                                Settled
+                            </span>
                             {% endif %}
                         </div>
                     </td>
@@ -359,125 +525,145 @@
     </div>
 
     {# ============================================================
-       MOBILE CARDS (hidden lg and up)
+       MOBILE CARDS
     ============================================================ #}
-    <div class="lg:hidden divide-y divide-slate-800/60">
+    <div class="lg:hidden divide-y divide-line dark:divide-gray-800">
         {% for inv in invoices %}
         {% set st = inv.get('status', 'pending') %}
         {% set amt = inv.get('amount', 0) or 0 %}
         {% set created_ts = inv.created_at.timestamp() if inv.created_at and inv.created_at.strftime is defined else 0 %}
+        {% set is_paid = st == 'paid' %}
+        {% set is_overdue = st == 'overdue' %}
+
         <div class="invoice-row p-4 space-y-3"
              data-status="{{ st }}"
              data-search="{{ (inv.get('number','') ~ ' ' ~ (inv.get('description','') or ''))|lower }}"
              data-timestamp="{{ created_ts }}"
-             data-amount="{{ amt }}">
+             data-amount="{{ amt }}"
+             data-invoice-id="{{ inv._id }}"
+             data-pdf-url="{{ url_for('client_invoice_pdf', invoice_id=inv._id) }}">
 
-            {# Row 1: number + status #}
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
-                    <p class="font-mono text-sm font-bold text-white truncate">
-                        {{ inv.get('number', '—') }}
-                    </p>
-                    <p class="text-[11px] text-slate-400 mt-0.5 line-clamp-2">
+                    <button type="button"
+                            onclick="copyText('{{ inv.get('number','') }}', 'Invoice #')"
+                            class="font-mono text-sm font-semibold text-ink dark:text-surface
+                                   hover:text-electric transition
+                                   inline-flex items-center gap-1 group truncate max-w-full">
+                        <span class="truncate">{{ inv.get('number', '—') }}</span>
+                        <i class="fa-regular fa-copy text-[9px] opacity-0
+                                  group-hover:opacity-70 transition-opacity shrink-0"
+                           aria-hidden="true"></i>
+                    </button>
+                    <p class="text-[11px] text-muted mt-1 line-clamp-2">
                         {{ inv.get('description', '') or 'No description' }}
                     </p>
                 </div>
 
-                {% if st == 'paid' %}
-                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
-                             text-[10px] font-bold uppercase whitespace-nowrap
-                             bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                {% if is_paid %}
+                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                             text-[10px] font-mono uppercase whitespace-nowrap
+                             bg-teal/10 text-teal border border-teal/30">
                     <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
                     Paid
                 </span>
-                {% elif st == 'overdue' %}
-                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
-                             text-[10px] font-bold uppercase whitespace-nowrap
-                             bg-red-500/20 text-red-300 border border-red-500/30">
+                {% elif is_overdue %}
+                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                             text-[10px] font-mono uppercase whitespace-nowrap
+                             bg-red-500/10 text-red-500 border border-red-500/30">
                     <i class="fa-solid fa-triangle-exclamation text-[8px]" aria-hidden="true"></i>
                     Overdue
                 </span>
                 {% else %}
-                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
-                             text-[10px] font-bold uppercase whitespace-nowrap
-                             bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                             text-[10px] font-mono uppercase whitespace-nowrap
+                             bg-orange-500/10 text-orange-500 border border-orange-500/30">
                     <i class="fa-solid fa-hourglass-half text-[8px]" aria-hidden="true"></i>
                     Pending
                 </span>
                 {% endif %}
             </div>
 
-            {# Row 2: due date + amount #}
             <div class="grid grid-cols-2 gap-3 text-[11px] font-mono">
                 <div class="min-w-0">
-                    <p class="text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">
+                    <p class="text-muted uppercase tracking-wider text-[9px] mb-0.5">
                         Due Date
                     </p>
-                    <p class="text-slate-300 truncate">
+                    <p class="{% if is_overdue %}text-red-500{% else %}text-ink dark:text-surface{% endif %} truncate">
                         {{ inv.get('due_date', '—') or '—' }}
                     </p>
                 </div>
                 <div class="min-w-0 text-right">
-                    <p class="text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">
+                    <p class="text-muted uppercase tracking-wider text-[9px] mb-0.5">
                         Amount
                     </p>
-                    <p class="text-white font-bold truncate">
+                    <p class="text-ink dark:text-surface font-bold truncate tabular-nums">
                         GH₵ {{ '%.2f' % amt }}
                     </p>
                 </div>
             </div>
 
-            {# Row 3: actions #}
             <div class="flex items-center gap-2 pt-1">
                 <a href="{{ url_for('client_invoice_pdf', invoice_id=inv._id) }}"
-                   class="flex-1 inline-flex items-center justify-center gap-1.5
-                          px-3 py-2.5 rounded-lg
-                          text-[11px] font-mono font-bold
-                          bg-slate-800 hover:bg-slate-700
-                          text-slate-200 border border-slate-700
-                          transition active:scale-[0.98]"
-                   aria-label="Download PDF">
-                    <i class="fa-solid fa-file-pdf text-cyan-400 text-xs" aria-hidden="true"></i>
+                   class="inline-flex items-center justify-center gap-1.5
+                          px-3.5 py-2.5 rounded-full
+                          text-[11px] font-medium
+                          bg-canvas dark:bg-gray-800
+                          text-ink dark:text-surface
+                          border border-line dark:border-gray-700
+                          hover:border-electric/40 hover:text-electric transition">
+                    <i class="fa-solid fa-file-pdf text-[10px]" aria-hidden="true"></i>
                     PDF
                 </a>
 
-                {% if st != 'paid' %}
-                <a href="{{ url_for('client_invoice_pay', invoice_id=inv._id) }}"
-                   class="flex-1 inline-flex items-center justify-center gap-1.5
-                          px-3 py-2.5 rounded-lg
-                          text-[11px] font-mono font-bold
-                          bg-gradient-to-r from-cyan-400 to-emerald-400
-                          text-slate-950 hover:brightness-110
-                          transition active:scale-[0.98]"
-                   onclick="return confirm('Proceed to Paystack checkout for GH₵ {{ '%.2f' % amt }}?');"
-                   aria-label="Pay invoice now">
-                    <i class="fa-solid fa-credit-card text-xs" aria-hidden="true"></i>
+                {% if not is_paid %}
+                <button type="button"
+                        onclick="requestPay('{{ inv.get('number','') }}', {{ amt }}, '{{ url_for('client_invoice_pay', invoice_id=inv._id) }}', {{ 'true' if is_overdue else 'false' }})"
+                        class="flex-1 inline-flex items-center justify-center gap-1.5
+                               px-3 py-2.5 rounded-full
+                               text-[11px] font-medium text-white
+                               {% if is_overdue %}bg-red-500 hover:bg-red-600{% else %}bg-ink dark:bg-white dark:text-ink hover:bg-electric dark:hover:bg-electric dark:hover:text-white{% endif %}
+                               transition-colors">
+                    <i class="fa-solid fa-credit-card text-[10px]" aria-hidden="true"></i>
                     Pay Now
-                </a>
+                </button>
                 {% else %}
                 <span class="flex-1 inline-flex items-center justify-center gap-1.5
-                             px-3 py-2.5 rounded-lg
+                             px-3 py-2.5 rounded-full
                              text-[11px] font-mono
-                             bg-emerald-500/10 text-emerald-300
-                             border border-emerald-500/30">
-                    <i class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+                             bg-teal/10 text-teal border border-teal/20">
+                    <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
                     Settled
                 </span>
                 {% endif %}
             </div>
-
         </div>
         {% endfor %}
     </div>
 
     {# No results #}
-    <div id="no-results" class="hidden p-12 text-center border-t border-slate-800/60">
-        <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
-           aria-hidden="true"></i>
-        <p class="text-slate-400 text-xs font-mono">No invoices match your search.</p>
+    <div id="no-results" class="hidden p-12 text-center
+                                border-t border-line dark:border-gray-700">
+        <div class="w-14 h-14 mx-auto rounded-full
+                    bg-canvas dark:bg-gray-800
+                    border border-line dark:border-gray-700
+                    flex items-center justify-center mb-3">
+            <i class="fa-solid fa-magnifying-glass text-xl text-muted"
+               aria-hidden="true"></i>
+        </div>
+        <p class="text-ink dark:text-surface text-sm font-medium">No matches</p>
+        <p class="text-muted text-xs font-mono mt-1">
+            Try a different search or filter.
+        </p>
         <button type="button"
                 onclick="resetFilters()"
-                class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+                class="mt-4 inline-flex items-center gap-1.5
+                       px-4 py-2 rounded-full text-xs font-medium
+                       bg-canvas dark:bg-gray-800
+                       text-ink dark:text-surface
+                       border border-line dark:border-gray-700
+                       hover:border-ink dark:hover:border-surface transition">
+            <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
             Clear filters
         </button>
     </div>
@@ -488,38 +674,207 @@
     ============================================================ #}
     <div class="p-12 sm:p-16 text-center">
         <div class="w-20 h-20 rounded-full
-                    bg-gradient-to-br from-emerald-500/20 to-cyan-500/20
-                    border border-emerald-500/30
-                    flex items-center justify-center mx-auto mb-6">
-            <i class="fa-solid fa-file-invoice-dollar text-3xl text-emerald-400"
+                    bg-teal/10 border border-teal/20
+                    flex items-center justify-center mx-auto mb-5">
+            <i class="fa-solid fa-file-invoice-dollar text-3xl text-teal"
                aria-hidden="true"></i>
         </div>
-        <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
+        <h3 class="text-lg font-semibold text-ink dark:text-surface tracking-tight mb-2">
             No Invoices Yet
         </h3>
-        <p class="text-slate-400 text-sm font-mono max-w-md mx-auto leading-relaxed">
+        <p class="text-muted text-sm max-w-md mx-auto leading-relaxed">
             When The Media Scientist issues an invoice, it will appear here.
             You'll be able to download a PDF copy and pay securely via Paystack.
         </p>
         <a href="{{ url_for('client_messages') }}"
-           class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl
-                  text-xs font-mono font-bold
-                  bg-cyan-500/15 text-cyan-300 border border-cyan-500/30
-                  hover:bg-cyan-500/25 transition">
-            <i class="fa-solid fa-comments" aria-hidden="true"></i>
-            Ask a Question
+           class="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-full
+                  text-sm font-medium text-white
+                  bg-ink dark:bg-white dark:text-ink
+                  hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                  transition-colors">
+            <i class="fa-solid fa-comments text-[11px]" aria-hidden="true"></i>
+            Ask a question
         </a>
     </div>
     {% endif %}
 
 </div>
 
+{# ============================================================
+   PAY CONFIRMATION MODAL
+============================================================ #}
+<div id="pay-modal"
+     class="fixed inset-0 z-[110] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="pay-modal-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closePayModal()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-sm card p-5 sm:p-6 shadow-2xl
+                bg-white dark:bg-[#141414]">
+        <div class="flex items-start gap-3 mb-5">
+            <div id="pay-modal-icon-wrap"
+                 class="w-10 h-10 shrink-0 rounded-full
+                        bg-electric/10 border border-electric/20
+                        flex items-center justify-center text-electric">
+                <i class="fa-solid fa-credit-card text-sm" aria-hidden="true"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 id="pay-modal-title"
+                    class="text-sm font-semibold text-ink dark:text-surface">
+                    Confirm payment
+                </h3>
+                <p id="pay-modal-message"
+                   class="text-xs text-muted mt-1 leading-relaxed">
+                    You'll be redirected to Paystack to complete this payment.
+                </p>
+            </div>
+        </div>
+
+        <div class="p-3 rounded-xl mb-5
+                    bg-canvas dark:bg-gray-800/50
+                    border border-line dark:border-gray-700">
+            <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <p class="text-[10px] font-mono text-muted uppercase tracking-widest">
+                        Invoice
+                    </p>
+                    <p id="pay-modal-number"
+                       class="text-sm font-mono font-semibold text-ink dark:text-surface mt-1 truncate">
+                        —
+                    </p>
+                </div>
+                <div class="shrink-0 text-right">
+                    <p class="text-[10px] font-mono text-muted uppercase tracking-widest">
+                        Amount
+                    </p>
+                    <p id="pay-modal-amount"
+                       class="text-base font-mono font-bold text-ink dark:text-surface mt-1 tabular-nums">
+                        —
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+            <button type="button"
+                    onclick="closePayModal()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-ink dark:text-surface
+                           bg-canvas dark:bg-gray-800
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                Cancel
+            </button>
+            <a id="pay-modal-submit"
+               href="#"
+               class="px-4 py-2 rounded-full text-xs font-medium text-white
+                      bg-ink dark:bg-white dark:text-ink
+                      hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                      transition-colors">
+                Pay with Paystack
+            </a>
+        </div>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[120] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// SEARCH + FILTER + SORT
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2600) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    if (!text) return;
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => announce(true), () => announce(false));
+        return;
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) { announce(false); }
+}
+
+/* ============================================================
+   SEARCH + FILTER + SORT
+============================================================ */
 let currentFilter = 'all';
 let currentSearch = '';
+let bulkMode = false;
+let selectedIds = new Set();
 
 function applyFilters() {
     const rows = document.querySelectorAll('.invoice-row');
@@ -529,7 +884,6 @@ function applyFilters() {
     rows.forEach(row => {
         const status = row.dataset.status || '';
         const haystack = row.dataset.search || '';
-
         const matchesFilter = (currentFilter === 'all' || status === currentFilter);
         const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
 
@@ -550,6 +904,14 @@ function applyFilters() {
     }
 
     if (noResults) noResults.classList.toggle('hidden', visible > 0);
+
+    document.querySelectorAll('[data-kpi]').forEach(kpi => {
+        const isActive = kpi.dataset.kpi === currentFilter;
+        kpi.classList.toggle('ring-2', isActive);
+        kpi.classList.toggle('ring-electric/30', isActive);
+    });
+
+    updateClearButton();
 }
 
 function filterInvoices(filter) {
@@ -557,12 +919,17 @@ function filterInvoices(filter) {
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         const isActive = btn.dataset.filter === filter;
-        btn.classList.toggle('bg-cyan-500/20', isActive);
-        btn.classList.toggle('text-cyan-300', isActive);
-        btn.classList.toggle('border-cyan-500/40', isActive);
-        btn.classList.toggle('bg-slate-900', !isActive);
-        btn.classList.toggle('text-slate-400', !isActive);
-        btn.classList.toggle('border-slate-800', !isActive);
+        btn.classList.toggle('bg-ink', isActive);
+        btn.classList.toggle('dark:bg-white', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('dark:text-ink', isActive);
+        btn.classList.toggle('bg-canvas', !isActive);
+        btn.classList.toggle('dark:bg-gray-800', !isActive);
+        btn.classList.toggle('text-muted', !isActive);
+        btn.classList.toggle('border', !isActive);
+        btn.classList.toggle('border-line', !isActive);
+        btn.classList.toggle('dark:border-gray-700', !isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     applyFilters();
@@ -572,13 +939,33 @@ function resetFilters() {
     currentSearch = '';
     const searchInput = document.getElementById('invoice-search');
     if (searchInput) searchInput.value = '';
+    updateClearButton();
     filterInvoices('all');
 }
 
+function clearSearch() {
+    const searchInput = document.getElementById('invoice-search');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    currentSearch = '';
+    updateClearButton();
+    applyFilters();
+}
+
+function updateClearButton() {
+    const searchInput = document.getElementById('invoice-search');
+    const clearBtn = document.getElementById('search-clear');
+    if (!searchInput || !clearBtn) return;
+    clearBtn.classList.toggle('hidden', !searchInput.value);
+}
+
 function sortInvoices(order) {
-    // Group rows by their parent container (tbody or card list)
-    const tbody = document.querySelector('.invoice-row')?.closest('tbody');
-    const mobileList = document.querySelectorAll('.lg\\:hidden .invoice-row');
+    const containers = [
+        document.querySelector('table tbody'),
+        document.querySelector('.lg\\:hidden.divide-y')
+    ].filter(Boolean);
 
     const sortFn = (a, b) => {
         const tsA = parseFloat(a.dataset.timestamp) || 0;
@@ -587,49 +974,216 @@ function sortInvoices(order) {
         const amtB = parseFloat(b.dataset.amount) || 0;
 
         switch (order) {
-            case 'oldest':  return tsA - tsB;
-            case 'amount':  return amtB - amtA;
+            case 'oldest': return tsA - tsB;
+            case 'amount': return amtB - amtA;
             case 'number':
                 return (a.dataset.search || '').localeCompare(b.dataset.search || '');
-            case 'newest':
-            default:        return tsB - tsA;
+            default:       return tsB - tsA;
         }
     };
 
-    if (tbody) {
-        const rows = Array.from(tbody.querySelectorAll('.invoice-row'));
+    containers.forEach(container => {
+        const rows = Array.from(container.querySelectorAll('.invoice-row'));
+        if (rows.length === 0) return;
         rows.sort(sortFn);
-        rows.forEach(r => tbody.appendChild(r));
-    }
+        rows.forEach(r => container.appendChild(r));
+    });
+}
 
-    if (mobileList.length) {
-        const container = mobileList[0].parentElement;
-        const cards = Array.from(container.querySelectorAll('.invoice-row'));
-        cards.sort(sortFn);
-        cards.forEach(c => container.appendChild(c));
+/* ============================================================
+   BULK SELECTION
+============================================================ */
+function toggleBulkMode() {
+    bulkMode = !bulkMode;
+    const bar = document.getElementById('bulk-bar');
+    const toggle = document.getElementById('bulk-toggle');
+
+    document.querySelectorAll('.bulk-checkbox-wrapper').forEach(el => {
+        el.classList.toggle('hidden', !bulkMode);
+    });
+
+    if (bulkMode) {
+        bar?.classList.remove('hidden');
+        bar?.classList.add('flex');
+        if (toggle) toggle.innerHTML = '<i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i><span>Done</span>';
+    } else {
+        bar?.classList.add('hidden');
+        bar?.classList.remove('flex');
+        if (toggle) toggle.innerHTML = '<i class="fa-regular fa-square-check text-[10px]" aria-hidden="true"></i><span>Select</span>';
+        clearSelection();
     }
 }
 
-// Search input
+document.querySelectorAll('.row-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+        if (cb.checked) selectedIds.add(cb.dataset.id);
+        else selectedIds.delete(cb.dataset.id);
+        updateBulkBar();
+    });
+});
+
+function toggleSelectAll(checked) {
+    const master = document.getElementById('select-all-checkbox');
+    const shouldCheck = typeof checked === 'boolean' ? checked : !(master?.checked);
+
+    if (master) master.checked = shouldCheck;
+
+    document.querySelectorAll('.row-checkbox').forEach(cb => {
+        const row = cb.closest('.invoice-row');
+        if (row && row.style.display !== 'none') {
+            cb.checked = shouldCheck;
+            if (shouldCheck) selectedIds.add(cb.dataset.id);
+            else selectedIds.delete(cb.dataset.id);
+        }
+    });
+    updateBulkBar();
+}
+
+function updateBulkBar() {
+    const countEl = document.getElementById('bulk-count');
+    if (countEl) {
+        countEl.textContent = `${selectedIds.size} selected`;
+    }
+}
+
+function clearSelection() {
+    selectedIds.clear();
+    document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+    const master = document.getElementById('select-all-checkbox');
+    if (master) master.checked = false;
+    updateBulkBar();
+}
+
+function downloadSelectedPDFs() {
+    if (selectedIds.size === 0) {
+        if (typeof showToast === 'function') showToast('Select invoices first', 'info', 1600);
+        return;
+    }
+
+    // Build a list of PDF URLs from selected rows
+    const pdfUrls = [];
+    selectedIds.forEach(id => {
+        const row = document.querySelector(`.invoice-row[data-invoice-id="${id}"]`);
+        const url = row?.dataset.pdfUrl;
+        if (url) pdfUrls.push(url);
+    });
+
+    // Open in staggered tabs
+    pdfUrls.forEach((url, i) => {
+        setTimeout(() => {
+            window.open(url, '_blank', 'noopener');
+        }, i * 200);
+    });
+
+    if (typeof showToast === 'function') {
+        showToast(`Opening ${pdfUrls.length} PDF${pdfUrls.length === 1 ? '' : 's'}…`, 'info', 2400);
+    }
+}
+
+/* ============================================================
+   PAY CONFIRMATION MODAL
+============================================================ */
+function requestPay(invoiceNumber, amount, payUrl, isOverdue) {
+    const modal = document.getElementById('pay-modal');
+    const numEl = document.getElementById('pay-modal-number');
+    const amtEl = document.getElementById('pay-modal-amount');
+    const submitEl = document.getElementById('pay-modal-submit');
+    const iconWrap = document.getElementById('pay-modal-icon-wrap');
+    const msg = document.getElementById('pay-modal-message');
+
+    if (!modal || !submitEl) return;
+
+    if (numEl) numEl.textContent = invoiceNumber;
+    if (amtEl) amtEl.textContent = `GH₵ ${amount.toFixed(2)}`;
+    submitEl.setAttribute('href', payUrl);
+
+    if (isOverdue) {
+        iconWrap.className = 'w-10 h-10 shrink-0 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500';
+        iconWrap.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-sm';
+        msg.textContent = 'This invoice is overdue. You\'ll be redirected to Paystack to complete the payment.';
+        submitEl.className = 'px-4 py-2 rounded-full text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition';
+    } else {
+        iconWrap.className = 'w-10 h-10 shrink-0 rounded-full bg-electric/10 border border-electric/20 flex items-center justify-center text-electric';
+        iconWrap.querySelector('i').className = 'fa-solid fa-credit-card text-sm';
+        msg.textContent = 'You\'ll be redirected to Paystack to complete this payment securely.';
+        submitEl.className = 'px-4 py-2 rounded-full text-xs font-medium text-white bg-ink dark:bg-white dark:text-ink hover:bg-electric dark:hover:bg-electric dark:hover:text-white transition';
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.querySelector('button[type="button"]')?.focus(), 50);
+}
+
+function closePayModal() {
+    const modal = document.getElementById('pay-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    if (e.key === 'Escape') {
+        const payM = document.getElementById('pay-modal');
+        if (payM && !payM.classList.contains('hidden')) {
+            closePayModal();
+            return;
+        }
+
+        if (document.activeElement === searchInput) {
+            searchInput.blur();
+        } else if (currentSearch || currentFilter !== 'all') {
+            resetFilters();
+        }
+        return;
+    }
+
+    if (isTyping || cmd || e.altKey) return;
+
+    if (e.key === '/') {
+        e.preventDefault();
+        searchInput?.focus();
+        return;
+    }
+
+    if (e.key.toLowerCase() === 'a' && bulkMode) {
+        e.preventDefault();
+        toggleSelectAll(true);
+    }
+});
+
+/* ============================================================
+   INIT
+============================================================ */
 const searchInput = document.getElementById('invoice-search');
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
         currentSearch = (e.target.value || '').toLowerCase().trim();
+        updateClearButton();
         applyFilters();
     });
 }
 
-// Sort select
 const sortSelect = document.getElementById('invoice-sort');
 if (sortSelect) {
-    sortSelect.addEventListener('change', (e) => {
-        sortInvoices(e.target.value);
-    });
+    sortSelect.addEventListener('change', (e) => sortInvoices(e.target.value));
 }
+
+updateClearButton();
+updateBulkBar();
 </script>
 
 <style>
-    /* Line clamp utility */
+    /* Line clamp */
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -637,10 +1191,22 @@ if (sortSelect) {
         overflow: hidden;
     }
 
-    /* Focus-visible ring */
-    *:focus-visible {
-        outline: 2px solid rgba(0, 242, 254, 0.6);
-        outline-offset: 2px;
+    /* Hide scrollbars */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom select arrow */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 12px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .animate-pulse { animation: none !important; }
     }
 </style>
 

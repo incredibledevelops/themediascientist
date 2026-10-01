@@ -1,0 +1,723 @@
+# 🚀 Feature Roadmap for The Media Scientist
+
+Great question. I've grouped **50+ features** by priority and category — from "do these now" to "advanced differentiators." Each comes with a **why it matters**, **effort estimate**, and **impact rating**.
+
+---
+
+## 🎯 TIER 1 — Do These First (High Impact, Low Effort)
+
+These will transform your site from "good portfolio" to "professional platform." Most can be built in 1–3 hours each.
+
+### 1. 📊 Google Analytics 4 + Microsoft Clarity
+
+**Why:** You can't improve what you don't measure. See which portfolio items convert, where users drop off, and what search terms bring traffic.
+
+**Effort:** 15 min
+**Impact:** 🔥🔥🔥🔥🔥
+
+Add to `base.html` `<head>`:
+```html
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
+
+<!-- Microsoft Clarity (free session recordings + heatmaps) -->
+<script type="text/javascript">
+  (function(c,l,a,r,i,t,y){
+    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "XXXXXXXXXX");
+</script>
+```
+
+### 2. ⭐ Testimonials on Portfolio Items
+
+**Why:** Social proof per project. When someone's considering hiring you, seeing "Kaya Storytellers loved this shoot" on the specific portfolio item builds instant trust.
+
+**Effort:** 30 min
+**Impact:** 🔥🔥🔥🔥
+
+**Schema change** — add to `PortfolioItem` in `models.py`:
+```python
+"testimonial": {
+    "quote": "The best retouching I've ever seen.",
+    "author": "Jane Doe",
+    "company": "Kaya Storytellers",
+    "avatar": "https://..."
+}
+```
+
+**Admin UI** — add a testimonial field to `lab/portfolio.html`.
+
+**Frontend** — display inside the portfolio card modal.
+
+### 3. 📞 Floating WhatsApp / Call Button
+
+**Why:** Ghana clients (and international) default to WhatsApp for instant contact. One tap vs. "fill a form and wait." Conversion skyrockets.
+
+**Effort:** 20 min
+**Impact:** 🔥🔥🔥🔥🔥
+
+Add to `base.html` before `</body>`:
+```html
+<!-- Floating WhatsApp button -->
+<a href="https://wa.me/233551234567?text=Hi%20Incredible%2C%20I%27d%20like%20to%20discuss%20a%20project"
+   target="_blank"
+   rel="noopener noreferrer"
+   class="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full
+          bg-emerald-500 hover:bg-emerald-400
+          shadow-lg shadow-emerald-500/40
+          flex items-center justify-center text-white
+          hover:scale-110 transition-all
+          group">
+    <i class="fa-brands fa-whatsapp text-2xl"></i>
+    <span class="absolute right-full mr-3 px-3 py-2 rounded-lg
+                 bg-slate-900 text-white text-xs font-mono whitespace-nowrap
+                 opacity-0 group-hover:opacity-100 transition pointer-events-none
+                 border border-slate-700">
+        Chat on WhatsApp
+    </span>
+</a>
+```
+
+### 4. 🖼️ Client Logo Wall
+
+**Why:** "Trusted by" logo walls are the #1 fastest trust signal. Even 5 logos raise perceived credibility dramatically.
+
+**Effort:** 1 hour (needs admin CRUD)
+**Impact:** 🔥🔥🔥🔥
+
+**New MongoDB collection** `client_logos`:
+```python
+{"name": "STBM", "logo_url": "...", "url": "https://stbm.com"}
+```
+
+Add a strip below the hero on `index.html`:
+```
+"Trusted by businesses across Ghana & worldwide"
+[LOGO] [LOGO] [LOGO] [LOGO] [LOGO]
+```
+
+### 5. 🎥 Video Hero (Background Loop)
+
+**Why:** Video is your medium. A 5-second silent background loop of your best work (color-graded, cinematic) instantly signals "this person is legit."
+
+**Effort:** 1 hour (asset prep is the hard part)
+**Impact:** 🔥🔥🔥🔥🔥
+
+Replace the hero image with:
+```html
+<video autoplay muted loop playsinline preload="metadata"
+       class="absolute inset-0 w-full h-full object-cover opacity-30">
+    <source src="{{ url_for('static', filename='hero-loop.mp4') }}" type="video/mp4">
+</video>
+```
+
+Keep it under 3 MB with `ffmpeg`:
+```bash
+ffmpeg -i input.mp4 -vf "scale=1280:-2" -c:v libx264 -crf 28 -an -movflags +faststart hero-loop.mp4
+```
+
+---
+
+## 🎨 TIER 2 — Engagement Boosters (Medium Effort, High Impact)
+
+### 6. 📝 Blog / Case Studies Section
+
+**Why:** SEO + authority. When a client googles "how to choose a videographer in Ghana," you want your article ranking.
+
+**Effort:** 4–6 hours (needs full CRUD + public listing)
+**Impact:** 🔥🔥🔥🔥🔥
+
+**New collections:**
+```python
+blog_posts: {title, slug, excerpt, body_md, cover_image, tags, published_at, status}
+```
+
+**Routes:**
+- `/blog` — list
+- `/blog/<slug>` — detail
+- `/blog/tag/<tag>` — filtered
+- `/lab/blog` — admin CRUD
+
+**Markdown support:** use `markdown` library to render `body_md`.
+
+**Why this matters most:** Blog posts compound. 20 good posts = 5,000+ organic visitors/month within 6 months.
+
+### 7. 📅 Built-in Booking System
+
+**Why:** Right now clients fill out a form and wait. A booking system lets them pick a time slot for a discovery call immediately.
+
+**Effort:** 6–8 hours
+**Impact:** 🔥🔥🔥🔥🔥
+
+**Options:**
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Cal.com embed** | Free, zero-code, professional | External brand |
+| **Calendly embed** | Free tier, well-known | External brand |
+| **Custom slot picker** | Fully branded | Build it yourself |
+
+**Fastest path:** Cal.com embed in `/contact`:
+```html
+<iframe src="https://cal.com/themediascientist/discovery"
+        style="width:100%;height:600px;border:0;"></iframe>
+```
+
+### 8. 💬 Live Chat Widget
+
+**Why:** Real-time chat converts 3–5× better than forms. Visitors who have a quick question can get an instant answer.
+
+**Effort:** 15 min (via third party)
+**Impact:** 🔥🔥🔥🔥
+
+**Free options:**
+
+| Service | Cost | Best for |
+|---------|------|----------|
+| **Tawk.to** | Free forever | Small sites, solid features |
+| **Crisp** | Free tier | Modern UI |
+| **Chatwoot** | Self-hosted | Full control |
+
+Add to `base.html`:
+```html
+<script>
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+  var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+  s1.async=true;
+  s1.src='https://embed.tawk.to/YOUR_ID/default';
+  s1.charset='UTF-8';
+  s1.setAttribute('crossorigin','*');
+  s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+```
+
+### 9. 🏆 Awards & Certifications Section
+
+**Why:** "Adobe Certified Professional," "Top Rated on Upwork," or any industry recognition — displayed with a badge.
+
+**Effort:** 1 hour
+**Impact:** 🔥🔥🔥
+
+Add to About page:
+```html
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="glass-card p-4 text-center">
+        <i class="fa-solid fa-award text-3xl text-yellow-400 mb-2"></i>
+        <p class="text-xs font-bold text-white">Adobe Certified</p>
+        <p class="text-[10px] text-slate-500">Premiere Pro</p>
+    </div>
+    <!-- more -->
+</div>
+```
+
+### 10. 📊 Before/After Slider for Retouching
+
+**Why:** Retouching is your specialty — showing "raw → retouched" with a draggable slider is **the most convincing proof possible**.
+
+**Effort:** 2 hours
+**Impact:** 🔥🔥🔥🔥🔥
+
+**Use `img-comparison-slider`** (free Web Component):
+```html
+<script type="module" src="https://unpkg.com/img-comparison-slider@7/dist/index.js"></script>
+
+<img-comparison-slider class="rounded-2xl overflow-hidden">
+    <img slot="first" src="/before.jpg" alt="Before">
+    <img slot="second" src="/after.jpg" alt="After">
+    <div slot="handle" class="bg-cyan-400 w-1"></div>
+</img-comparison-slider>
+```
+
+Add an admin field `before_image_url` to portfolio items.
+
+### 11. 🎬 Portfolio Video Reel
+
+**Why:** Every videographer needs a 60-second showreel. Autoplay muted, click to unmute.
+
+**Effort:** 1 hour (asset prep is the work)
+**Impact:** 🔥🔥🔥🔥🔥
+
+Embed at the top of `/portfolio`:
+```html
+<div class="aspect-video rounded-2xl overflow-hidden mb-8 glass-card">
+    <video controls poster="/reel-poster.jpg" preload="metadata"
+           class="w-full h-full">
+        <source src="/showreel-2026.mp4" type="video/mp4">
+    </video>
+</div>
+```
+
+### 12. 📸 Instagram Feed Integration
+
+**Why:** Your latest Instagram posts autopopulate, showing you're active and current.
+
+**Effort:** 30 min
+**Impact:** 🔥🔥🔥
+
+**Free options:**
+
+| Service | Free tier |
+|---------|-----------|
+| **Elfsight Instagram Feed** | 200 views/mo |
+| **LightWidget** | Free with watermark |
+| **SnapWidget** | Free with watermark |
+
+Or use Instagram Basic Display API (free, requires app registration).
+
+### 13. 🎁 Free Resource / Lead Magnet
+
+**Why:** "Download my free Color Grading LUT pack" captures emails and builds authority.
+
+**Effort:** 3 hours
+**Impact:** 🔥🔥🔥🔥
+
+**Flow:**
+1. Visitor enters email on a landing page
+2. Email is saved to a `leads` collection
+3. Download link is emailed to them
+4. You have a warm audience for future offers
+
+**Landing page route:** `/free-luts`
+
+### 14. 📱 Progressive Web App (PWA)
+
+**Why:** Users can "install" your site to their home screen. Works offline. Feels like a native app.
+
+**Effort:** 2 hours
+**Impact:** 🔥🔥🔥
+
+**Add `static/manifest.json`:**
+```json
+{
+  "name": "The Media Scientist",
+  "short_name": "Media Scientist",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0E17",
+  "theme_color": "#00F2FE",
+  "icons": [
+    {"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
+```
+
+Link in `<head>`:
+```html
+<link rel="manifest" href="/static/manifest.json">
+```
+
+### 15. 🌍 Multi-Language Support
+
+**Why:** Ghana has Twi speakers. International clients may prefer French, Spanish, or Arabic.
+
+**Effort:** 4 hours (with Flask-Babel)
+**Impact:** 🔥🔥🔥
+
+```python
+pip install Flask-Babel
+```
+
+Then wrap strings in `_('...')` and add `translations/` folders.
+
+---
+
+## 🚀 TIER 3 — Advanced Differentiators (High Effort, Exceptional Impact)
+
+### 16. 🎨 AI-Powered Color Grading Preview
+
+**Why:** Upload a raw photo → see it auto-graded with your signature look. **Nobody does this.** It's a killer demo of your skills.
+
+**Effort:** 8–12 hours
+**Impact:** 🔥🔥🔥🔥🔥
+
+**Implementation:**
+- Pillow for image processing
+- NumPy for color matrix math
+- Or use Cloudinary's transformations API
+
+Route `/tools/color-grader` with a file upload + live preview.
+
+### 17. 📊 Client Analytics Dashboard
+
+**Why:** Show your clients how their campaign is performing — right in their portal.
+
+**Effort:** 6 hours
+**Impact:** 🔥🔥🔥🔥
+
+Add to client dashboard:
+- Website traffic (via Google Analytics API)
+- Social media growth (via platform APIs)
+- Campaign performance (from your marketing data)
+
+Use Chart.js for visualizations:
+```html
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<canvas id="trafficChart"></canvas>
+```
+
+### 18. 🎬 Video Timeline Editor
+
+**Why:** Let clients preview video drafts and leave time-coded comments like Frame.io.
+
+**Effort:** 20+ hours
+**Impact:** 🔥🔥🔥🔥🔥
+
+This is a **huge differentiator**. Uses:
+- HTML5 `<video>` with `currentTime` API
+- Time-coded comment storage in MongoDB
+- React or Alpine.js for interactivity
+
+### 19. 🤝 Referral System
+
+**Why:** Happy clients refer friends. Reward them for it.
+
+**Effort:** 4 hours
+**Impact:** 🔥🔥🔥🔥
+
+**How:**
+1. Each client gets a unique referral code
+2. They share it with friends
+3. New client enters code during inquiry
+4. Both get a discount on their next invoice
+5. Track in a `referrals` collection
+
+### 20. 📦 Digital Product Store
+
+**Why:** Sell LUTs, presets, templates, or stock footage as digital downloads.
+
+**Effort:** 6 hours (with Paystack)
+**Impact:** 🔥🔥🔥🔥
+
+**New collection** `products`:
+```python
+{
+    "title": "Cinematic LUT Pack Vol. 1",
+    "price": 199,
+    "thumbnail": "...",
+    "files": ["https://..."],
+    "type": "lut"
+}
+```
+
+**Routes:**
+- `/store` — browse products
+- `/store/<id>` — product page
+- `/store/<id>/buy` — Paystack checkout
+- Download link sent via email after payment
+
+### 21. 🎯 Client Onboarding Questionnaire
+
+**Why:** When you create a client account, they get an email with a link to a guided form. Their answers populate their project brief automatically.
+
+**Effort:** 3 hours
+**Impact:** 🔥🔥🔥🔥
+
+**Flow:**
+1. Admin creates client
+2. Client gets an email with an onboarding link
+3. Client fills: "What's your vision? What's your timeline? What's your budget?"
+4. Answers saved to project → admin sees them before the first call
+
+### 22. 📈 Real-Time Notification System
+
+**Why:** Instant desktop notifications when a client sends a message, an invoice is paid, or a new inquiry arrives.
+
+**Effort:** 5 hours
+**Impact:** 🔥🔥🔥🔥
+
+**Use WebSockets (Flask-SocketIO):**
+```python
+from flask_socketio import SocketIO, emit
+
+socketio = SocketIO(app)
+
+@socketio.on('connect')
+def handle_connect():
+    # join admin room if admin
+    pass
+
+def notify_admin(message):
+    socketio.emit('notification', {'message': message}, room='admin')
+```
+
+Trigger from `contact()`, `client_messages()`, etc.
+
+### 23. 🔒 Two-Factor Authentication (2FA)
+
+**Why:** Admin panel is the crown jewel. If your password leaks, 2FA prevents takeover.
+
+**Effort:** 3 hours
+**Impact:** 🔥🔥🔥🔥🔥
+
+```python
+pip install pyotp qrcode
+```
+
+**Flow:**
+1. Admin enables 2FA in settings
+2. QR code displayed → scanned with Google Authenticator
+3. On login, TOTP code required
+
+### 24. 🎨 Custom Domain Email
+
+**Why:** `incredible@themediascientist.com` beats `okwadwo642@gmail.com` for credibility.
+
+**Effort:** 1 hour
+**Impact:** 🔥🔥🔥🔥
+
+**Free options:**
+- **Zoho Mail** — free for 1 user, 5 GB
+- **Cloudflare Email Routing** — free forwarding to Gmail
+- **ImprovMX** — free forwarding
+
+Then update `MAIL_USERNAME` / `MAIL_DEFAULT_SENDER` in `.env`.
+
+### 25. 📊 Project Timeline / Gantt View
+
+**Why:** Client-facing Gantt chart showing project phases, milestones, dependencies.
+
+**Effort:** 4 hours
+**Impact:** 🔥🔥🔥🔥
+
+**Library:** [Frappe Gantt](https://frappe.io/gantt) — free, MIT licensed.
+
+```html
+<div id="gantt"></div>
+<script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.min.js"></script>
+<script>
+new Gantt("#gantt", [
+    { id: 'design', name: 'Design Phase', start: '2026-10-01', end: '2026-10-10', progress: 100 },
+    { id: 'dev',    name: 'Development',  start: '2026-10-11', end: '2026-10-25', progress: 60 }
+]);
+</script>
+```
+
+### 26. 🎬 Instagram Reels Auto-Sync
+
+**Why:** Every time you post a Reel, it appears on your site automatically.
+
+**Effort:** 4 hours
+**Impact:** 🔥🔥🔥
+
+**Use Instagram Graph API:**
+- Register a Facebook App
+- Get long-lived access token
+- Store in `.env`
+- Fetch `/me/media` on page load
+- Cache for 1 hour
+
+### 27. 🎨 Client Brand Asset Library
+
+**Why:** For each client, store their logo, brand colors, fonts, and asset files in one place. Both you and they can access them.
+
+**Effort:** 3 hours
+**Impact:** 🔥🔥🔥
+
+Extend `client_projects.html` with a "Brand Assets" section.
+
+### 28. 📅 Content Calendar
+
+**Why:** For marketing clients, show them what content you're planning.
+
+**Effort:** 5 hours
+**Impact:** 🔥🔥🔥
+
+Uses [FullCalendar](https://fullcalendar.io/) — free, well-maintained.
+
+### 29. 🎁 AI Copywriting Assistant
+
+**Why:** When writing about a new service, click "Generate description" → GPT-4o or Claude API suggests copy.
+
+**Effort:** 3 hours
+**Impact:** 🔥🔥🔥🔥
+
+```python
+import openai
+
+def generate_service_description(title, keywords):
+    response = openai.ChatCompletion.create(
+        model="gpt-4o-mini",
+        messages=[{
+            "role": "user",
+            "content": f"Write a 2-sentence marketing description for '{title}'. Keywords: {keywords}. Tone: professional, confident."
+        }]
+    )
+    return response.choices[0].message.content
+```
+
+Add a "✨ Auto-generate" button next to description fields in admin.
+
+### 30. 🔍 Site Search
+
+**Why:** With 50+ portfolio items and multiple services, users need search.
+
+**Effort:** 3 hours
+**Impact:** 🔥🔥🔥
+
+**Options:**
+- **Meilisearch** — self-hosted, fast, typo-tolerant
+- **Algolia** — hosted, free tier
+- **Custom implementation** — MongoDB text indexes + Flask endpoint
+
+---
+
+## 🎯 TIER 4 — Nice-to-Haves (Low Priority, Polish)
+
+### 31. Dark / Light Theme Toggle
+Adds to `base.html`. Users appreciate the option.
+
+### 32. Reading Progress Bar
+Horizontal bar at the top of blog posts.
+
+### 33. Custom 404 Page
+An animated "lost in the lab" page with links back.
+
+### 34. Newsletter Signup
+Footer subscription for blog updates.
+
+### 35. Related Posts
+At bottom of blog posts, suggest 3 similar ones.
+
+### 36. Search Console Integration
+Display keyword rankings in `/lab/dashboard`.
+
+### 37. Spotify Playlist Embed
+"Why I work to this playlist" — humanizes the brand.
+
+### 38. Behind-the-Scenes Section
+Raw footage, outtakes, "how I did this" — content that no AI can fake.
+
+### 39. Mood Board / Inspiration
+Pinterest-style board of your influences.
+
+### 40. FAQ Chatbot
+Uses your FAQ content to answer common questions.
+
+### 41. Client Referral Tracker
+Who referred whom, and how much they earned.
+
+### 42. Project Templates
+Save a project template → apply to new clients.
+
+### 43. Bulk Operations
+Select multiple items → mark all as reviewed / delete.
+
+### 44. Email Templates in DB
+Edit email templates from `/lab/settings` instead of code.
+
+### 45. Webhooks
+Notify external services (Slack, Discord, Telegram) when events fire.
+
+### 46. Invoice Reminders
+Auto-email client 3 days before due date.
+
+### 47. Recurring Invoices
+For monthly retainer clients.
+
+### 48. Multi-Currency Support
+Charge in USD, EUR, GBP. Paystack supports it.
+
+### 49. Contract Signatures
+Send contracts via HelloSign / DocuSign. Store PDF in client files.
+
+### 50. Portfolio Item Ordering
+Drag-and-drop to reorder items.
+
+---
+
+## 📊 Recommended Roadmap (First 6 Months)
+
+### Month 1 — Foundation
+
+| Feature | Hours | Impact |
+|---------|-------|--------|
+| Google Analytics + Clarity | 0.5 | 🔥🔥🔥🔥🔥 |
+| WhatsApp floating button | 0.5 | 🔥🔥🔥🔥🔥 |
+| Testimonials on portfolio | 1 | 🔥🔥🔥🔥 |
+| Client logo wall | 2 | 🔥🔥🔥🔥 |
+| **Total** | **4h** | |
+
+### Month 2 — Engagement
+
+| Feature | Hours | Impact |
+|---------|-------|--------|
+| Live chat (Tawk.to) | 0.5 | 🔥🔥🔥🔥 |
+| Instagram feed | 0.5 | 🔥🔥🔥 |
+| Booking system (Cal.com) | 1 | 🔥🔥🔥🔥🔥 |
+| Video hero + showreel | 3 | 🔥🔥🔥🔥🔥 |
+| **Total** | **5h** | |
+
+### Month 3 — Authority
+
+| Feature | Hours | Impact |
+|---------|-------|--------|
+| Blog / case studies | 8 | 🔥🔥🔥🔥🔥 |
+| Before/After slider | 2 | 🔥🔥🔥🔥🔥 |
+| Awards section | 1 | 🔥🔥🔥 |
+| Lead magnet | 3 | 🔥🔥🔥🔥 |
+| **Total** | **14h** | |
+
+### Month 4 — Advanced
+
+| Feature | Hours | Impact |
+|---------|-------|--------|
+| 2FA for admin | 3 | 🔥🔥🔥🔥🔥 |
+| Custom domain email | 1 | 🔥🔥🔥🔥 |
+| PWA | 2 | 🔥🔥🔥 |
+| Real-time notifications | 5 | 🔥🔥🔥🔥 |
+| **Total** | **11h** | |
+
+### Month 5 — Revenue
+
+| Feature | Hours | Impact |
+|---------|-------|--------|
+| Digital product store | 6 | 🔥🔥🔥🔥 |
+| Client analytics dashboard | 6 | 🔥🔥🔥🔥 |
+| Referral system | 4 | 🔥🔥🔥🔥 |
+| **Total** | **16h** | |
+
+### Month 6 — Differentiators
+
+| Feature | Hours | Impact |
+|---------|-------|--------|
+| AI color grading preview | 10 | 🔥🔥🔥🔥🔥 |
+| Video timeline editor | 20 | 🔥🔥🔥🔥🔥 |
+| Multi-language | 4 | 🔥🔥🔥 |
+| **Total** | **34h** | |
+
+---
+
+## 🎯 My Top 5 Picks (If You Only Do 5 Things)
+
+If you're time-constrained, **do these five** in order:
+
+1. **📊 Analytics (GA4 + Clarity)** — 15 min → know what's working
+2. **📞 WhatsApp floating button** — 20 min → 3× more inquiries
+3. **🎥 Video hero + showreel** — 2 hours → instant credibility
+4. **📝 Blog / case studies** — 8 hours → organic traffic that compounds
+5. **⭐ Testimonials on portfolio** — 1 hour → social proof that converts
+
+**Total: ~12 hours** → transforms your site from "portfolio" to "lead-generating machine."
+
+---
+
+## 🤔 Questions to Guide Your Decision
+
+Before you build anything, answer these:
+
+1. **Who is my ideal client?** (Local Ghana businesses? International brands? Startups?)
+2. **What's my #1 goal?** (More inquiries? Higher-priced clients? Passive income?)
+3. **What do competitors NOT have?** (That's your differentiator.)
+4. **What can I maintain?** (A blog needs weekly posts. A store needs inventory. A chat widget needs responses.)
+5. **What's the ROI?** (Every feature should either increase conversions, save time, or build authority.)

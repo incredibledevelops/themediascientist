@@ -1,34 +1,29 @@
 {% extends 'client/base.html' %}
 {% block title %}Support Messages{% endblock %}
-{% block page_title %}Support Messages{% endblock %}
-{% block page_subtitle %}Direct line to your project team.{% endblock %}
-
-{% block content %}
+{% block breadcrumb %}Messages{% endblock %}
 
 {# ============================================================
    SAFE DATA — preprocess messages for template safety
+   Must be defined BEFORE page_title/page_subtitle
 ============================================================ #}
 {% set safe_messages = [] %}
-{% set ns = namespace(prev_date=None) %}
+{% set ns = namespace(prev_date=None, unread_count=0) %}
 
 {% for m in messages %}
     {% set role = m.get('from_role', 'admin') if m is mapping else (m.from_role if m.from_role is defined else 'admin') %}
 
-    {# Safely get the sender's name with a role-based fallback #}
     {% if role == 'client' %}
         {% set fallback_name = current_user.name if current_user and current_user.name else 'You' %}
     {% else %}
         {% set fallback_name = 'The Media Scientist' %}
     {% endif %}
-    {% set from_name = (m.get('from_name') if m is mapping else (m.from_name if m.from_name is defined else none)) or fallback_name %}
 
-    {# Safely get created_at #}
+    {% set from_name = (m.get('from_name') if m is mapping else (m.from_name if m.from_name is defined else none)) or fallback_name %}
     {% set created_at = (m.get('created_at') if m is mapping else (m.created_at if m.created_at is defined else none)) %}
 
-    {# Build a display date string (used for grouping) #}
     {% if created_at and created_at.strftime is defined %}
         {% set display_date = created_at.strftime('%Y-%m-%d') %}
-        {% set display_date_label = created_at.strftime('%b %d, %Y') %}
+        {% set display_date_label = created_at.strftime('%A, %b %d') %}
         {% set display_time = created_at.strftime('%H:%M') %}
         {% set iso_date = created_at.isoformat() %}
     {% else %}
@@ -38,19 +33,18 @@
         {% set iso_date = '' %}
     {% endif %}
 
-    {# Does this message begin a new date group? #}
     {% set starts_new_day = (display_date != ns.prev_date) %}
     {% if starts_new_day %}
         {% set ns.prev_date = display_date %}
     {% endif %}
 
-    {# Read status for admin messages #}
     {% set is_unread = (role != 'client' and not (m.get('read', True) if m is mapping else (m.read if m.read is defined else True))) %}
+    {% if is_unread %}
+        {% set ns.unread_count = ns.unread_count + 1 %}
+    {% endif %}
 
-    {# Body — safely stringified #}
     {% set body = (m.get('body', '') if m is mapping else (m.body if m.body is defined else ''))|string %}
 
-    {# Push onto our safe list #}
     {% set _ = safe_messages.append({
         'role': role,
         'from_name': from_name,
@@ -66,32 +60,60 @@
     }) %}
 {% endfor %}
 
+{% block page_title %}Support Messages{% endblock %}
+{% block page_subtitle %}
+    {% if safe_messages %}
+        {{ safe_messages|length }} message{% if safe_messages|length != 1 %}s{% endif %}
+        {% if ns.unread_count > 0 %}
+            · {{ ns.unread_count }} unread
+        {% endif %}
+    {% else %}
+        Direct line to your project team.
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<button type="button"
+        onclick="focusComposer()"
+        class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+               text-[12px] font-medium text-white
+               bg-ink dark:bg-white dark:text-ink
+               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+               transition-colors"
+        title="New message (/)">
+    <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
+    <span>New Message</span>
+</button>
+{% endblock %}
+
+{% block content %}
+
 {# ============================================================
    CHAT SHELL — flex column, fills available height
 ============================================================ #}
 <div class="flex flex-col min-h-0
-            h-[calc(100vh-190px)] lg:h-[calc(100vh-210px)]
+            h-[calc(100vh-200px)] lg:h-[calc(100vh-220px)]
             min-h-[520px] sm:min-h-[600px]
-            glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            card overflow-hidden">
 
     {# ---------- CHAT HEADER ---------- #}
-    <header class="p-3.5 sm:p-5 border-b border-slate-800 bg-slate-900/50
+    <header class="p-4 sm:p-5 border-b border-line dark:border-gray-700
                    flex items-center gap-3 shrink-0">
 
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full
-                    bg-gradient-to-br from-cyan-400 to-purple-600
+        <div class="w-11 h-11 rounded-full
+                    bg-gradient-to-br from-electric to-teal
                     flex items-center justify-center text-white shrink-0
-                    shadow-lg shadow-cyan-500/20">
+                    shadow-lg shadow-electric/20">
             <i class="fa-solid fa-headset text-base" aria-hidden="true"></i>
         </div>
 
         <div class="min-w-0 flex-1">
-            <p class="font-bold text-white text-sm sm:text-base truncate">
+            <p class="font-semibold text-ink dark:text-surface text-sm sm:text-base truncate">
                 The Media Scientist Support
             </p>
-            <p class="text-[10px] sm:text-xs font-mono text-emerald-400
-                      flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+            <p class="text-[11px] font-mono text-teal
+                      flex items-center gap-1.5 mt-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"
                       aria-hidden="true"></span>
                 Typically replies within 24 hours
             </p>
@@ -99,9 +121,10 @@
 
         {# Message count badge #}
         {% if safe_messages %}
-        <div class="shrink-0 text-[10px] font-mono text-slate-500
-                    bg-slate-900 border border-slate-800
-                    px-2.5 py-1 rounded-lg">
+        <div class="shrink-0 text-[10px] font-mono text-muted
+                    bg-canvas dark:bg-gray-800
+                    border border-line dark:border-gray-700
+                    px-2.5 py-1 rounded-full tabular-nums">
             {{ safe_messages|length }} msg{% if safe_messages|length != 1 %}s{% endif %}
         </div>
         {% endif %}
@@ -112,11 +135,11 @@
 
         <div id="messages-container"
              class="absolute inset-0 overflow-y-auto overscroll-contain
-                    p-3.5 sm:p-6 space-y-1
-                    bg-black/10"
+                    p-4 sm:p-6 space-y-2"
              role="log"
              aria-live="polite"
-             aria-label="Conversation">
+             aria-label="Conversation"
+             tabindex="0">
 
             {% if safe_messages %}
                 {% for msg in safe_messages %}
@@ -124,35 +147,43 @@
                     {# ---------- DATE DIVIDER ---------- #}
                     {% if msg.starts_new_day %}
                     <div class="flex items-center gap-3 my-5 sm:my-6">
-                        <div class="flex-1 h-px bg-slate-800" aria-hidden="true"></div>
+                        <div class="flex-1 h-px bg-line dark:bg-gray-700"
+                             aria-hidden="true"></div>
                         <span class="text-[10px] font-mono uppercase tracking-widest
-                                     text-slate-500 px-2 shrink-0">
+                                     text-muted px-2 shrink-0">
                             {{ msg.display_date_label }}
                         </span>
-                        <div class="flex-1 h-px bg-slate-800" aria-hidden="true"></div>
+                        <div class="flex-1 h-px bg-line dark:bg-gray-700"
+                             aria-hidden="true"></div>
                     </div>
                     {% endif %}
 
                     {# ---------- MESSAGE ROW ---------- #}
                     <div class="flex {% if msg.role == 'client' %}justify-end{% else %}justify-start{% endif %}
-                                group">
+                                group message-row">
 
                         <div class="relative max-w-[85%] sm:max-w-md lg:max-w-lg
-                                    px-3.5 py-2.5 sm:px-4 sm:py-3
+                                    px-4 py-3
                                     text-sm leading-relaxed
                                     {% if msg.role == 'client' %}
-                                        bg-gradient-to-br from-cyan-500/25 to-purple-500/25
-                                        border border-cyan-500/30 text-white
+                                        bg-ink dark:bg-white
+                                        text-white dark:text-ink
                                         rounded-2xl rounded-br-md
                                     {% else %}
-                                        bg-slate-900 border border-slate-800 text-slate-100
+                                        bg-canvas dark:bg-gray-800/60
+                                        border border-line dark:border-gray-700
+                                        text-ink dark:text-surface
                                         rounded-2xl rounded-bl-md
                                     {% endif %}">
 
                             {# Sender name #}
-                            <div class="text-[10px] font-mono uppercase mb-1
+                            <div class="text-[10px] font-mono uppercase mb-1.5
                                         flex items-center gap-1.5
-                                        {% if msg.role == 'client' %}text-cyan-300{% else %}text-purple-300{% endif %}">
+                                        {% if msg.role == 'client' %}
+                                            text-white/60 dark:text-ink/60
+                                        {% else %}
+                                            text-muted
+                                        {% endif %}">
                                 <i class="fa-solid
                                           {% if msg.role == 'client' %}fa-user{% else %}fa-headset{% endif %}
                                           text-[8px]"
@@ -160,9 +191,9 @@
                                 <span class="truncate">{{ msg.from_name }}</span>
 
                                 {% if msg.is_unread %}
-                                <span class="ml-1 px-1.5 py-0.5 rounded
+                                <span class="ml-1 px-1.5 py-0.5 rounded-full
                                              text-[8px] font-bold uppercase
-                                             bg-cyan-500 text-slate-950">
+                                             bg-electric text-white">
                                     New
                                 </span>
                                 {% endif %}
@@ -180,31 +211,62 @@
                             <button type="button"
                                     onclick="toggleMessageBody({{ msg.index }}, this)"
                                     class="mt-2 text-[10px] font-mono
-                                           text-cyan-400 hover:text-cyan-300
+                                           {% if msg.role == 'client' %}
+                                               text-white/70 hover:text-white dark:text-ink/70 dark:hover:text-ink
+                                           {% else %}
+                                               text-electric hover:text-electric/80
+                                           {% endif %}
                                            transition underline-offset-2
                                            hover:underline">
                                 Show more
                             </button>
                             {% endif %}
 
-                            {# Timestamp + copy #}
+                            {# Timestamp + copy + reactions #}
                             <div class="mt-2 flex items-center justify-between gap-3
-                                        text-[10px] font-mono text-slate-500">
-                                <button type="button"
-                                        onclick="copyMessage(this, '{{ msg.body|e }}')"
-                                        class="opacity-0 group-hover:opacity-100
-                                               hover:text-cyan-400 transition-opacity
-                                               inline-flex items-center gap-1"
-                                        title="Copy message"
-                                        aria-label="Copy message">
-                                    <i class="fa-regular fa-copy" aria-hidden="true"></i>
-                                </button>
-                                {% if msg.display_time %}
-                                <time datetime="{{ msg.iso_date }}"
-                                      title="{{ msg.display_date_label }} at {{ msg.display_time }}">
-                                    {{ msg.display_time }}
-                                </time>
-                                {% endif %}
+                                        text-[10px] font-mono
+                                        {% if msg.role == 'client' %}
+                                            text-white/50 dark:text-ink/50
+                                        {% else %}
+                                            text-muted
+                                        {% endif %}">
+
+                                <div class="flex items-center gap-2 opacity-0
+                                            group-hover:opacity-100 transition-opacity">
+                                    <button type="button"
+                                            onclick="copyMessage(this, '{{ msg.body|e }}')"
+                                            class="hover:text-electric transition
+                                                   inline-flex items-center gap-1"
+                                            title="Copy message"
+                                            aria-label="Copy message">
+                                        <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                                    </button>
+                                    {% if msg.role != 'client' %}
+                                    <button type="button"
+                                            onclick="showToast('Reaction added', 'success', 1200)"
+                                            class="hover:text-electric transition"
+                                            title="React with 👍"
+                                            aria-label="React with thumbs up">
+                                        <i class="fa-regular fa-thumbs-up" aria-hidden="true"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+
+                                <div class="flex items-center gap-1.5">
+                                    {% if msg.role == 'client' %}
+                                    <i class="fa-solid fa-check-double text-[8px]
+                                              {% if msg.display_time %}opacity-70{% endif %}"
+                                       title="Sent"
+                                       aria-label="Sent"></i>
+                                    {% endif %}
+                                    {% if msg.display_time %}
+                                    <time datetime="{{ msg.iso_date }}"
+                                          title="{{ msg.display_date_label }} at {{ msg.display_time }}"
+                                          class="tabular-nums">
+                                        {{ msg.display_time }}
+                                    </time>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -215,53 +277,51 @@
                 <div class="flex flex-col items-center justify-center
                             h-full min-h-[300px] text-center px-6">
                     <div class="w-16 h-16 rounded-full
-                                bg-gradient-to-br from-cyan-500/20 to-purple-500/20
-                                border border-cyan-500/30
+                                bg-electric/10 border border-electric/20
                                 flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-comments text-2xl text-cyan-400"
+                        <i class="fa-solid fa-comments text-2xl text-electric"
                            aria-hidden="true"></i>
                     </div>
-                    <h3 class="font-mono-heading font-bold text-white text-sm mb-1">
-                        Start the Conversation
+                    <h3 class="text-base font-semibold text-ink dark:text-surface mb-1">
+                        Start the conversation
                     </h3>
-                    <p class="text-slate-400 text-xs font-mono max-w-sm leading-relaxed">
-                        Have a question about your project? Send a message below and we'll get back to you within 24 hours.
+                    <p class="text-muted text-xs max-w-sm leading-relaxed">
+                        Have a question about your project? Send a message below
+                        and we'll get back to you within 24 hours.
                     </p>
                 </div>
             {% endif %}
-
         </div>
 
         {# ---------- SCROLL TO BOTTOM FAB ---------- #}
         <button type="button"
                 id="scroll-bottom-btn"
-                onclick="scrollToBottom()"
+                onclick="scrollToBottom(true)"
                 class="hidden absolute bottom-4 right-4 z-10
                        w-11 h-11 rounded-full
-                       bg-cyan-500 text-slate-950
-                       shadow-lg shadow-cyan-500/40
+                       bg-ink dark:bg-white text-white dark:text-ink
+                       shadow-lg
                        flex items-center justify-center
-                       hover:brightness-110 transition
-                       active:scale-95"
+                       hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                       transition active:scale-95"
                 aria-label="Scroll to latest message">
             <i class="fa-solid fa-arrow-down text-base" aria-hidden="true"></i>
             <span id="unread-indicator"
                   class="absolute -top-1 -right-1
                          min-w-[18px] h-[18px] px-1
-                         rounded-full bg-amber-400 text-slate-950
+                         rounded-full bg-orange-500 text-white
                          text-[10px] font-bold
                          flex items-center justify-center
-                         border-2 border-[#0B0E17] hidden"></span>
+                         border-2 border-white dark:border-ink hidden"></span>
         </button>
-
     </div>
 
     {# ---------- MESSAGE INPUT ---------- #}
     <form method="POST"
           action="{{ url_for('client_messages') }}"
           id="message-form"
-          class="p-3 sm:p-4 border-t border-slate-800
-                 bg-slate-900/70 backdrop-blur shrink-0">
+          class="p-3 sm:p-4 border-t border-line dark:border-gray-700
+                 bg-canvas dark:bg-gray-800/40 shrink-0">
 
         <div class="flex items-end gap-2">
 
@@ -274,23 +334,24 @@
                           required
                           maxlength="2000"
                           autocomplete="off"
-                          placeholder="Type your message..."
+                          placeholder="Type your message…"
                           oninput="autoResize(this)"
                           onkeydown="handleKeydown(event)"
                           class="w-full px-4 py-3 rounded-xl
-                                 bg-slate-900 border border-slate-800
-                                 text-sm text-white placeholder-slate-500
+                                 bg-white dark:bg-gray-900
+                                 border border-line dark:border-gray-700
+                                 text-sm text-ink dark:text-surface placeholder-muted
                                  resize-none
                                  max-h-32 overflow-y-auto
-                                 focus:outline-none focus:border-cyan-400
-                                 focus:ring-1 focus:ring-cyan-400/30
+                                 focus:outline-none focus:border-electric
+                                 focus:ring-2 focus:ring-electric/20
                                  transition"></textarea>
 
-                {# Character counter (shows near limit) #}
+                {# Character counter #}
                 <span id="char-counter"
                       class="hidden absolute bottom-2 right-3
-                             text-[10px] font-mono text-slate-500
-                             pointer-events-none"></span>
+                             text-[10px] font-mono text-muted
+                             pointer-events-none tabular-nums"></span>
             </div>
 
             {# Submit button #}
@@ -298,36 +359,104 @@
                     id="message-submit-btn"
                     class="shrink-0 w-11 h-11 sm:w-auto sm:h-auto
                            sm:px-5 sm:py-3
-                           rounded-xl font-mono text-xs font-bold
-                           text-slate-950
-                           bg-gradient-to-r from-cyan-400 to-purple-500
-                           hover:brightness-110
-                           transition active:scale-95
+                           rounded-full text-xs font-medium
+                           text-white
+                           bg-ink dark:bg-white dark:text-ink
+                           hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                           transition-colors active:scale-95
                            disabled:opacity-60 disabled:cursor-not-allowed
                            flex items-center justify-center gap-2">
-                <i class="fa-solid fa-paper-plane" id="send-icon" aria-hidden="true"></i>
+                <i class="fa-solid fa-paper-plane text-[11px]" id="send-icon" aria-hidden="true"></i>
                 <span class="hidden sm:inline">Send</span>
             </button>
 
         </div>
 
-        <p class="mt-2 text-[10px] font-mono text-slate-500">
-            Press <kbd class="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400">Enter</kbd>
-            to send · <kbd class="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400">Shift</kbd>+<kbd class="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400">Enter</kbd>
-            for a new line
+        <p class="mt-2 text-[10px] font-mono text-muted flex items-center gap-2 flex-wrap">
+            <span>
+                <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Enter</kbd>
+                to send
+            </span>
+            <span class="text-muted/50">·</span>
+            <span>
+                <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Shift</kbd>
+                +
+                <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Enter</kbd>
+                new line
+            </span>
+            <span class="text-muted/50">·</span>
+            <span>
+                <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Esc</kbd>
+                blur
+            </span>
         </p>
     </form>
 
 </div>
 
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[110] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// SCROLL MANAGEMENT
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2400) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   SCROLL MANAGEMENT
+============================================================ */
 const container = document.getElementById('messages-container');
 const scrollBtn = document.getElementById('scroll-bottom-btn');
 
-// Track whether user is near the bottom
 let isNearBottom = true;
 
 function scrollToBottom(smooth = false) {
@@ -341,7 +470,7 @@ function scrollToBottom(smooth = false) {
 
 function isScrolledNearBottom() {
     if (!container) return true;
-    const threshold = 100; // pixels from bottom
+    const threshold = 100;
     return (container.scrollHeight - container.scrollTop - container.clientHeight) < threshold;
 }
 
@@ -356,65 +485,72 @@ function hideScrollButton() {
 }
 
 if (container) {
-    // Track scroll position
     container.addEventListener('scroll', () => {
         isNearBottom = isScrolledNearBottom();
-        if (isNearBottom) {
-            hideScrollButton();
-        } else {
-            showScrollButton();
-        }
-    });
+        if (isNearBottom) hideScrollButton();
+        else showScrollButton();
+    }, { passive: true });
 
-    // On page load: jump to bottom
     window.addEventListener('load', () => {
         requestAnimationFrame(() => scrollToBottom());
     });
 
-    // On back/forward navigation: jump to bottom
     window.addEventListener('pageshow', () => {
         requestAnimationFrame(() => scrollToBottom());
     });
 
-    // On DOM ready fallback
     document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(() => scrollToBottom());
     });
 }
 
-// ============================================================
-// TEXTAREA AUTO-RESIZE
-// ============================================================
+/* ============================================================
+   TEXTAREA AUTO-RESIZE + COUNTER
+============================================================ */
 const textarea = document.getElementById('message-input');
 const charCounter = document.getElementById('char-counter');
 const MAX_LENGTH = 2000;
-const COUNTER_THRESHOLD = 1800;
+const COUNTER_THRESHOLD = MAX_LENGTH * 0.9;
 
 function autoResize(el) {
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 128) + 'px';
 
-    // Character counter
     if (charCounter) {
         const len = el.value.length;
         if (len >= COUNTER_THRESHOLD) {
             charCounter.classList.remove('hidden');
             charCounter.textContent = `${len}/${MAX_LENGTH}`;
-            charCounter.classList.toggle('text-red-400', len >= MAX_LENGTH * 0.95);
-            charCounter.classList.toggle('text-slate-500', len < MAX_LENGTH * 0.95);
+            charCounter.classList.remove('text-muted', 'text-orange-500', 'text-red-500');
+            if (len >= MAX_LENGTH * 0.95) charCounter.classList.add('text-red-500');
+            else if (len >= COUNTER_THRESHOLD) charCounter.classList.add('text-orange-500');
+            else charCounter.classList.add('text-muted');
         } else {
             charCounter.classList.add('hidden');
         }
     }
+
+    // Enable/disable submit based on content
+    const hasContent = el.value.trim().length > 0;
+    const submitBtn = document.getElementById('message-submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = !hasContent;
+    }
 }
 
-// ============================================================
-// ENTER TO SEND / SHIFT+ENTER FOR NEWLINE
-// ============================================================
+/* ============================================================
+   ENTER TO SEND
+============================================================ */
 const form = document.getElementById('message-form');
 
 function handleKeydown(e) {
+    // Esc → blur
+    if (e.key === 'Escape') {
+        e.target.blur();
+        return;
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         submitMessage();
@@ -426,13 +562,12 @@ function submitMessage() {
     const value = textarea.value.trim();
     if (!value) return;
 
-    // Submit via form
     form.requestSubmit ? form.requestSubmit() : form.submit();
 }
 
-// ============================================================
-// SUBMIT FEEDBACK
-// ============================================================
+/* ============================================================
+   SUBMIT FEEDBACK
+============================================================ */
 const submitBtn = document.getElementById('message-submit-btn');
 const sendIcon = document.getElementById('send-icon');
 
@@ -444,15 +579,14 @@ if (form && submitBtn && sendIcon) {
             return;
         }
 
-        // Disable and show spinner
         submitBtn.disabled = true;
-        sendIcon.className = 'fa-solid fa-circle-notch fa-spin';
+        sendIcon.className = 'fa-solid fa-circle-notch fa-spin text-[11px]';
     });
 }
 
-// ============================================================
-// COPY MESSAGE
-// ============================================================
+/* ============================================================
+   COPY MESSAGE
+============================================================ */
 function copyMessage(btn, text) {
     if (!text) return;
     const decoded = (() => {
@@ -465,13 +599,15 @@ function copyMessage(btn, text) {
 
     const done = () => {
         const original = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400" aria-hidden="true"></i> Copied';
-        btn.classList.add('opacity-100', 'text-emerald-400');
+        btn.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
+        btn.classList.add('text-teal');
         setTimeout(() => {
             btn.innerHTML = original;
-            btn.classList.remove('opacity-100', 'text-emerald-400');
-            btn.classList.add('opacity-0', 'group-hover:opacity-100');
+            btn.classList.remove('text-teal');
         }, 1200);
+        if (typeof showToast === 'function') {
+            showToast('Message copied', 'success', 1400);
+        }
     };
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -497,9 +633,9 @@ function fallbackCopy(text, cb) {
     }
 }
 
-// ============================================================
-// EXPAND/COLLAPSE LONG MESSAGES
-// ============================================================
+/* ============================================================
+   EXPAND/COLLAPSE LONG MESSAGES
+============================================================ */
 function toggleMessageBody(index, btn) {
     const el = document.getElementById(`msg-body-${index}`);
     if (!el) return;
@@ -512,14 +648,44 @@ function toggleMessageBody(index, btn) {
     } else {
         el.classList.add('line-clamp-6');
         btn.textContent = 'Show more';
-        // Scroll up to keep the message in view
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 
-// ============================================================
-// INITIALIZE
-// ============================================================
+/* ============================================================
+   FOCUS COMPOSER
+============================================================ */
+function focusComposer() {
+    textarea?.focus();
+    textarea?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    // "/" → focus composer (when not typing)
+    if (e.key === '/' && !isTyping && !cmd && !e.altKey) {
+        e.preventDefault();
+        focusComposer();
+        return;
+    }
+
+    // "G" → scroll to latest
+    if (e.key.toLowerCase() === 'g' && !isTyping && !cmd && !e.altKey) {
+        e.preventDefault();
+        scrollToBottom(true);
+    }
+});
+
+/* ============================================================
+   INITIALIZE
+============================================================ */
 if (textarea) {
     textarea.addEventListener('input', () => autoResize(textarea));
     autoResize(textarea);
@@ -527,7 +693,7 @@ if (textarea) {
 </script>
 
 <style>
-    /* Line clamp utility (for long messages) */
+    /* Line clamp for long messages */
     .line-clamp-6 {
         display: -webkit-box;
         -webkit-line-clamp: 6;
@@ -535,38 +701,34 @@ if (textarea) {
         overflow: hidden;
     }
 
-    /* Focus-visible ring */
-    *:focus-visible {
-        outline: 2px solid rgba(0, 242, 254, 0.6);
-        outline-offset: 2px;
-    }
-
     /* Smooth scrolling */
     #messages-container {
         scroll-behavior: smooth;
     }
 
-    /* Subtle scrollbar styling inside chat */
-    #messages-container::-webkit-scrollbar { width: 6px; }
+    /* Subtle scrollbar inside chat */
+    #messages-container::-webkit-scrollbar { width: 8px; }
+    #messages-container::-webkit-scrollbar-track { background: transparent; }
     #messages-container::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.3);
-        border-radius: 3px;
+        background: rgba(107, 114, 128, 0.3);
+        border-radius: 4px;
     }
     #messages-container::-webkit-scrollbar-thumb:hover {
-        background: rgba(148, 163, 184, 0.5);
+        background: rgba(107, 114, 128, 0.5);
     }
 
-    /* Reduce motion respect */
+    /* Fade-in for message rows */
+    .message-row {
+        animation: messageIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes messageIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         #messages-container { scroll-behavior: auto; }
         * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-    }
-
-    /* Kbd styling for keyboard hints */
-    kbd {
-        font-family: inherit;
-        font-size: 0.9em;
-        line-height: 1;
     }
 </style>
 

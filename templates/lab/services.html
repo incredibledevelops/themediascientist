@@ -1,83 +1,202 @@
 {% extends 'lab/base.html' %}
 {% block title %}Services{% endblock %}
+{% block breadcrumb %}Services{% endblock %}
 {% block page_title %}Services & Pricing{% endblock %}
 {% block page_subtitle %}Manage your service offerings and pricing plans.{% endblock %}
+
+{% block page_actions %}
+<button type="button"
+        onclick="focusNewService()"
+        class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+               text-[12px] font-medium
+               text-white bg-ink dark:bg-white dark:text-ink
+               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+               transition-colors"
+        title="New service (N)">
+    <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
+    <span>New Service</span>
+</button>
+{% endblock %}
 
 {% block content %}
 
 {# ============================================================
    SUMMARY STATS
 ============================================================ #}
-{% set ns = namespace(total_plans=0) %}
+{% set ns = namespace(total_plans=0, active=0, colors={}) %}
 {% for svc in services %}
     {% set ns.total_plans = ns.total_plans + (svc.plans|length if svc.plans else 0) %}
+    {% set c = svc.color if svc.color in ['electric','teal','violet','orange'] else 'electric' %}
+    {% set _ = ns.colors.update({c: (ns.colors.get(c, 0) + 1)}) %}
+    {% if svc.plans and svc.plans|length > 0 %}{% set ns.active = ns.active + 1 %}{% endif %}
 {% endfor %}
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-tags text-cyan-400" aria-hidden="true"></i>
-            Services
+    {# Services #}
+    <a href="#services-list" data-jump
+       class="text-left card card-hover p-4 sm:p-5 group
+              focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Services</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ services|length }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-tags text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ services|length }}
+        <p class="text-[10px] font-mono text-muted">Offered</p>
+    </a>
+
+    {# Plans #}
+    <div class="text-left card p-4 sm:p-5">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Plans</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.total_plans }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center">
+                <i class="fa-solid fa-layer-group text-sm" aria-hidden="true"></i>
+            </div>
         </div>
+        <p class="text-[10px] font-mono text-muted">Across all services</p>
     </div>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-layer-group text-purple-400" aria-hidden="true"></i>
-            Plans
+    {# Active #}
+    <div class="text-left card p-4 sm:p-5">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Active</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.active }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center">
+                <i class="fa-solid fa-circle-check text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.total_plans }}
-        </div>
+        <p class="text-[10px] font-mono text-muted">With pricing set</p>
     </div>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-list-ol text-emerald-400" aria-hidden="true"></i>
-            Order
-        </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {% if services %}Sorted{% else %}—{% endif %}
+    {# Colors #}
+    <div class="text-left card p-4 sm:p-5">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Colors</p>
+                <div class="flex flex-wrap items-center gap-1 mt-2">
+                    {% set color_map = {
+                        'electric': 'bg-electric',
+                        'teal': 'bg-teal',
+                        'violet': 'bg-violet-500',
+                        'orange': 'bg-orange-500'
+                    } %}
+                    {% for c, count in ns.colors.items() %}
+                    {% if count > 0 %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                                 bg-canvas dark:bg-gray-800
+                                 border border-line dark:border-gray-700
+                                 text-[10px] font-mono text-ink dark:text-surface">
+                        <span class="w-2 h-2 rounded-full {{ color_map.get(c, 'bg-electric') }}"
+                              aria-hidden="true"></span>
+                        {{ count }}
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                    {% if services|length == 0 %}
+                    <span class="text-[11px] font-mono text-muted">—</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-violet-500/10 border border-violet-500/20 text-violet-500
+                        flex items-center justify-center">
+                <i class="fa-solid fa-palette text-sm" aria-hidden="true"></i>
+            </div>
         </div>
     </div>
-
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-signal text-orange-400" aria-hidden="true"></i>
-            Status
-        </div>
-        <div class="text-base sm:text-xl font-bold font-mono text-white truncate">
-            {% if services %}
-                <span class="text-emeraldMint">Live</span>
-            {% else %}
-                <span class="text-slate-500">Empty</span>
-            {% endif %}
-        </div>
-    </div>
-
 </div>
 
 {# ============================================================
-   SEARCH
+   TOOLBAR
 ============================================================ #}
 {% if services %}
-<div class="glass-card rounded-2xl border border-slate-800 p-4 mb-6">
-    <div class="relative">
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
-                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
-        <input type="text"
-               id="service-search"
-               placeholder="Search services by title or description..."
-               autocomplete="off"
-               class="w-full pl-10 pr-4 py-2.5 rounded-xl
-                      bg-slate-900 border border-slate-800
-                      text-sm text-white placeholder-slate-500
-                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                      transition">
+<div class="card p-4 mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
+
+        <div class="relative flex-1 lg:max-w-md">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
+                      text-muted text-xs pointer-events-none" aria-hidden="true"></i>
+            <input type="text"
+                   id="service-search"
+                   placeholder="Search by title or description…"
+                   autocomplete="off"
+                   spellcheck="false"
+                   aria-label="Search services"
+                   class="w-full pl-10 pr-10 py-2.5 rounded-xl
+                          bg-canvas dark:bg-gray-800/50
+                          border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface placeholder-muted
+                          focus:outline-none focus:border-electric
+                          focus:ring-2 focus:ring-electric/20 transition">
+            <button type="button"
+                    id="search-clear"
+                    onclick="clearSearch()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2
+                           w-7 h-7 rounded-md flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-surface dark:hover:bg-gray-700 transition"
+                    aria-label="Clear search">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="shrink-0">
+            <label for="service-sort" class="sr-only">Sort services</label>
+            <div class="relative">
+                <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
+                          text-muted text-xs pointer-events-none" aria-hidden="true"></i>
+                <select id="service-sort"
+                        class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
+                               bg-canvas dark:bg-gray-800/50
+                               border border-line dark:border-gray-700
+                               text-xs font-mono text-ink dark:text-surface cursor-pointer
+                               focus:outline-none focus:border-electric transition">
+                    <option value="order">Display order</option>
+                    <option value="title">Title (A–Z)</option>
+                    <option value="plans">Most plans</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
+                          text-muted text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 pt-3 border-t border-line dark:border-gray-700
+                text-[10px] font-mono text-muted flex items-center gap-2 flex-wrap">
+        <i class="fa-solid fa-circle-info text-electric shrink-0" aria-hidden="true"></i>
+        <span>
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">/</kbd>
+            search ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">N</kbd>
+            new service ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Esc</kbd>
+            close panel
+        </span>
     </div>
 </div>
 {% endif %}
@@ -88,296 +207,399 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     {# ==========================================================
-       LEFT: ADD SERVICE FORM
+       LEFT: Add New Service
     ========================================================== #}
     <aside class="lg:col-span-1">
 
-        <details class="lg:!block group glass-card rounded-2xl border border-slate-800
-                        lg:sticky lg:top-24"
+        <details class="group card overflow-hidden lg:sticky lg:top-24"
+                 id="add-service-details"
                  {% if not services %}open{% endif %}>
 
-            <summary class="lg:!hidden p-4 cursor-pointer flex items-center justify-between gap-3
-                            border-b border-slate-800 list-none">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-plus text-cyan-400" aria-hidden="true"></i>
+            <summary class="lg:hidden p-4 cursor-pointer flex items-center justify-between gap-3
+                            border-b border-line dark:border-gray-700 list-none">
+                <h3 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-plus text-electric text-xs" aria-hidden="true"></i>
                     Add New Service
                 </h3>
-                <i class="fa-solid fa-chevron-down text-slate-400 text-xs
+                <i class="fa-solid fa-chevron-down text-muted text-xs
                           group-open:rotate-180 transition-transform" aria-hidden="true"></i>
             </summary>
 
-            <header class="hidden lg:block p-5 border-b border-slate-800">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-plus text-cyan-400" aria-hidden="true"></i>
+            <header class="hidden lg:block p-5 border-b border-line dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-plus text-electric text-xs" aria-hidden="true"></i>
                     Add New Service
                 </h3>
-                <p class="text-[10px] font-mono text-slate-500 mt-1">
-                    Plans can be added after creating the service.
+                <p class="text-[11px] text-muted mt-1">
+                    Attach pricing plans after creating the service.
                 </p>
             </header>
 
             <form method="POST"
                   action="{{ url_for('lab_service_create') }}"
                   id="create-service-form"
-                  class="p-4 sm:p-5 space-y-3.5">
+                  class="p-4 sm:p-5 space-y-4"
+                  autocomplete="off"
+                  novalidate>
 
                 {# Title #}
                 <div>
-                    <label for="new-service-title"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Service Title <span class="text-cyan-400">*</span>
-                    </label>
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="new-service-title"
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                            Service Title <span class="text-electric">*</span>
+                        </label>
+                        <span class="text-[10px] font-mono text-muted tabular-nums"
+                              data-counter-for="new-service-title">0 / 80</span>
+                    </div>
                     <input type="text"
                            id="new-service-title"
                            name="title"
                            required
                            maxlength="80"
                            placeholder="e.g. Video & Photography"
-                           class="w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
+                           class="w-full px-4 py-3 rounded-xl
+                                  bg-canvas dark:bg-gray-800/50
+                                  border border-line dark:border-gray-700
+                                  text-sm text-ink dark:text-surface placeholder-muted
+                                  focus:outline-none focus:border-electric
+                                  focus:ring-2 focus:ring-electric/20 transition">
                 </div>
 
                 {# Slug #}
                 <div>
-                    <label for="new-service-slug"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Slug
-                    </label>
-                    <input type="text"
-                           id="new-service-slug"
-                           name="slug"
-                           maxlength="60"
-                           placeholder="video-photography"
-                           class="w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500 font-mono
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
-                    <p class="text-[10px] font-mono text-slate-500 mt-1.5">
-                        URL-friendly identifier (lowercase, dashes).
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="new-service-slug"
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                            URL Slug
+                        </label>
+                        <button type="button"
+                                onclick="autoSlug()"
+                                class="text-[10px] font-mono text-electric hover:text-electric/80 transition">
+                            Auto-fill
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2
+                                     text-muted text-xs font-mono pointer-events-none">
+                            /services/
+                        </span>
+                        <input type="text"
+                               id="new-service-slug"
+                               name="slug"
+                               maxlength="60"
+                               spellcheck="false"
+                               placeholder="video-photography"
+                               class="w-full pl-[5.5rem] pr-4 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface placeholder-muted font-mono
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition">
+                    </div>
+                    <p class="text-[11px] text-muted mt-1.5">
+                        Leave blank to auto-generate from the title.
                     </p>
                 </div>
 
-                {# Icon + Color #}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
+                {# Icon #}
+                <div>
+                    <div class="flex items-baseline justify-between mb-2">
                         <label for="new-service-icon"
-                               class="block text-[10px] font-mono text-slate-400
-                                      uppercase tracking-wider mb-1.5">
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
                             Icon
                         </label>
-                        <div class="relative">
-                            <input type="text"
-                                   id="new-service-icon"
-                                   name="icon"
-                                   value="fa-cog"
-                                   maxlength="50"
-                                   class="icon-input w-full pl-3.5 pr-12 py-2.5 rounded-xl
-                                          bg-slate-900 border border-slate-800
-                                          text-sm text-white font-mono
-                                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                          transition"
-                                   placeholder="fa-video">
-                            <div class="absolute right-2 top-1/2 -translate-y-1/2
-                                        w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30
-                                        flex items-center justify-center text-cyan-400
-                                        pointer-events-none"
-                                 title="Preview">
-                                <i class="fa-solid fa-cog icon-preview text-sm" aria-hidden="true"></i>
-                            </div>
+                        <button type="button"
+                                onclick="openIconPicker()"
+                                class="text-[10px] font-mono text-electric hover:text-electric/80 transition">
+                            Browse all
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <input type="text"
+                               id="new-service-icon"
+                               name="icon"
+                               value="fa-cog"
+                               maxlength="50"
+                               spellcheck="false"
+                               class="icon-input w-full pl-4 pr-14 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface font-mono
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition"
+                               placeholder="fa-video">
+                        <div class="absolute right-2 top-1/2 -translate-y-1/2
+                                    w-9 h-9 rounded-lg
+                                    bg-electric/10 border border-electric/20
+                                    flex items-center justify-center text-electric
+                                    pointer-events-none">
+                            <i class="fa-solid fa-cog icon-preview text-sm" aria-hidden="true"></i>
                         </div>
-                        <p class="text-[9px] font-mono text-slate-500 mt-1">
-                            Font Awesome class
-                        </p>
                     </div>
 
-                    <div>
-                        <label for="new-service-color"
-                               class="block text-[10px] font-mono text-slate-400
-                                      uppercase tracking-wider mb-1.5">
-                            Color
-                        </label>
-                        <select id="new-service-color"
-                                name="color"
-                                class="color-input w-full px-3.5 py-2.5 rounded-xl
-                                       bg-slate-900 border border-slate-800
-                                       text-sm text-slate-200
-                                       focus:outline-none focus:border-cyan-400 transition">
-                            <option value="cyan">Cyan</option>
-                            <option value="purple">Purple</option>
-                            <option value="emerald">Emerald</option>
-                            <option value="orange">Orange</option>
-                        </select>
-                        <div class="mt-1.5 flex items-center gap-1.5 text-[9px] font-mono">
-                            <span class="w-2 h-2 rounded-full color-preview"
-                                  style="background:#00F2FE;"></span>
-                            <span class="text-slate-500">Preview</span>
-                        </div>
+                    {# Quick picks #}
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        {% set suggestions = ['fa-camera', 'fa-video', 'fa-film', 'fa-code', 'fa-palette', 'fa-bolt', 'fa-wand-magic-sparkles', 'fa-bullhorn', 'fa-pen-fancy', 'fa-scissors'] %}
+                        {% for icon in suggestions %}
+                        <button type="button"
+                                onclick="setIcon('{{ icon }}')"
+                                class="w-7 h-7 rounded-lg flex items-center justify-center
+                                       text-[10px] text-muted
+                                       hover:text-electric hover:bg-electric/5
+                                       border border-transparent hover:border-electric/20
+                                       transition"
+                                title="{{ icon }}">
+                            <i class="fa-solid {{ icon }}" aria-hidden="true"></i>
+                        </button>
+                        {% endfor %}
                     </div>
                 </div>
 
-                {# Order #}
-                <div>
-                    <label for="new-service-order"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Display Order
-                    </label>
-                    <input type="number"
-                           id="new-service-order"
-                           name="order"
-                           value="99"
-                           min="1" max="999"
-                           class="w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
-                    <p class="text-[10px] font-mono text-slate-500 mt-1.5">
-                        Lower number = appears first.
-                    </p>
+                {# Color + Order #}
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="new-service-color"
+                               class="block text-[10px] font-mono text-muted
+                                      uppercase tracking-widest mb-2">
+                            Accent Color
+                        </label>
+                        <div class="flex flex-wrap gap-1.5">
+                            {% set color_options = [
+                                ('electric', 'bg-electric', 'Electric'),
+                                ('teal', 'bg-teal', 'Teal'),
+                                ('violet', 'bg-violet-500', 'Violet'),
+                                ('orange', 'bg-orange-500', 'Orange')
+                            ] %}
+                            {% for value, bg_class, label in color_options %}
+                            <label class="color-swatch cursor-pointer" title="{{ label }}">
+                                <input type="radio"
+                                       name="color"
+                                       value="{{ value }}"
+                                       {% if loop.first %}checked{% endif %}
+                                       class="sr-only peer">
+                                <div class="w-8 h-8 rounded-lg {{ bg_class }}
+                                            border-2 border-transparent
+                                            peer-checked:border-ink dark:peer-checked:border-white
+                                            peer-checked:ring-2 peer-checked:ring-offset-2
+                                            peer-checked:ring-offset-canvas dark:peer-checked:ring-offset-ink
+                                            peer-checked:ring-electric/30
+                                            transition-all"></div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="new-service-order"
+                               class="block text-[10px] font-mono text-muted
+                                      uppercase tracking-widest mb-2">
+                            Display Order
+                        </label>
+                        <input type="number"
+                               id="new-service-order"
+                               name="order"
+                               value="{{ (services|length + 1) if services else 1 }}"
+                               min="1" max="999"
+                               class="w-full px-4 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface tabular-nums
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition">
+                    </div>
                 </div>
 
                 {# Description #}
                 <div>
-                    <label for="new-service-description"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Description
-                    </label>
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="new-service-description"
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                            Description
+                        </label>
+                        <span class="text-[10px] font-mono text-muted tabular-nums"
+                              data-counter-for="new-service-description">0 / 300</span>
+                    </div>
                     <textarea id="new-service-description"
                               name="description"
                               rows="3"
                               maxlength="300"
-                              placeholder="Short summary of what this service covers..."
-                              class="w-full px-3.5 py-2.5 rounded-xl
-                                     bg-slate-900 border border-slate-800
-                                     text-sm text-white placeholder-slate-500
-                                     resize-y min-h-[80px]
-                                     focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                     transition"></textarea>
+                              placeholder="Short summary of what this service covers…"
+                              class="w-full px-4 py-3 rounded-xl
+                                     bg-canvas dark:bg-gray-800/50
+                                     border border-line dark:border-gray-700
+                                     text-sm text-ink dark:text-surface placeholder-muted
+                                     resize-y min-h-[88px]
+                                     focus:outline-none focus:border-electric
+                                     focus:ring-2 focus:ring-electric/20 transition"></textarea>
                 </div>
 
                 <button type="submit"
                         id="create-service-btn"
-                        class="w-full py-3 rounded-xl text-xs font-mono font-bold
-                               text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
-                               hover:brightness-110 transition active:scale-[0.98]
-                               inline-flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                    <span id="create-service-label">Create Service</span>
+                        class="w-full py-3 rounded-full
+                               text-xs font-medium text-white
+                               bg-ink dark:bg-white dark:text-ink
+                               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                               transition-colors
+                               inline-flex items-center justify-center gap-2
+                               disabled:opacity-70 disabled:cursor-wait">
+                    <i class="fa-solid fa-plus text-[10px]" data-create-icon aria-hidden="true"></i>
+                    <span data-create-label>Create Service</span>
                 </button>
             </form>
         </details>
     </aside>
 
     {# ==========================================================
-       RIGHT: SERVICES LIST
+       RIGHT: Services List
     ========================================================== #}
-    <div class="lg:col-span-2 space-y-4">
+    <div class="lg:col-span-2 space-y-4" id="services-list">
 
         {% for svc in services %}
-        {% set svc_color = svc.color if svc.color in ['cyan','purple','emerald','orange'] else 'cyan' %}
+        {% set svc_color = svc.color if svc.color in ['electric','teal','violet','orange'] else 'electric' %}
         {% set plan_count = svc.plans|length if svc.plans else 0 %}
 
-        <article class="service-card glass-card rounded-2xl border border-slate-800
-                        overflow-hidden hover:border-{{ svc_color }}-500/40 transition-colors"
-                 data-search="{{ (svc.title ~ ' ' ~ (svc.description or ''))|lower }}">
+        {% if svc_color == 'electric' %}
+            {% set accent_bg = 'bg-electric/10' %}
+            {% set accent_border = 'border-electric/30' %}
+            {% set accent_text = 'text-electric' %}
+            {% set accent_solid = 'bg-electric' %}
+        {% elif svc_color == 'teal' %}
+            {% set accent_bg = 'bg-teal/10' %}
+            {% set accent_border = 'border-teal/30' %}
+            {% set accent_text = 'text-teal' %}
+            {% set accent_solid = 'bg-teal' %}
+        {% elif svc_color == 'violet' %}
+            {% set accent_bg = 'bg-violet-500/10' %}
+            {% set accent_border = 'border-violet-500/30' %}
+            {% set accent_text = 'text-violet-500' %}
+            {% set accent_solid = 'bg-violet-500' %}
+        {% else %}
+            {% set accent_bg = 'bg-orange-500/10' %}
+            {% set accent_border = 'border-orange-500/30' %}
+            {% set accent_text = 'text-orange-500' %}
+            {% set accent_solid = 'bg-orange-500' %}
+        {% endif %}
 
-            {# ============================================================
-               CARD HEADER
-            ============================================================ #}
+        <article class="service-card card overflow-hidden
+                        hover:border-electric/30 transition-colors"
+                 data-search="{{ (svc.title ~ ' ' ~ (svc.description or ''))|lower }}"
+                 data-title="{{ svc.title|lower }}"
+                 data-order="{{ svc.order or 99 }}"
+                 data-plans="{{ plan_count }}"
+                 data-service-id="{{ svc._id }}">
+
+            {# Header #}
             <header class="p-4 sm:p-5 flex items-start justify-between gap-3
-                           border-b border-slate-800 bg-slate-900/40">
+                           border-b border-line dark:border-gray-700">
 
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                     <div class="shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl
-                                bg-{{ svc_color }}-500/10 border border-{{ svc_color }}-500/30
+                                {{ accent_bg }} border {{ accent_border }}
                                 flex items-center justify-center
-                                text-{{ svc_color }}-400 text-lg">
+                                {{ accent_text }} text-lg
+                                transition-transform hover:scale-105">
                         <i class="fa-solid {{ svc.icon or 'fa-cog' }}" aria-hidden="true"></i>
                     </div>
 
                     <div class="min-w-0 flex-1">
-                        <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base truncate">
+                        <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                                   truncate tracking-tight"
+                            title="{{ svc.title }}">
                             {{ svc.title }}
                         </h3>
-                        <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 text-[10px] font-mono text-slate-500">
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-3
+                                    mt-1 text-[10px] font-mono text-muted">
                             <span class="inline-flex items-center gap-1">
-                                <i class="fa-solid fa-sort-numeric-ascending" aria-hidden="true"></i>
+                                <i class="fa-solid fa-sort-numeric-ascending text-[9px]" aria-hidden="true"></i>
                                 Order {{ svc.order or '—' }}
                             </span>
                             <span class="inline-flex items-center gap-1">
-                                <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                                <i class="fa-solid fa-layer-group text-[9px]" aria-hidden="true"></i>
                                 {{ plan_count }} plan{% if plan_count != 1 %}s{% endif %}
                             </span>
-                            <span class="inline-flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-{{ svc_color }}-400"></span>
-                                {{ svc_color|title }}
+                            {% if svc.slug %}
+                            <span class="inline-flex items-center gap-1 truncate max-w-[140px]"
+                                  title="/services/{{ svc.slug }}">
+                                <i class="fa-solid fa-link text-[9px]" aria-hidden="true"></i>
+                                <span class="truncate">/{{ svc.slug }}</span>
                             </span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
 
-                <div class="shrink-0 flex items-center gap-1.5">
+                <div class="shrink-0 flex items-center gap-1">
                     <button type="button"
                             onclick="toggleServiceEdit('{{ svc._id }}')"
-                            class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700
-                                   flex items-center justify-center text-slate-300
-                                   hover:bg-slate-700 hover:border-slate-600 transition"
+                            class="service-edit-toggle w-9 h-9 rounded-lg
+                                   bg-canvas dark:bg-gray-800
+                                   border border-line dark:border-gray-700
+                                   flex items-center justify-center
+                                   text-muted
+                                   hover:text-ink dark:hover:text-surface
+                                   hover:border-ink dark:hover:border-surface
+                                   transition"
+                            data-service-id="{{ svc._id }}"
                             title="Edit service"
-                            aria-label="Edit {{ svc.title }}">
+                            aria-label="Edit {{ svc.title|e }}"
+                            aria-expanded="false">
                         <i class="fa-solid fa-pen text-xs" aria-hidden="true"></i>
                     </button>
-                    <form method="POST"
-                          action="{{ url_for('lab_service_delete', service_id=svc._id) }}"
-                          onsubmit="return confirm('⚠️ Delete &quot;{{ svc.title }}&quot;?\n\nAll {{ plan_count }} plans will also be removed. This cannot be undone.');">
-                        <button type="submit"
-                                class="w-9 h-9 rounded-lg bg-red-950/50 border border-red-500/30
-                                       flex items-center justify-center text-red-400
-                                       hover:bg-red-500/20 hover:border-red-500/50 transition"
-                                title="Delete service"
-                                aria-label="Delete {{ svc.title }}">
-                            <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
-                        </button>
-                    </form>
+
+                    <button type="button"
+                            onclick="requestDeleteService('{{ svc._id }}', '{{ svc.title|e }}', {{ plan_count }})"
+                            class="w-9 h-9 rounded-lg
+                                   bg-red-500/5 border border-red-500/20
+                                   flex items-center justify-center text-red-500
+                                   hover:bg-red-500/10 hover:border-red-500/40
+                                   transition"
+                            title="Delete service"
+                            aria-label="Delete {{ svc.title|e }}">
+                        <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                    </button>
                 </div>
             </header>
 
-            {# ============================================================
-               DESCRIPTION + PLANS PREVIEW
-            ============================================================ #}
+            {# Description + Plans preview #}
             <div class="p-4 sm:p-5 space-y-4">
 
                 {% if svc.description %}
-                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                <p class="text-xs sm:text-sm text-muted leading-relaxed">
                     {{ svc.description }}
                 </p>
                 {% endif %}
 
                 {% if svc.plans %}
                 <div class="space-y-2">
-                    <p class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                        Plans
-                    </p>
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] font-mono text-muted uppercase tracking-widest">
+                            Pricing Plans
+                        </p>
+                        <span class="text-[10px] font-mono text-muted tabular-nums">
+                            {{ plan_count }} total
+                        </span>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {% for plan in svc.plans[:4] %}
-                        <div class="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                        <div class="p-3 rounded-lg
+                                    bg-canvas dark:bg-gray-800/50
+                                    border border-line dark:border-gray-700
+                                    hover:{{ accent_border }} transition-colors">
                             <div class="flex items-start justify-between gap-2 mb-1">
-                                <span class="text-xs font-mono font-bold text-{{ svc_color }}-300 truncate">
+                                <span class="text-xs font-mono font-medium {{ accent_text }} truncate"
+                                      title="{{ plan.name }}">
                                     {{ plan.name }}
                                 </span>
-                                <span class="text-[10px] font-mono font-bold text-emeraldMint whitespace-nowrap shrink-0">
+                                <span class="text-[11px] font-mono font-semibold text-teal
+                                             whitespace-nowrap shrink-0">
                                     {{ plan.price }}
                                 </span>
                             </div>
                             {% if plan.desc %}
-                            <p class="text-[10px] text-slate-500 line-clamp-2 leading-snug">
+                            <p class="text-[11px] text-muted line-clamp-2 leading-snug">
                                 {{ plan.desc }}
                             </p>
                             {% endif %}
@@ -385,19 +607,21 @@
                         {% endfor %}
                     </div>
                     {% if svc.plans|length > 4 %}
-                    <p class="text-[10px] font-mono text-slate-500 text-center">
+                    <p class="text-[10px] font-mono text-muted text-center">
                         +{{ svc.plans|length - 4 }} more plan{% if svc.plans|length - 4 != 1 %}s{% endif %}
                     </p>
                     {% endif %}
                 </div>
                 {% else %}
-                <div class="p-4 rounded-lg bg-slate-900/40 border border-dashed border-slate-700
+                <div class="p-4 rounded-lg
+                            bg-canvas dark:bg-gray-800/40
+                            border border-dashed border-line dark:border-gray-700
                             text-center">
-                    <p class="text-[11px] font-mono text-slate-500">
+                    <p class="text-[11px] font-mono text-muted">
                         No pricing plans yet.
                         <button type="button"
                                 onclick="toggleServiceEdit('{{ svc._id }}')"
-                                class="text-cyan-400 hover:text-cyan-300 underline transition">
+                                class="text-electric hover:text-electric/80 underline transition">
                             Add one now
                         </button>
                     </p>
@@ -405,63 +629,69 @@
                 {% endif %}
             </div>
 
-            {# ============================================================
-               EDIT PANEL
-            ============================================================ #}
+            {# Edit Panel #}
             <div id="edit-{{ svc._id }}"
-                 class="hidden border-t border-slate-800 bg-slate-950/40
+                 class="hidden border-t border-line dark:border-gray-700
+                        bg-canvas dark:bg-gray-800/40
                         p-4 sm:p-5 space-y-5">
 
-                <p class="text-[10px] font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                <p class="text-[10px] font-mono {{ accent_text }} uppercase tracking-widest
+                          flex items-center gap-1.5">
                     <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
                     Edit Service &amp; Plans
                 </p>
 
-                {# ---------------- Service details ---------------- #}
+                {# Service details form #}
                 <form method="POST"
                       action="{{ url_for('lab_service_update', service_id=svc._id) }}"
-                      class="space-y-3">
+                      class="space-y-3"
+                      data-dirty-guard>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
                         <div class="sm:col-span-2">
-                            <label class="block text-[10px] font-mono text-slate-400
-                                          uppercase tracking-wider mb-1.5">
+                            <label class="block text-[10px] font-mono text-muted
+                                          uppercase tracking-widest mb-1.5">
                                 Title
                             </label>
                             <input type="text" name="title"
                                    value="{{ svc.title }}"
                                    required maxlength="80"
                                    class="w-full px-3 py-2.5 rounded-lg
-                                          bg-slate-900 border border-slate-800
-                                          text-xs text-white
-                                          focus:outline-none focus:border-cyan-400 transition">
+                                          bg-white dark:bg-gray-900
+                                          border border-line dark:border-gray-700
+                                          text-sm text-ink dark:text-surface
+                                          focus:outline-none focus:border-electric transition">
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-mono text-slate-400
-                                          uppercase tracking-wider mb-1.5">
+                            <label class="block text-[10px] font-mono text-muted
+                                          uppercase tracking-widest mb-1.5">
                                 Icon
                             </label>
                             <input type="text" name="icon"
                                    value="{{ svc.icon or 'fa-cog' }}"
                                    maxlength="50"
+                                   spellcheck="false"
                                    class="w-full px-3 py-2.5 rounded-lg
-                                          bg-slate-900 border border-slate-800
-                                          text-xs text-white font-mono
-                                          focus:outline-none focus:border-cyan-400 transition">
+                                          bg-white dark:bg-gray-900
+                                          border border-line dark:border-gray-700
+                                          text-sm text-ink dark:text-surface font-mono
+                                          focus:outline-none focus:border-electric transition">
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-mono text-slate-400
-                                          uppercase tracking-wider mb-1.5">
+                            <label class="block text-[10px] font-mono text-muted
+                                          uppercase tracking-widest mb-1.5">
                                 Color
                             </label>
                             <select name="color"
                                     class="w-full px-3 py-2.5 rounded-lg
-                                           bg-slate-900 border border-slate-800
-                                           text-xs text-slate-200
-                                           focus:outline-none focus:border-cyan-400 transition">
-                                {% for c in ['cyan','purple','emerald','orange'] %}
+                                           bg-white dark:bg-gray-900
+                                           border border-line dark:border-gray-700
+                                           text-sm text-ink dark:text-surface
+                                           focus:outline-none focus:border-electric transition">
+                                {% for c in ['electric','teal','violet','orange'] %}
                                 <option value="{{ c }}" {% if svc_color==c %}selected{% endif %}>
                                     {{ c|title }}
                                 </option>
@@ -470,81 +700,120 @@
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-mono text-slate-400
-                                          uppercase tracking-wider mb-1.5">
-                                Order
+                            <label class="block text-[10px] font-mono text-muted
+                                          uppercase tracking-widest mb-1.5">
+                                Display Order
                             </label>
                             <input type="number" name="order"
                                    value="{{ svc.order or 99 }}"
                                    min="1" max="999"
                                    class="w-full px-3 py-2.5 rounded-lg
-                                          bg-slate-900 border border-slate-800
-                                          text-xs text-white
-                                          focus:outline-none focus:border-cyan-400 transition">
+                                          bg-white dark:bg-gray-900
+                                          border border-line dark:border-gray-700
+                                          text-sm text-ink dark:text-surface tabular-nums
+                                          focus:outline-none focus:border-electric transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-mono text-muted
+                                          uppercase tracking-widest mb-1.5">
+                                URL Slug
+                            </label>
+                            <input type="text" name="slug"
+                                   value="{{ svc.slug or '' }}"
+                                   maxlength="60"
+                                   spellcheck="false"
+                                   class="w-full px-3 py-2.5 rounded-lg
+                                          bg-white dark:bg-gray-900
+                                          border border-line dark:border-gray-700
+                                          text-sm text-ink dark:text-surface font-mono
+                                          focus:outline-none focus:border-electric transition">
                         </div>
 
                         <div class="sm:col-span-2">
-                            <label class="block text-[10px] font-mono text-slate-400
-                                          uppercase tracking-wider mb-1.5">
+                            <label class="block text-[10px] font-mono text-muted
+                                          uppercase tracking-widest mb-1.5">
                                 Description
                             </label>
                             <textarea name="description"
-                                      rows="2"
+                                      rows="3"
                                       maxlength="300"
                                       class="w-full px-3 py-2.5 rounded-lg
-                                             bg-slate-900 border border-slate-800
-                                             text-xs text-white resize-y
-                                             focus:outline-none focus:border-cyan-400 transition">{{ svc.description or '' }}</textarea>
+                                             bg-white dark:bg-gray-900
+                                             border border-line dark:border-gray-700
+                                             text-sm text-ink dark:text-surface resize-y
+                                             focus:outline-none focus:border-electric transition">{{ svc.description or '' }}</textarea>
                         </div>
                     </div>
 
                     <div class="flex flex-col sm:flex-row gap-2 pt-1">
                         <button type="button"
                                 onclick="toggleServiceEdit('{{ svc._id }}')"
-                                class="flex-1 py-2.5 rounded-lg text-[10px] font-mono font-bold
-                                       bg-slate-800 text-slate-300 border border-slate-700
-                                       hover:bg-slate-700 transition">
+                                class="flex-1 sm:flex-none px-5 py-2.5 rounded-full
+                                       text-xs font-medium
+                                       bg-canvas dark:bg-gray-800                                       text-ink dark:text-surface
+                                       border border-line dark:border-gray-700
+                                       hover:border-ink dark:hover:border-surface transition">
                             Close
                         </button>
                         <button type="submit"
-                                class="flex-1 py-2.5 rounded-lg text-[10px] font-mono font-bold
-                                       text-slate-950 bg-emeraldMint
-                                       hover:brightness-110 transition active:scale-[0.98]
-                                       inline-flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-save" aria-hidden="true"></i>
-                            Save Service
+                                class="flex-1 sm:flex-none px-5 py-2.5 rounded-full
+                                       text-xs font-medium text-white
+                                       bg-ink dark:bg-white dark:text-ink
+                                       hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                                       transition-colors inline-flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+                            Save Changes
                         </button>
                     </div>
                 </form>
 
-                {# ---------------- Plans management ---------------- #}
-                <div class="pt-4 border-t border-slate-800 space-y-3">
+                {# Plans management #}
+                <div class="pt-4 border-t border-line dark:border-gray-700 space-y-3">
                     <div class="flex items-center justify-between gap-3">
-                        <p class="text-[10px] font-mono text-{{ svc_color }}-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <p class="text-[10px] font-mono {{ accent_text }} uppercase tracking-widest
+                                  flex items-center gap-1.5">
                             <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-                            Pricing Plans ({{ plan_count }})
+                            Pricing Plans
+                            <span class="text-muted font-normal normal-case tracking-normal plan-count-label">
+                                ({{ plan_count }})
+                            </span>
                         </p>
                         <button type="button"
                                 onclick="addPlanRow('{{ svc._id }}', '{{ svc_color }}')"
-                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg
-                                       text-[10px] font-mono font-bold
-                                       bg-{{ svc_color }}-500/15 text-{{ svc_color }}-300
-                                       border border-{{ svc_color }}-500/30
-                                       hover:bg-{{ svc_color }}-500/25 transition">
-                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                                       text-[11px] font-medium
+                                       {{ accent_bg }} {{ accent_text }}
+                                       border {{ accent_border }}
+                                       hover:brightness-110 transition">
+                            <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
                             Add Plan
                         </button>
                     </div>
 
-                    {# The form that actually submits all plans #}
                     <form method="POST"
                           action="{{ url_for('lab_service_update_plans', service_id=svc._id) }}"
-                          id="plans-form-{{ svc._id }}">
+                          id="plans-form-{{ svc._id }}"
+                          data-dirty-guard>
 
                         <div id="plans-{{ svc._id }}" class="space-y-2">
                             {% for plan in svc.plans %}
-                            <div class="plan-row p-3 rounded-lg bg-slate-900/70 border border-slate-800
-                                        space-y-2">
+                            <div class="plan-row p-3 rounded-lg
+                                        bg-white dark:bg-gray-900/40
+                                        border border-line dark:border-gray-700
+                                        space-y-2"
+                                 draggable="true">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="drag-handle cursor-grab active:cursor-grabbing
+                                                 text-muted hover:text-ink dark:hover:text-surface
+                                                 transition"
+                                          aria-hidden="true">
+                                        <i class="fa-solid fa-grip-vertical text-[10px]"></i>
+                                    </span>
+                                    <span class="text-[10px] font-mono text-muted uppercase tracking-widest">
+                                        Plan {{ loop.index }}
+                                    </span>
+                                </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <input type="text"
@@ -552,58 +821,81 @@
                                            value="{{ plan.name }}"
                                            maxlength="80"
                                            placeholder="Plan name"
-                                           class="w-full px-3 py-2 rounded-lg
-                                                  bg-slate-900 border border-slate-800
-                                                  text-xs text-white
-                                                  focus:outline-none focus:border-{{ svc_color }}-400 transition">
+                                           class="w-full px-3 py-2.5 rounded-lg
+                                                  bg-canvas dark:bg-gray-800/60
+                                                  border border-line dark:border-gray-700
+                                                  text-sm text-ink dark:text-surface
+                                                  focus:outline-none focus:border-electric transition">
                                     <input type="text"
                                            name="plan_price[]"
                                            value="{{ plan.price }}"
                                            maxlength="60"
                                            placeholder="e.g. GH₵ 800 - GH₵ 1,500"
-                                           class="w-full px-3 py-2 rounded-lg
-                                                  bg-slate-900 border border-slate-800
-                                                  text-xs text-emeraldMint font-mono
-                                                  focus:outline-none focus:border-{{ svc_color }}-400 transition">
+                                           class="w-full px-3 py-2.5 rounded-lg
+                                                  bg-canvas dark:bg-gray-800/60
+                                                  border border-line dark:border-gray-700
+                                                  text-sm text-teal font-mono
+                                                  focus:outline-none focus:border-electric transition">
                                 </div>
 
                                 <div class="flex items-start gap-2">
                                     <textarea name="plan_desc[]"
                                               rows="2"
                                               maxlength="250"
-                                              placeholder="What's included..."
-                                              class="flex-1 px-3 py-2 rounded-lg
-                                                     bg-slate-900 border border-slate-800
-                                                     text-xs text-white resize-y
-                                                     focus:outline-none focus:border-{{ svc_color }}-400 transition">{{ plan.desc or '' }}</textarea>
-                                    <button type="button"
-                                            onclick="removePlanRow(this)"
-                                            class="shrink-0 w-9 h-9 rounded-lg
-                                                   bg-red-950/50 border border-red-500/30
-                                                   flex items-center justify-center
-                                                   text-red-400 hover:bg-red-500/20 transition"
-                                            title="Remove plan"
-                                            aria-label="Remove plan">
-                                        <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
-                                    </button>
+                                              placeholder="What's included…"
+                                              class="flex-1 px-3 py-2.5 rounded-lg
+                                                     bg-canvas dark:bg-gray-800/60
+                                                     border border-line dark:border-gray-700
+                                                     text-sm text-ink dark:text-surface resize-y
+                                                     focus:outline-none focus:border-electric transition">{{ plan.desc or '' }}</textarea>
+                                    <div class="flex flex-col gap-1.5">
+                                        <button type="button"
+                                                onclick="duplicatePlanRow(this)"
+                                                class="w-9 h-9 rounded-lg
+                                                       bg-canvas dark:bg-gray-800
+                                                       border border-line dark:border-gray-700
+                                                       flex items-center justify-center
+                                                       text-muted hover:text-electric
+                                                       hover:border-electric/40 transition"
+                                                title="Duplicate plan"
+                                                aria-label="Duplicate plan">
+                                            <i class="fa-regular fa-clone text-xs" aria-hidden="true"></i>
+                                        </button>
+                                        <button type="button"
+                                                onclick="removePlanRow(this)"
+                                                class="w-9 h-9 rounded-lg
+                                                       bg-red-500/5 border border-red-500/20
+                                                       flex items-center justify-center
+                                                       text-red-500
+                                                       hover:bg-red-500/10 hover:border-red-500/40
+                                                       transition"
+                                                title="Remove plan"
+                                                aria-label="Remove plan">
+                                            <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             {% else %}
-                            <div class="plan-empty p-4 text-center rounded-lg bg-slate-900/40
-                                        border border-dashed border-slate-700">
-                                <p class="text-[10px] font-mono text-slate-500">
-                                    No plans yet. Click "Add Plan" to create one.
+                            <div class="plan-empty p-6 text-center rounded-lg
+                                        bg-white dark:bg-gray-900/30
+                                        border border-dashed border-line dark:border-gray-700">
+                                <i class="fa-solid fa-layer-group text-2xl text-muted/40 mb-2"
+                                   aria-hidden="true"></i>
+                                <p class="text-[11px] font-mono text-muted">
+                                    No plans yet. Click "Add Plan" to create your first one.
                                 </p>
                             </div>
                             {% endfor %}
                         </div>
 
                         <button type="submit"
-                                class="mt-3 w-full py-2.5 rounded-lg text-[10px] font-mono font-bold
-                                       text-slate-950 bg-gradient-to-r from-{{ svc_color }}-400 to-emerald-400
-                                       hover:brightness-110 transition active:scale-[0.98]
-                                       inline-flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-save" aria-hidden="true"></i>
+                                class="mt-3 w-full py-3 rounded-full
+                                       text-xs font-medium text-white
+                                       bg-ink dark:bg-white dark:text-ink
+                                       hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                                       transition-colors inline-flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
                             Save All Plans
                         </button>
                     </form>
@@ -612,34 +904,54 @@
         </article>
         {% else %}
 
-        {# ============================================================
-           EMPTY STATE
-        ============================================================ #}
-        <div class="glass-card rounded-2xl border border-slate-800 p-12 sm:p-16 text-center">
+        {# Empty state #}
+        <div class="card p-12 sm:p-16 text-center">
             <div class="w-20 h-20 rounded-full
-                        bg-gradient-to-br from-cyan-500/20 to-purple-500/20
-                        border border-cyan-500/30
-                        flex items-center justify-center mx-auto mb-6">
-                <i class="fa-solid fa-tags text-3xl text-cyan-400" aria-hidden="true"></i>
+                        bg-electric/10 border border-electric/20
+                        flex items-center justify-center mx-auto mb-5">
+                <i class="fa-solid fa-tags text-3xl text-electric" aria-hidden="true"></i>
             </div>
-            <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
+            <h3 class="text-lg font-semibold text-ink dark:text-surface tracking-tight mb-2">
                 No Services Yet
             </h3>
-            <p class="text-slate-400 text-sm font-mono max-w-md mx-auto leading-relaxed">
+            <p class="text-muted text-sm max-w-md mx-auto leading-relaxed">
                 Add your first service to start selling. You can attach multiple pricing plans to each service.
             </p>
+            <button type="button"
+                    onclick="focusNewService()"
+                    class="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-full
+                           text-sm font-medium text-white
+                           bg-ink dark:bg-white dark:text-ink
+                           hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                           transition-colors">
+                <i class="fa-solid fa-plus text-[11px]" aria-hidden="true"></i>
+                Add your first service
+            </button>
         </div>
 
         {% endfor %}
 
         {# No search results #}
-        <div id="no-results" class="hidden glass-card rounded-2xl border border-slate-800 p-12 text-center">
-            <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
-               aria-hidden="true"></i>
-            <p class="text-slate-400 text-xs font-mono">No services match your search.</p>
+        <div id="no-results" class="hidden card p-12 text-center">
+            <div class="w-14 h-14 mx-auto rounded-full
+                        bg-canvas dark:bg-gray-800
+                        border border-line dark:border-gray-700
+                        flex items-center justify-center mb-3">
+                <i class="fa-solid fa-magnifying-glass text-xl text-muted" aria-hidden="true"></i>
+            </div>
+            <p class="text-ink dark:text-surface text-sm font-medium">No matches</p>
+            <p class="text-muted text-xs font-mono mt-1">
+                Try a different search term.
+            </p>
             <button type="button"
                     onclick="resetSearch()"
-                    class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+                    class="mt-4 inline-flex items-center gap-1.5
+                           px-4 py-2 rounded-full text-xs font-medium
+                           bg-canvas dark:bg-gray-800
+                           text-ink dark:text-surface
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
                 Clear search
             </button>
         </div>
@@ -647,103 +959,529 @@
     </div>
 </div>
 
+{# ============================================================
+   ICON PICKER MODAL
+============================================================ #}
+<div id="icon-modal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="icon-modal-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeIconPicker()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-lg card shadow-2xl
+                bg-white dark:bg-[#141414]
+                max-h-[80vh] flex flex-col overflow-hidden">
+        <header class="p-4 border-b border-line dark:border-gray-700
+                       flex items-center gap-3 shrink-0">
+            <i class="fa-solid fa-icons text-electric" aria-hidden="true"></i>
+            <h3 id="icon-modal-title"
+                class="flex-1 text-sm font-semibold text-ink dark:text-surface">
+                Choose an icon
+            </h3>
+            <button type="button"
+                    onclick="closeIconPicker()"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-canvas dark:hover:bg-gray-800 transition"
+                    aria-label="Close">
+                <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <div class="p-4 border-b border-line dark:border-gray-700 shrink-0">
+            <input type="text"
+                   id="icon-search"
+                   placeholder="Search icons…"
+                   autocomplete="off"
+                   class="w-full px-4 py-2.5 rounded-xl
+                          bg-canvas dark:bg-gray-800/50
+                          border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface placeholder-muted
+                          focus:outline-none focus:border-electric transition">
+        </div>
+
+        <div class="p-4 overflow-y-auto flex-1">
+            <div id="icon-grid" class="grid grid-cols-5 sm:grid-cols-6 gap-2">
+                {# Populated by JS #}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ============================================================
+   CONFIRM MODAL
+============================================================ #}
+<div id="confirm-modal"
+     class="fixed inset-0 z-[110] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="confirm-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeConfirmModal()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-sm card p-5 sm:p-6 shadow-2xl
+                bg-white dark:bg-[#141414]">
+        <div class="flex items-start gap-3 mb-4">
+            <div class="w-10 h-10 shrink-0 rounded-full
+                        bg-red-500/10 border border-red-500/20
+                        flex items-center justify-center text-red-500">
+                <i class="fa-solid fa-triangle-exclamation text-sm" aria-hidden="true"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 id="confirm-title"
+                    class="text-sm font-semibold text-ink dark:text-surface">
+                    Are you sure?
+                </h3>
+                <p id="confirm-message"
+                   class="text-xs text-muted mt-1 leading-relaxed">
+                    This action cannot be undone.
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+            <button type="button"
+                    onclick="closeConfirmModal()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-ink dark:text-surface
+                           bg-canvas dark:bg-gray-800
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                Cancel
+            </button>
+            <form id="confirm-form" method="POST" action="">
+                <button type="submit"
+                        class="px-4 py-2 rounded-full text-xs font-medium text-white
+                               bg-red-500 hover:bg-red-600 transition">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[120] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// SEARCH
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2600) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   SEARCH + SORT
+============================================================ */
 const searchInput = document.getElementById('service-search');
 const noResults = document.getElementById('no-results');
+const searchClear = document.getElementById('search-clear');
+
+function applySearch() {
+    if (!searchInput) return;
+    const query = (searchInput.value || '').toLowerCase().trim();
+    const cards = document.querySelectorAll('.service-card');
+    let visible = 0;
+
+    cards.forEach(card => {
+        const haystack = card.dataset.search || '';
+        const match = !query || haystack.includes(query);
+        card.style.display = match ? '' : 'none';
+        if (match) visible++;
+
+        if (!match) {
+            const panel = card.querySelector('[id^="edit-"]');
+            if (panel && !panel.classList.contains('hidden')) {
+                panel.classList.add('hidden');
+            }
+        }
+    });
+
+    noResults?.classList.toggle('hidden', visible > 0);
+    searchClear?.classList.toggle('hidden', !searchInput.value);
+}
 
 if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-        const query = (e.target.value || '').toLowerCase().trim();
-        const cards = document.querySelectorAll('.service-card');
-        let visible = 0;
+    searchInput.addEventListener('input', applySearch);
+}
 
-        cards.forEach(card => {
-            const haystack = card.dataset.search || '';
-            const match = !query || haystack.includes(query);
-            card.style.display = match ? '' : 'none';
-            if (match) visible++;
-        });
-
-        noResults?.classList.toggle('hidden', visible > 0);
-    });
+function clearSearch() {
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    applySearch();
 }
 
 function resetSearch() {
     if (searchInput) searchInput.value = '';
     document.querySelectorAll('.service-card').forEach(c => c.style.display = '');
     noResults?.classList.add('hidden');
+    searchClear?.classList.add('hidden');
 }
 
-// ============================================================
-// TOGGLE EDIT PANEL
-// ============================================================
+/* Sort */
+const sortSelect = document.getElementById('service-sort');
+if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => sortServices(e.target.value));
+}
+
+function sortServices(order) {
+    const container = document.getElementById('services-list');
+    if (!container) return;
+
+    const cards = Array.from(container.querySelectorAll('.service-card'));
+    if (cards.length === 0) return;
+
+    cards.sort((a, b) => {
+        const titleA = (a.dataset.title || '').toLowerCase();
+        const titleB = (b.dataset.title || '').toLowerCase();
+        const orderA = parseInt(a.dataset.order) || 999;
+        const orderB = parseInt(b.dataset.order) || 999;
+        const plansA = parseInt(a.dataset.plans) || 0;
+        const plansB = parseInt(b.dataset.plans) || 0;
+
+        switch (order) {
+            case 'title': return titleA.localeCompare(titleB);
+            case 'plans': return plansB - plansA;
+            default:      return orderA - orderB;
+        }
+    });
+    cards.forEach(c => container.appendChild(c));
+    applySearch();
+}
+
+/* ============================================================
+   EDIT PANEL TOGGLE
+============================================================ */
 function toggleServiceEdit(serviceId) {
-    const panel = document.getElementById('edit-' + serviceId);
-    if (!panel) return;
-    panel.classList.toggle('hidden');
-    if (!panel.classList.contains('hidden')) {
-        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const target = document.getElementById('edit-' + serviceId);
+    if (!target) return;
+
+    const isOpening = target.classList.contains('hidden');
+
+    document.querySelectorAll('[id^="edit-"]').forEach(panel => {
+        if (panel !== target) panel.classList.add('hidden');
+    });
+    document.querySelectorAll('.service-edit-toggle').forEach(btn => {
+        btn.setAttribute('aria-expanded', 'false');
+    });
+
+    target.classList.toggle('hidden');
+
+    const btn = document.querySelector(`.service-edit-toggle[data-service-id="${serviceId}"]`);
+    if (btn) btn.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
+
+    if (isOpening) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(() => {
+            target.querySelector('input[type="text"]')?.focus();
+        }, 100);
     }
 }
 
-// ============================================================
-// PLAN ROW MANAGEMENT
-// ============================================================
+/* ============================================================
+   PLAN ROW MANAGEMENT
+============================================================ */
 function addPlanRow(serviceId, color) {
     const container = document.getElementById('plans-' + serviceId);
     if (!container) return;
 
-    // Remove "no plans yet" placeholder if present
     const placeholder = container.querySelector('.plan-empty');
     if (placeholder) placeholder.remove();
 
     const row = document.createElement('div');
-    row.className = 'plan-row p-3 rounded-lg bg-slate-900/70 border border-slate-800 space-y-2';
+    row.className = 'plan-row p-3 rounded-lg bg-white dark:bg-gray-900/40 border border-line dark:border-gray-700 space-y-2';
+    row.draggable = true;
     row.innerHTML = `
+        <div class="flex items-center gap-2 mb-1">
+            <span class="drag-handle cursor-grab active:cursor-grabbing text-muted hover:text-ink dark:hover:text-surface transition" aria-hidden="true">
+                <i class="fa-solid fa-grip-vertical text-[10px]"></i>
+            </span>
+            <span class="text-[10px] font-mono text-muted uppercase tracking-widest">New Plan</span>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input type="text" name="plan_name[]" maxlength="80"
                    placeholder="Plan name"
-                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800
-                          text-xs text-white focus:outline-none focus:border-${color}-400 transition">
+                   class="w-full px-3 py-2.5 rounded-lg bg-canvas dark:bg-gray-800/60 border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface focus:outline-none focus:border-electric transition">
             <input type="text" name="plan_price[]" maxlength="60"
                    placeholder="e.g. GH₵ 800 - GH₵ 1,500"
-                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800
-                          text-xs text-emeraldMint font-mono focus:outline-none focus:border-${color}-400 transition">
+                   class="w-full px-3 py-2.5 rounded-lg bg-canvas dark:bg-gray-800/60 border border-line dark:border-gray-700
+                          text-sm text-teal font-mono focus:outline-none focus:border-electric transition">
         </div>
         <div class="flex items-start gap-2">
             <textarea name="plan_desc[]" rows="2" maxlength="250"
-                      placeholder="What's included..."
-                      class="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-800
-                             text-xs text-white resize-y focus:outline-none focus:border-${color}-400 transition"></textarea>
-            <button type="button" onclick="removePlanRow(this)"
-                    class="shrink-0 w-9 h-9 rounded-lg bg-red-950/50 border border-red-500/30
-                           flex items-center justify-center text-red-400
-                           hover:bg-red-500/20 transition"
-                    aria-label="Remove plan">
-                <i class="fa-solid fa-xmark text-xs"></i>
-            </button>
+                      placeholder="What's included…"
+                      class="flex-1 px-3 py-2.5 rounded-lg bg-canvas dark:bg-gray-800/60 border border-line dark:border-gray-700
+                             text-sm text-ink dark:text-surface resize-y focus:outline-none focus:border-electric transition"></textarea>
+            <div class="flex flex-col gap-1.5">
+                <button type="button" onclick="duplicatePlanRow(this)"
+                        class="w-9 h-9 rounded-lg bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700
+                               flex items-center justify-center text-muted hover:text-electric hover:border-electric/40 transition"
+                        aria-label="Duplicate plan">
+                    <i class="fa-regular fa-clone text-xs"></i>
+                </button>
+                <button type="button" onclick="removePlanRow(this)"
+                        class="w-9 h-9 rounded-lg bg-red-500/5 border border-red-500/20
+                               flex items-center justify-center text-red-500
+                               hover:bg-red-500/10 hover:border-red-500/40 transition"
+                        aria-label="Remove plan">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
         </div>
     `;
     container.appendChild(row);
     row.querySelector('input')?.focus();
+    updatePlanCount(serviceId);
+    initPlanDragAndDrop(container);
+}
+
+function duplicatePlanRow(btn) {
+    const row = btn.closest('.plan-row');
+    if (!row) return;
+    const container = row.parentElement;
+    const clone = row.cloneNode(true);
+    const nameInput = clone.querySelector('input[name="plan_name[]"]');
+    if (nameInput) nameInput.value = (nameInput.value || '') + ' (copy)';
+    container.appendChild(clone);
+    row.parentElement.appendChild(clone);
+
+    // Re-wire handlers in the clone (they're inline so they should work)
+    const serviceId = container?.id.replace('plans-', '');
+    if (serviceId) updatePlanCount(serviceId);
+    initPlanDragAndDrop(container);
+    showToast('Plan duplicated', 'info', 1500);
 }
 
 function removePlanRow(btn) {
     const row = btn.closest('.plan-row');
     if (!row) return;
+    const container = row.parentElement;
 
     row.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
     row.style.opacity = '0';
     row.style.transform = 'translateX(-8px)';
-    setTimeout(() => row.remove(), 150);
+    setTimeout(() => {
+        row.remove();
+        if (container && container.querySelectorAll('.plan-row').length === 0) {
+            container.innerHTML = `
+                <div class="plan-empty p-6 text-center rounded-lg
+                            bg-white dark:bg-gray-900/30
+                            border border-dashed border-line dark:border-gray-700">
+                    <i class="fa-solid fa-layer-group text-2xl text-muted/40 mb-2"></i>
+                    <p class="text-[11px] font-mono text-muted">
+                        No plans yet. Click "Add Plan" to create your first one.
+                    </p>
+                </div>
+            `;
+        }
+        const serviceId = container?.id.replace('plans-', '');
+        if (serviceId) updatePlanCount(serviceId);
+    }, 150);
 }
 
-// ============================================================
-// PREVIEW: icon input updates the icon preview
-// ============================================================
+function updatePlanCount(serviceId) {
+    const container = document.getElementById('plans-' + serviceId);
+    if (!container) return;
+    const count = container.querySelectorAll('.plan-row').length;
+    const label = document.querySelector(`#edit-${serviceId} .plan-count-label`);
+    if (label) label.textContent = `(${count})`;
+}
+
+/* ============================================================
+   DRAG-AND-DROP PLAN REORDER
+============================================================ */
+function initPlanDragAndDrop(container) {
+    if (!container) return;
+    let dragged = null;
+
+    container.querySelectorAll('.plan-row').forEach(row => {
+        if (row.dataset.dragInit) return;
+        row.dataset.dragInit = '1';
+
+        row.addEventListener('dragstart', (e) => {
+            dragged = row;
+            row.classList.add('opacity-50');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => {
+            row.classList.remove('opacity-50');
+            dragged = null;
+        });
+        row.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!dragged || dragged === row) return;
+            const rect = row.getBoundingClientRect();
+            const after = e.clientY > rect.top + rect.height / 2;
+            if (after) {
+                row.parentNode.insertBefore(dragged, row.nextSibling);
+            } else {
+                row.parentNode.insertBefore(dragged, row);
+            }
+        });
+    });
+}
+
+// Init DnD for existing plan rows on load
+document.querySelectorAll('[id^="plans-"]').forEach(initPlanDragAndDrop);
+
+/* ============================================================
+   ICON PICKER
+============================================================ */
+const ICONS = [
+    // Media
+    'fa-camera', 'fa-video', 'fa-film', 'fa-image', 'fa-photo-film',
+    'fa-microphone', 'fa-headphones', 'fa-music', 'fa-podcast', 'fa-tv',
+    // Design
+    'fa-palette', 'fa-pen-fancy', 'fa-pen-nib', 'fa-brush', 'fa-layer-group',
+    'fa-shapes', 'fa-wand-magic-sparkles', 'fa-sparkles', 'fa-swatchbook', 'fa-ruler-combined',
+    // Code / tech
+    'fa-code', 'fa-terminal', 'fa-laptop-code', 'fa-database', 'fa-server',
+    'fa-cloud', 'fa-mobile-screen', 'fa-desktop', 'fa-microchip', 'fa-robot',
+    // Business
+    'fa-bullhorn', 'fa-chart-line', 'fa-chart-simple', 'fa-briefcase', 'fa-handshake',
+    'fa-tags', 'fa-tag', 'fa-wallet', 'fa-credit-card', 'fa-receipt',
+    // Creative
+    'fa-bolt', 'fa-fire', 'fa-star', 'fa-gem', 'fa-crown',
+    'fa-rocket', 'fa-lightbulb', 'fa-magic', 'fa-infinity', 'fa-compass',
+    // Communication
+    'fa-comments', 'fa-comment', 'fa-envelope', 'fa-paper-plane', 'fa-share-nodes',
+    // Misc
+    'fa-cog', 'fa-sliders', 'fa-toolbox', 'fa-wrench', 'fa-hammer'
+];
+
+function openIconPicker() {
+    const modal = document.getElementById('icon-modal');
+    const grid = document.getElementById('icon-grid');
+    const search = document.getElementById('icon-search');
+    if (!modal || !grid) return;
+
+    renderIconGrid('');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => search?.focus(), 50);
+}
+
+function closeIconPicker() {
+    const modal = document.getElementById('icon-modal');
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+function renderIconGrid(query) {
+    const grid = document.getElementById('icon-grid');
+    if (!grid) return;
+    const q = (query || '').toLowerCase().replace('fa-', '').trim();
+    const filtered = q ? ICONS.filter(i => i.includes(q)) : ICONS;
+
+    if (filtered.length === 0) {
+        grid.innerHTML = '<div class="col-span-full py-8 text-center text-xs font-mono text-muted">No icons found</div>';
+        return;
+    }
+
+    grid.innerHTML = filtered.map(icon => `
+        <button type="button"
+                onclick="selectIcon('${icon}')"
+                class="aspect-square rounded-lg flex flex-col items-center justify-center gap-1
+                       text-muted hover:text-electric hover:bg-electric/5
+                       border border-transparent hover:border-electric/20
+                       transition group"
+                title="${icon}">
+            <i class="fa-solid ${icon} text-base" aria-hidden="true"></i>
+            <span class="text-[8px] font-mono opacity-0 group-hover:opacity-60 transition truncate px-1 w-full text-center">
+                ${icon.replace('fa-', '')}
+            </span>
+        </button>
+    `).join('');
+}
+
+function selectIcon(icon) {
+    const input = document.getElementById('new-service-icon');
+    if (input) {
+        input.value = icon;
+        input.dispatchEvent(new Event('input'));
+    }
+    closeIconPicker();
+    showToast(`Icon set to ${icon}`, 'success', 1500);
+}
+
+const iconSearchInput = document.getElementById('icon-search');
+if (iconSearchInput) {
+    iconSearchInput.addEventListener('input', (e) => renderIconGrid(e.target.value));
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const iconModal = document.getElementById('icon-modal');
+        if (iconModal && !iconModal.classList.contains('hidden')) closeIconPicker();
+    }
+});
+
+/* ============================================================
+   QUICK ICON SETTER
+============================================================ */
+function setIcon(iconClass) {
+    const input = document.getElementById('new-service-icon');
+    if (!input) return;
+    input.value = iconClass;
+    input.dispatchEvent(new Event('input'));
+}
+
 document.querySelectorAll('.icon-input').forEach(input => {
     const preview = input.parentElement.querySelector('.icon-preview');
     if (!preview) return;
@@ -753,74 +1491,259 @@ document.querySelectorAll('.icon-input').forEach(input => {
     });
 });
 
-// ============================================================
-// PREVIEW: color select updates the color dot
-// ============================================================
-const colorMap = {
-    cyan:    '#00F2FE',
-    purple:  '#7928CA',
-    emerald: '#00F5A0',
-    orange:  '#F97316'
-};
-document.querySelectorAll('.color-input').forEach(select => {
-    const dot = select.parentElement.querySelector('.color-preview');
-    if (!dot) return;
-    select.addEventListener('change', () => {
-        dot.style.background = colorMap[select.value] || '#00F2FE';
+/* ============================================================
+   AUTO-SLUG
+============================================================ */
+function autoSlug() {
+    const titleInput = document.getElementById('new-service-title');
+    const slugInput = document.getElementById('new-service-slug');
+    if (!titleInput || !slugInput) return;
+
+    const slug = (titleInput.value || '')
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    slugInput.value = slug;
+    showToast('Slug generated from title', 'info', 1500);
+}
+
+const titleInput = document.getElementById('new-service-title');
+if (titleInput) {
+    titleInput.addEventListener('blur', () => {
+        const slugInput = document.getElementById('new-service-slug');
+        if (slugInput && !slugInput.value.trim()) {
+            autoSlug();
+        }
     });
+}
+
+/* ============================================================
+   CHARACTER COUNTERS
+============================================================ */
+document.querySelectorAll('[data-counter-for]').forEach(el => {
+    const targetId = el.dataset.counterFor;
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    const max = parseInt(input.getAttribute('maxlength') || '0', 10);
+    const update = () => {
+        const len = input.value.length;
+        el.textContent = `${len} / ${max}`;
+        el.classList.remove('text-muted', 'text-orange-500', 'text-red-500');
+        const ratio = max > 0 ? len / max : 0;
+        if (ratio >= 1) el.classList.add('text-red-500');
+        else if (ratio >= 0.7) el.classList.add('text-orange-500');
+        else el.classList.add('text-muted');
+    };
+    input.addEventListener('input', update);
+    update();
 });
 
-// ============================================================
-// CREATE FORM SUBMIT FEEDBACK
-// ============================================================
+/* ============================================================
+   FORM SUBMIT FEEDBACK
+============================================================ */
 const createForm = document.getElementById('create-service-form');
-const createBtn = document.getElementById('create-service-btn');
-const createLabel = document.getElementById('create-service-label');
-
-if (createForm && createBtn && createLabel) {
-    createForm.addEventListener('submit', () => {
+if (createForm) {
+    createForm.addEventListener('submit', (e) => {
         if (!createForm.checkValidity()) return;
-        createBtn.disabled = true;
-        createBtn.classList.add('opacity-70', 'cursor-not-allowed');
-        createBtn.innerHTML = `
-            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
-            <span>Creating...</span>
-        `;
+        const btn = document.getElementById('create-service-btn');
+        const icon = btn?.querySelector('[data-create-icon]');
+        const label = btn?.querySelector('[data-create-label]');
+        if (btn) {
+            btn.disabled = true;
+            if (icon) icon.className = 'fa-solid fa-circle-notch fa-spin text-[10px]';
+            if (label) label.textContent = 'Creating…';
+        }
     });
+}
+
+/* ============================================================
+   CONFIRM MODAL
+============================================================ */
+let confirmCallback = null;
+
+function openConfirmModal({ title, message, confirmLabel = 'Delete', onConfirm }) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-message');
+    const form = document.getElementById('confirm-form');
+    const btn = form?.querySelector('button[type="submit"]');
+    if (!modal || !form || !btn) return;
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    btn.textContent = confirmLabel;
+
+    // Clear previous listeners by cloning the form
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+
+    confirmCallback = onConfirm;
+
+    newForm.addEventListener('submit', (e) => {
+        if (confirmCallback) {
+            e.preventDefault();
+            const cb = confirmCallback;
+            closeConfirmModal();
+            cb();
+        }
+    });
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.querySelector('button[type="button"]')?.focus(), 50);
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    confirmCallback = null;
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeConfirmModal();
+});
+
+function requestDeleteService(serviceId, title, planCount) {
+    const plansMsg = planCount > 0
+        ? ` and its ${planCount} plan${planCount === 1 ? '' : 's'} will also be removed.`
+        : '.';
+
+    openConfirmModal({
+        title: 'Delete this service?',
+        message: `"${title}"${plansMsg} This cannot be undone.`,
+        confirmLabel: 'Delete',
+        onConfirm: () => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            const base = '{{ url_for("lab_services") }}'.replace(/\/$/, '');
+            form.action = `${base}/${serviceId}/delete`;
+            form.style.display = 'none';
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+/* ============================================================
+   FOCUS NEW SERVICE
+============================================================ */
+function focusNewService() {
+    const details = document.getElementById('add-service-details');
+    if (details) details.setAttribute('open', '');
+    const input = document.getElementById('new-service-title');
+    if (input) {
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    if (e.key === '/' && !isTyping && !cmd && searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+        return;
+    }
+
+    if (e.key === 'Escape') {
+        const iconM = document.getElementById('icon-modal');
+        const confirmM = document.getElementById('confirm-modal');
+        if (confirmM && !confirmM.classList.contains('hidden')) { closeConfirmModal(); return; }
+        if (iconM && !iconM.classList.contains('hidden')) { closeIconPicker(); return; }
+
+        if (document.activeElement === searchInput) {
+            searchInput.blur();
+        } else if (searchInput?.value) {
+            clearSearch();
+        } else {
+            document.querySelectorAll('[id^="edit-"]').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.service-edit-toggle').forEach(b => b.setAttribute('aria-expanded', 'false'));
+        }
+        return;
+    }
+
+    if (e.key.toLowerCase() === 'n' && !isTyping && !cmd && !e.altKey) {
+        e.preventDefault();
+        focusNewService();
+    }
+});
+
+/* ============================================================
+   INIT
+============================================================ */
+if (searchClear && searchInput) {
+    searchClear.classList.toggle('hidden', !searchInput.value);
 }
 </script>
 
 <style>
-    /* Hide default <details> marker */
+    /* Hide details marker */
     details summary::-webkit-details-marker { display: none; }
     details summary::marker { content: ''; }
 
-    /* Force the <details> open on desktop */
+    /* Force details open on desktop */
     @media (min-width: 1024px) {
-        details[open] > summary,
-        details > summary {
-            display: none;
-        }
-        details > *:not(summary) {
-            display: revert !important;
-        }
+        #add-service-details > summary { display: none; }
     }
 
-    /* Smooth fade-in for edit panel */
+    /* Details open animation */
+    details[open] > *:not(summary) {
+        animation: fadeIn 0.2s ease-out;
+    }
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-4px); }
         to   { opacity: 1; transform: translateY(0); }
     }
+
+    /* Edit panel fade-in */
     .service-card [id^="edit-"]:not(.hidden) {
         animation: fadeIn 0.2s ease-out;
     }
 
-    /* Line clamp utility */
+    /* Line clamp */
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+
+    /* Custom select */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 12px;
+    }
+
+    /* Color swatch: selected state */
+    .color-swatch input:checked + div {
+        border-color: #0A0A0A;
+    }
+    .dark .color-swatch input:checked + div {
+        border-color: #FFFFFF;
+    }
+
+    /* Drag styles */
+    .plan-row[draggable="true"] {
+        transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .animate-pulse { animation: none !important; }
     }
 </style>
 

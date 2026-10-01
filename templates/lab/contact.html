@@ -1,34 +1,54 @@
 {% extends 'lab/base.html' %}
 {% block title %}Contact Info{% endblock %}
+{% block breadcrumb %}Contact Info{% endblock %}
 {% block page_title %}Contact Information{% endblock %}
 {% block page_subtitle %}Manage contact details shown on the public site.{% endblock %}
 
 {% block content %}
 
+{# ============================================================
+   STATUS BAR (autosave + dirty state)
+============================================================ #}
+<div id="status-bar"
+     class="hidden mb-5 p-3 rounded-xl flex items-center gap-3 text-xs
+            border transition-colors"
+     role="status"
+     aria-live="polite">
+    <i id="status-icon" class="fa-solid fa-circle-exclamation shrink-0" aria-hidden="true"></i>
+    <span id="status-text" class="flex-1 font-mono">You have unsaved changes.</span>
+    <button type="button"
+            onclick="document.getElementById('contact-form').requestSubmit()"
+            class="shrink-0 px-3 py-1.5 rounded-full font-medium transition
+                   bg-current/10 hover:bg-current/20 border border-current/30 text-[11px]">
+        Save now
+    </button>
+</div>
+
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
     {# ============================================================
-       FORM (2 cols on xl)
+       FORM
     ============================================================ #}
     <form method="POST"
           action="{{ url_for('lab_contact') }}"
           id="contact-form"
-          class="xl:col-span-2 space-y-6">
+          class="xl:col-span-2 space-y-6"
+          autocomplete="off"
+          novalidate>
+
+        <input type="hidden" name="restore_draft" id="restore-draft" value="">
 
         {# ---------- SECTION: BUSINESS IDENTITY ---------- #}
-        <section class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+        <section class="card p-5 sm:p-6 space-y-5">
 
-            <header class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30
-                                flex items-center justify-center text-cyan-400">
-                        <i class="fa-solid fa-address-card text-xs" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
-                        Business Identity
-                    </h3>
-                </div>
-                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+            <header class="flex items-center justify-between gap-3
+                           pb-3 border-b border-line dark:border-gray-700">
+                <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-address-card text-electric text-xs" aria-hidden="true"></i>
+                    Business Identity
+                </h3>
+                <span class="text-[10px] font-mono text-muted uppercase tracking-widest hidden sm:block">
                     Section 01
                 </span>
             </header>
@@ -37,14 +57,17 @@
 
                 {# Email #}
                 <div>
-                    <label for="contact-email"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Email Address <span class="text-cyan-400">*</span>
-                    </label>
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="contact-email"
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                            Email Address <span class="text-electric">*</span>
+                        </label>
+                        <span class="text-[10px] font-mono text-muted tabular-nums"
+                              data-counter-for="contact-email">0 / 120</span>
+                    </div>
                     <div class="relative">
-                        <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                        <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2
+                                  text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                         <input type="email"
                                id="contact-email"
                                name="email"
@@ -52,402 +75,482 @@
                                required
                                maxlength="120"
                                autocomplete="email"
+                               spellcheck="false"
+                               inputmode="email"
                                placeholder="you@example.com"
-                               class="w-full pl-10 pr-4 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                      transition">
+                               aria-describedby="contact-email-help"
+                               class="w-full pl-11 pr-4 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface placeholder-muted
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition">
                     </div>
-                    <p class="text-[10px] font-mono text-slate-500 mt-1.5">
-                        Shown publicly as clickable mailto link.
+                    <p id="contact-email-help" class="text-[11px] text-muted mt-1.5">
+                        Shown publicly as a clickable mailto link.
                     </p>
                 </div>
 
                 {# Phone #}
                 <div>
-                    <label for="contact-phone"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Phone Number
-                    </label>
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="contact-phone"
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                            Phone Number
+                        </label>
+                        <span class="text-[10px] font-mono text-muted tabular-nums"
+                              data-counter-for="contact-phone">0 / 40</span>
+                    </div>
                     <div class="relative">
-                        <i class="fa-solid fa-phone absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                        <i class="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2
+                                  text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                         <input type="tel"
                                id="contact-phone"
                                name="phone"
                                value="{{ contact.phone or '' }}"
                                maxlength="40"
                                autocomplete="tel"
-                               placeholder="+233 (0) 55 123 4567"
-                               class="w-full pl-10 pr-4 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                      transition">
+                               inputmode="tel"
+                               placeholder="+233 55 123 4567"
+                               class="w-full pl-11 pr-4 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface placeholder-muted
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition">
                     </div>
-                    <p class="text-[10px] font-mono text-slate-500 mt-1.5">
-                        Include country code (e.g. +233 for Ghana).
+                    <p class="text-[11px] text-muted mt-1.5">
+                        Include country code — e.g. <span class="font-mono">+233</span> for Ghana.
                     </p>
                 </div>
-
             </div>
 
             {# Location #}
             <div>
-                <label for="contact-location"
-                       class="block text-[10px] font-mono text-slate-400
-                              uppercase tracking-wider mb-1.5">
-                    Location
-                </label>
+                <div class="flex items-baseline justify-between mb-2">
+                    <label for="contact-location"
+                           class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                        Location
+                    </label>
+                    <span class="text-[10px] font-mono text-muted tabular-nums"
+                          data-counter-for="contact-location">0 / 150</span>
+                </div>
                 <div class="relative">
-                    <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2
-                              text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                    <i class="fa-solid fa-location-dot absolute left-4 top-1/2 -translate-y-1/2
+                              text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                     <input type="text"
                            id="contact-location"
                            name="location"
                            value="{{ contact.location or '' }}"
                            maxlength="150"
-                           placeholder="Kumasi, Ghana // Available Worldwide Remote"
-                           class="w-full pl-10 pr-4 py-3 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
+                           placeholder="Kumasi, Ghana · Available Worldwide"
+                           class="w-full pl-11 pr-4 py-3 rounded-xl
+                                  bg-canvas dark:bg-gray-800/50
+                                  border border-line dark:border-gray-700
+                                  text-sm text-ink dark:text-surface placeholder-muted
+                                  focus:outline-none focus:border-electric
+                                  focus:ring-2 focus:ring-electric/20 transition">
                 </div>
-                <p class="text-[10px] font-mono text-slate-500 mt-1.5">
-                    Displayed as-is. Use "//" to separate city from availability.
+                <p class="text-[11px] text-muted mt-1.5">
+                    Displayed as-is. Use <span class="font-mono">·</span> to separate city from availability.
                 </p>
             </div>
-
         </section>
 
         {# ---------- SECTION: SOCIAL MEDIA ---------- #}
-        <section class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-5">
+        <section class="card p-5 sm:p-6 space-y-5">
 
-            <header class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30
-                                flex items-center justify-center text-purple-400">
-                        <i class="fa-solid fa-share-nodes text-xs" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
-                        Social Media Links
-                    </h3>
-                </div>
-                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+            <header class="flex items-center justify-between gap-3
+                           pb-3 border-b border-line dark:border-gray-700">
+                <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-share-nodes text-electric text-xs" aria-hidden="true"></i>
+                    Social Media
+                </h3>
+                <span class="text-[10px] font-mono text-muted uppercase tracking-widest hidden sm:block">
                     Section 02
                 </span>
             </header>
 
-            <div class="flex items-start gap-2 p-3 rounded-xl
-                        bg-cyan-950/30 border border-cyan-500/20">
-                <i class="fa-solid fa-circle-info text-cyan-400 text-xs mt-0.5 shrink-0"
+            <div class="flex items-start gap-2.5 p-3 rounded-xl
+                        bg-electric/[0.04] dark:bg-electric/[0.08]
+                        border border-electric/20">
+                <i class="fa-solid fa-circle-info text-electric text-xs mt-0.5 shrink-0"
                    aria-hidden="true"></i>
-                <p class="text-[10px] font-mono text-cyan-300 leading-relaxed">
-                    Leave blank to hide a social icon on the public site.
-                    Include the full URL (<code class="text-cyan-200">https://...</code>) —
-                    we'll add it automatically if missing.
+                <p class="text-[11px] text-electric/90 dark:text-electric/80 leading-relaxed">
+                    Leave blank to hide an icon on the public site.
+                    Type a bare domain (e.g. <span class="font-mono">instagram.com/you</span>) and we'll
+                    add <span class="font-mono">https://</span> automatically.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {% set socials = [
+                    ('instagram', 'Instagram', 'fa-brands fa-instagram', 'https://instagram.com/username'),
+                    ('tiktok',    'TikTok',    'fa-brands fa-tiktok',    'https://tiktok.com/@username'),
+                    ('youtube',   'YouTube',   'fa-brands fa-youtube',   'https://youtube.com/@channel'),
+                    ('github',    'GitHub',    'fa-brands fa-github',    'https://github.com/username')
+                ] %}
 
-                {# Instagram #}
+                {% for key, label, icon, placeholder in socials %}
                 <div>
-                    <label for="contact-instagram"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Instagram URL
+                    <label for="contact-{{ key }}"
+                           class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                        {{ label }} URL
                     </label>
                     <div class="relative">
-                        <i class="fa-brands fa-instagram absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-pink-400 text-sm pointer-events-none" aria-hidden="true"></i>
-                        <input type="text"
-                               id="contact-instagram"
-                               name="instagram"
-                               value="{{ contact.instagram or '' }}"
+                        <i class="{{ icon }} absolute left-4 top-1/2 -translate-y-1/2
+                                  text-muted text-sm pointer-events-none"
+                           data-social-icon aria-hidden="true"></i>
+                        <input type="url"
+                               id="contact-{{ key }}"
+                               name="{{ key }}"
+                               value="{{ contact[key] or '' }}"
                                maxlength="200"
-                               data-url-field="true"
-                               placeholder="https://instagram.com/username"
-                               class="url-input w-full pl-10 pr-4 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30
-                                      transition">
+                               spellcheck="false"
+                               autocomplete="off"
+                               inputmode="url"
+                               data-url-field
+                               placeholder="{{ placeholder }}"
+                               class="url-input w-full pl-11 pr-10 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface placeholder-muted font-mono
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition">
+                        <span class="url-status absolute right-3.5 top-1/2 -translate-y-1/2 text-xs">
+                        </span>
                     </div>
                 </div>
-
-                {# TikTok #}
-                <div>
-                    <label for="contact-tiktok"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        TikTok URL
-                    </label>
-                    <div class="relative">
-                        <i class="fa-brands fa-tiktok absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-cyan-400 text-sm pointer-events-none" aria-hidden="true"></i>
-                        <input type="text"
-                               id="contact-tiktok"
-                               name="tiktok"
-                               value="{{ contact.tiktok or '' }}"
-                               maxlength="200"
-                               data-url-field="true"
-                               placeholder="https://tiktok.com/@username"
-                               class="url-input w-full pl-10 pr-4 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30
-                                      transition">
-                    </div>
-                </div>
-
-                {# YouTube #}
-                <div>
-                    <label for="contact-youtube"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        YouTube URL
-                    </label>
-                    <div class="relative">
-                        <i class="fa-brands fa-youtube absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-red-400 text-sm pointer-events-none" aria-hidden="true"></i>
-                        <input type="text"
-                               id="contact-youtube"
-                               name="youtube"
-                               value="{{ contact.youtube or '' }}"
-                               maxlength="200"
-                               data-url-field="true"
-                               placeholder="https://youtube.com/@channel"
-                               class="url-input w-full pl-10 pr-4 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30
-                                      transition">
-                    </div>
-                </div>
-
-                {# GitHub #}
-                <div>
-                    <label for="contact-github"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        GitHub URL
-                    </label>
-                    <div class="relative">
-                        <i class="fa-brands fa-github absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-slate-300 text-sm pointer-events-none" aria-hidden="true"></i>
-                        <input type="text"
-                               id="contact-github"
-                               name="github"
-                               value="{{ contact.github or '' }}"
-                               maxlength="200"
-                               data-url-field="true"
-                               placeholder="https://github.com/username"
-                               class="url-input w-full pl-10 pr-4 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30
-                                      transition">
-                    </div>
-                </div>
-
+                {% endfor %}
             </div>
-
         </section>
 
-        {# ---------- ACTION BAR (sticky on mobile) ---------- #}
-        <div class="glass-card rounded-2xl border border-slate-800 p-4 sm:p-5
-                    sticky bottom-4 sm:static bg-slate-900/95 backdrop-blur-md z-30">
+        {# ---------- STICKY ACTION BAR ---------- #}
+        <div class="card p-4 sm:p-5 sticky bottom-4 z-30
+                    bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md
+                    border-line dark:border-gray-700">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center
+                        justify-between gap-3">
 
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-
-                <div class="flex items-center gap-2 text-[10px] font-mono text-slate-500
-                            w-full sm:w-auto">
-                    <i class="fa-solid fa-circle-info text-cyan-400" aria-hidden="true"></i>
+                <div class="flex items-center gap-2 text-[11px] font-mono text-muted
+                            order-2 sm:order-1">
+                    <i class="fa-solid fa-circle-info text-electric shrink-0" aria-hidden="true"></i>
                     <span>Changes go live immediately after saving.</span>
+                    <span class="hidden sm:inline text-muted/70">·</span>
+                    <span class="hidden sm:inline">
+                        <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800
+                                    border border-line dark:border-gray-700">⌘S</kbd>
+                        to save
+                    </span>
                 </div>
 
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <button type="reset"
-                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-mono
-                                   bg-slate-800 text-slate-300 border border-slate-700
-                                   hover:bg-slate-700 transition active:scale-[0.98]">
-                        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset
+                <div class="flex items-center gap-2 order-1 sm:order-2">
+                    <button type="button"
+                            onclick="requestReset()"
+                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-full
+                                   text-xs font-medium
+                                   bg-canvas dark:bg-gray-800
+                                   text-ink dark:text-surface
+                                   border border-line dark:border-gray-700
+                                   hover:border-ink dark:hover:border-surface transition">
+                        <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
+                        Reset
                     </button>
                     <button type="submit"
                             id="contact-save-btn"
-                            class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-mono font-bold
-                                   text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
-                                   hover:brightness-110 transition active:scale-[0.98]
-                                   inline-flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-save" aria-hidden="true"></i>
+                            class="flex-1 sm:flex-none px-5 py-2.5 rounded-full
+                                   text-xs font-medium text-white
+                                   bg-ink dark:bg-white dark:text-ink
+                                   hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                                   transition-colors
+                                   inline-flex items-center justify-center gap-2
+                                   disabled:opacity-70 disabled:cursor-wait">
+                        <i class="fa-solid fa-check text-[10px]" id="contact-save-icon" aria-hidden="true"></i>
                         <span id="contact-save-label">Save Changes</span>
                     </button>
                 </div>
-
             </div>
-
         </div>
-
     </form>
 
     {# ============================================================
-       LIVE PREVIEW (hidden below xl)
+       LIVE PREVIEW
     ============================================================ #}
     <aside class="hidden xl:block xl:col-span-1">
         <div class="sticky top-24 space-y-4">
 
             <div class="flex items-center gap-2 px-1">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
-                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-teal animate-pulse" aria-hidden="true"></span>
+                <span class="text-[10px] font-mono text-muted uppercase tracking-wider">
                     Live Preview
                 </span>
             </div>
 
-            <div class="glass-card rounded-2xl border border-slate-800 p-5 space-y-4">
+            <div class="card p-5 space-y-4">
 
-                {# Preview header #}
+                {# Header #}
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30
-                                flex items-center justify-center text-emerald-400">
+                    <div class="w-8 h-8 rounded-lg bg-teal/10 border border-teal/20
+                                flex items-center justify-center text-teal">
                         <i class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
                     </div>
-                    <span class="text-[10px] font-mono text-emerald-300 uppercase tracking-wider">
+                    <span class="text-[10px] font-mono text-teal uppercase tracking-wider">
                         Get in Touch
                     </span>
                 </div>
 
-                {# Email preview #}
-                <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-900/70 border border-slate-800">
-                    <div class="w-8 h-8 shrink-0 rounded-lg bg-cyan-950 border border-cyan-500/30
-                                flex items-center justify-center text-cyan-400">
+                {# Email #}
+                <div class="flex items-start gap-3 p-3 rounded-lg
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700">
+                    <div class="w-8 h-8 shrink-0 rounded-lg
+                                bg-electric/10 border border-electric/20 text-electric
+                                flex items-center justify-center">
                         <i class="fa-solid fa-envelope text-xs" aria-hidden="true"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider">
+                        <p class="text-[9px] font-mono text-muted uppercase tracking-wider mb-0.5">
                             Email
                         </p>
-                        <p id="preview-email" class="text-xs text-white truncate font-mono">
+                        <p id="preview-email"
+                           class="text-xs text-ink dark:text-surface truncate font-mono">
                             {{ contact.email or '—' }}
                         </p>
                     </div>
+                    <button type="button"
+                            onclick="copyText(document.getElementById('contact-email').value, 'Email')"
+                            class="shrink-0 w-7 h-7 rounded-md flex items-center justify-center
+                                   text-muted hover:text-electric hover:bg-electric/5 transition"
+                            aria-label="Copy email">
+                        <i class="fa-regular fa-copy text-[10px]" aria-hidden="true"></i>
+                    </button>
                 </div>
 
-                {# Phone preview #}
-                <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-900/70 border border-slate-800">
-                    <div class="w-8 h-8 shrink-0 rounded-lg bg-purple-950 border border-purple-500/30
-                                flex items-center justify-center text-purple-400">
+                {# Phone #}
+                <div class="flex items-start gap-3 p-3 rounded-lg
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700">
+                    <div class="w-8 h-8 shrink-0 rounded-lg
+                                bg-teal/10 border border-teal/20 text-teal
+                                flex items-center justify-center">
                         <i class="fa-solid fa-phone text-xs" aria-hidden="true"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider">
+                        <p class="text-[9px] font-mono text-muted uppercase tracking-wider mb-0.5">
                             Phone
                         </p>
-                        <p id="preview-phone" class="text-xs text-white truncate font-mono">
+                        <p id="preview-phone"
+                           class="text-xs text-ink dark:text-surface truncate font-mono">
                             {{ contact.phone or '—' }}
                         </p>
                     </div>
+                    {% if contact.phone %}
+                    <button type="button"
+                            onclick="copyText(document.getElementById('contact-phone').value, 'Phone')"
+                            class="shrink-0 w-7 h-7 rounded-md flex items-center justify-center
+                                   text-muted hover:text-electric hover:bg-electric/5 transition"
+                            aria-label="Copy phone">
+                        <i class="fa-regular fa-copy text-[10px]" aria-hidden="true"></i>
+                    </button>
+                    {% endif %}
                 </div>
 
-                {# Location preview #}
-                <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-900/70 border border-slate-800">
-                    <div class="w-8 h-8 shrink-0 rounded-lg bg-purple-950 border border-purple-500/30
-                                flex items-center justify-center text-purple-400">
+                {# Location #}
+                <div class="flex items-start gap-3 p-3 rounded-lg
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700">
+                    <div class="w-8 h-8 shrink-0 rounded-lg
+                                bg-electric/10 border border-electric/20 text-electric
+                                flex items-center justify-center">
                         <i class="fa-solid fa-location-dot text-xs" aria-hidden="true"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider">
+                        <p class="text-[9px] font-mono text-muted uppercase tracking-wider mb-0.5">
                             Location
                         </p>
-                        <p id="preview-location" class="text-xs text-white font-mono leading-relaxed">
+                        <p id="preview-location"
+                           class="text-xs text-ink dark:text-surface font-mono leading-relaxed">
                             {{ contact.location or '—' }}
                         </p>
                     </div>
                 </div>
 
-                {# Social preview #}
-                <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-900/70 border border-slate-800">
-                    <div class="w-8 h-8 shrink-0 rounded-lg bg-emerald-950 border border-emerald-500/30
-                                flex items-center justify-center text-emerald-400">
+                {# Social #}
+                <div class="flex items-start gap-3 p-3 rounded-lg
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700">
+                    <div class="w-8 h-8 shrink-0 rounded-lg
+                                bg-teal/10 border border-teal/20 text-teal
+                                flex items-center justify-center">
                         <i class="fa-solid fa-share-nodes text-xs" aria-hidden="true"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+                        <p class="text-[9px] font-mono text-muted uppercase tracking-wider mb-1.5">
                             Social
                         </p>
                         <div id="preview-social" class="flex flex-wrap items-center gap-2 text-base">
-                            {% if contact.instagram %}
-                            <a href="{{ contact.instagram }}" target="_blank" rel="noopener noreferrer"
-                               class="w-7 h-7 rounded-md bg-slate-800 border border-slate-700
-                                      flex items-center justify-center text-pink-400 hover:border-pink-500/40 transition"
-                               aria-label="Instagram">
-                                <i class="fa-brands fa-instagram text-sm" aria-hidden="true"></i>
-                            </a>
-                            {% endif %}
-                            {% if contact.tiktok %}
-                            <a href="{{ contact.tiktok }}" target="_blank" rel="noopener noreferrer"
-                               class="w-7 h-7 rounded-md bg-slate-800 border border-slate-700
-                                      flex items-center justify-center text-cyan-400 hover:border-cyan-500/40 transition"
-                               aria-label="TikTok">
-                                <i class="fa-brands fa-tiktok text-sm" aria-hidden="true"></i>
-                            </a>
-                            {% endif %}
-                            {% if contact.youtube %}
-                            <a href="{{ contact.youtube }}" target="_blank" rel="noopener noreferrer"
-                               class="w-7 h-7 rounded-md bg-slate-800 border border-slate-700
-                                      flex items-center justify-center text-red-400 hover:border-red-500/40 transition"
-                               aria-label="YouTube">
-                                <i class="fa-brands fa-youtube text-sm" aria-hidden="true"></i>
-                            </a>
-                            {% endif %}
-                            {% if contact.github %}
-                            <a href="{{ contact.github }}" target="_blank" rel="noopener noreferrer"
-                               class="w-7 h-7 rounded-md bg-slate-800 border border-slate-700
-                                      flex items-center justify-center text-slate-300 hover:border-slate-500/40 transition"
-                               aria-label="GitHub">
-                                <i class="fa-brands fa-github text-sm" aria-hidden="true"></i>
-                            </a>
-                            {% endif %}
-                            {% if not (contact.instagram or contact.tiktok or contact.youtube or contact.github) %}
-                            <span class="text-[10px] font-mono text-slate-600 italic">
-                                No social links yet
-                            </span>
-                            {% endif %}
+                            {# Populated by JS #}
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <a href="{{ url_for('contact') }}"
                target="_blank"
                rel="noopener noreferrer"
-               class="block text-center px-4 py-2.5 rounded-xl text-xs font-mono
-                      bg-slate-800 text-slate-200 border border-slate-700
-                      hover:bg-slate-700 transition">
-                <i class="fa-solid fa-external-link-alt" aria-hidden="true"></i>
+               class="block text-center px-4 py-2.5 rounded-full text-xs font-medium
+                      bg-canvas dark:bg-gray-800
+                      text-ink dark:text-surface
+                      border border-line dark:border-gray-700
+                      hover:border-ink dark:hover:border-surface transition">
+                <i class="fa-solid fa-external-link-alt text-[10px]" aria-hidden="true"></i>
                 Open Public Contact Page
             </a>
-
         </div>
     </aside>
-
 </div>
 
+{# ============================================================
+   DRAFT RECOVERY CARD
+============================================================ #}
+<div id="draft-banner"
+     class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+            max-w-md w-[calc(100%-2rem)] card p-4 shadow-2xl">
+    <div class="flex items-start gap-3">
+        <div class="w-9 h-9 shrink-0 rounded-lg
+                    bg-electric/10 border border-electric/20 text-electric
+                    flex items-center justify-center">
+            <i class="fa-solid fa-clock-rotate-left text-sm" aria-hidden="true"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-ink dark:text-surface">
+                Unsaved draft found
+            </p>
+            <p class="text-[11px] text-muted mt-0.5">
+                You have changes from a previous session.
+            </p>
+        </div>
+    </div>
+    <div class="mt-3 flex gap-2 justify-end">
+        <button type="button"
+                onclick="dismissDraft()"
+                class="px-3 py-1.5 rounded-full text-[11px] font-medium
+                       bg-canvas dark:bg-gray-800
+                       text-muted border border-line dark:border-gray-700
+                       hover:text-ink dark:hover:text-surface transition">
+            Discard
+        </button>
+        <button type="button"
+                onclick="restoreDraft()"
+                class="px-3 py-1.5 rounded-full text-[11px] font-medium
+                       text-white bg-ink dark:bg-white dark:text-ink
+                       hover:bg-electric dark:hover:bg-electric dark:hover:text-white transition">
+            Restore
+        </button>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[110] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// LIVE PREVIEW SYNC (desktop only, no-op on mobile)
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 3000) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg
+                        text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    if (!text) return;
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => announce(true), () => announce(false));
+        return;
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) {
+        announce(false);
+    }
+}
+
+/* ============================================================
+   LIVE PREVIEW SYNC
+============================================================ */
 const emailInput = document.getElementById('contact-email');
 const phoneInput = document.getElementById('contact-phone');
 const locationInput = document.getElementById('contact-location');
-const instagramInput = document.getElementById('contact-instagram');
-const tiktokInput = document.getElementById('contact-tiktok');
-const youtubeInput = document.getElementById('contact-youtube');
-const githubInput = document.getElementById('contact-github');
 
 const previewEmail = document.getElementById('preview-email');
 const previewPhone = document.getElementById('preview-phone');
@@ -460,86 +563,480 @@ function syncField(input, target, fallback = '—') {
         target.textContent = input.value.trim() || fallback;
     });
 }
-
 syncField(emailInput, previewEmail);
 syncField(phoneInput, previewPhone);
 syncField(locationInput, previewLocation);
 
-// ============================================================
-// AUTO-PREFIX "https://" ON URL FIELDS
-// ============================================================
+/* ============================================================
+   SOCIAL PREVIEW RENDERING
+============================================================ */
+const socialConfig = [
+    { id: 'contact-instagram', name: 'Instagram',
+      icon: 'fa-brands fa-instagram',
+      classes: 'text-pink-500 border-pink-500/30 hover:border-pink-500/60 hover:bg-pink-500/5' },
+    { id: 'contact-tiktok', name: 'TikTok',
+      icon: 'fa-brands fa-tiktok',
+      classes: 'text-ink dark:text-surface border-line dark:border-gray-700 hover:border-ink dark:hover:border-surface' },
+    { id: 'contact-youtube', name: 'YouTube',
+      icon: 'fa-brands fa-youtube',
+      classes: 'text-red-500 border-red-500/30 hover:border-red-500/60 hover:bg-red-500/5' },
+    { id: 'contact-github', name: 'GitHub',
+      icon: 'fa-brands fa-github',
+      classes: 'text-ink dark:text-surface border-line dark:border-gray-700 hover:border-ink dark:hover:border-surface' }
+];
+
+// Mirror the input icon to brand colors too
+const inputIconClasses = {
+    'contact-instagram': 'text-pink-500',
+    'contact-tiktok':    'text-ink dark:text-surface',
+    'contact-youtube':   'text-red-500',
+    'contact-github':    'text-ink dark:text-surface'
+};
+
+function renderSocialPreview() {
+    if (!previewSocial) return;
+
+    // Tint the input icons
+    socialConfig.forEach(cfg => {
+        const input = document.getElementById(cfg.id);
+        const icon = input?.parentElement?.querySelector('[data-social-icon]');
+        if (icon && inputIconClasses[cfg.id]) {
+            icon.className = `${cfg.icon} absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none ${inputIconClasses[cfg.id]}`;
+        }
+    });
+
+    const items = socialConfig
+        .map(cfg => {
+            const input = document.getElementById(cfg.id);
+            const url = (input?.value || '').trim();
+            return { ...cfg, url };
+        })
+        .filter(item => item.url);
+
+    if (items.length === 0) {
+        previewSocial.innerHTML =
+            '<span class="text-[10px] font-mono text-muted italic">No social links yet</span>';
+        return;
+    }
+
+    previewSocial.innerHTML = items.map(item => `
+        <a href="${escapeAttr(item.url)}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="w-8 h-8 rounded-lg bg-white dark:bg-gray-900 border
+                  flex items-center justify-center
+                  ${item.classes} transition"
+           aria-label="${item.name}"
+           title="${item.name}">
+            <i class="${item.icon} text-sm" aria-hidden="true"></i>
+        </a>
+    `).join('');
+}
+
+socialConfig.forEach(cfg => {
+    const input = document.getElementById(cfg.id);
+    if (input) input.addEventListener('input', renderSocialPreview);
+});
+renderSocialPreview();
+
+/* ============================================================
+   URL NORMALIZATION + VALIDATION
+============================================================ */
 function normalizeUrl(value) {
     const v = (value || '').trim();
     if (!v) return '';
     if (/^https?:\/\//i.test(v)) return v;
-    // If it looks like a domain, prefix https://
-    if (/^[\w.-]+\.[a-z]{2,}/i.test(v)) return 'https://' + v;
+    // Bare domain like "instagram.com/foo"
+    if (/^[\w-]+(\.[\w-]+)+([/?#].*)?$/i.test(v)) return 'https://' + v;
     return v;
 }
 
+function isValidUrl(value) {
+    const v = (value || '').trim();
+    if (!v) return null;
+    try {
+        const url = new URL(normalizeUrl(v));
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (e) {
+        return false;
+    }
+}
+
+function updateUrlStatus(input, statusEl) {
+    if (!statusEl) return;
+    const val = input.value.trim();
+    if (!val) {
+        statusEl.innerHTML = '';
+        statusEl.removeAttribute('title');
+        input.classList.remove('border-red-500', 'border-teal');
+        return;
+    }
+    if (isValidUrl(val)) {
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-teal" aria-hidden="true"></i>';
+        statusEl.setAttribute('title', 'Valid URL');
+        input.classList.remove('border-red-500');
+        input.classList.add('border-teal');
+    } else {
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-exclamation text-orange-500" aria-hidden="true"></i>';
+        statusEl.setAttribute('title', 'Looks like an invalid URL');
+        input.classList.remove('border-teal');
+        input.classList.add('border-red-500');
+    }
+}
+
 document.querySelectorAll('.url-input').forEach(input => {
+    const statusEl = input.parentElement?.querySelector('.url-status');
+
     input.addEventListener('blur', () => {
         const normalized = normalizeUrl(input.value);
         if (normalized !== input.value) {
             input.value = normalized;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
         }
+        updateUrlStatus(input, statusEl);
     });
+
+    input.addEventListener('input', () => {
+        if (statusEl) {
+            statusEl.innerHTML = '';
+            statusEl.removeAttribute('title');
+        }
+        input.classList.remove('border-red-500', 'border-teal');
+    });
+
+    updateUrlStatus(input, statusEl);
 });
 
-// ============================================================
-// UNSAVED CHANGES WARNING
-// ============================================================
+/* ============================================================
+   PHONE FORMATTING (light touch)
+============================================================ */
+phoneInput?.addEventListener('input', (e) => {
+    // Keep digits, spaces, +, -, (, )
+    let v = e.target.value.replace(/[^\d+\-() ]/g, '');
+    // Collapse multi-space
+    v = v.replace(/\s{2,}/g, ' ');
+    if (v !== e.target.value) e.target.value = v;
+});
+
+/* ============================================================
+   CHARACTER COUNTERS
+============================================================ */
+document.querySelectorAll('[data-counter-for]').forEach(el => {
+    const targetId = el.dataset.counterFor;
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    const max = parseInt(input.getAttribute('maxlength') || '0', 10);
+    const update = () => {
+        const len = input.value.length;
+        el.textContent = `${len} / ${max}`;
+        el.classList.remove('text-muted', 'text-orange-500', 'text-red-500');
+        const ratio = max > 0 ? len / max : 0;
+        if (ratio >= 1) el.classList.add('text-red-500');
+        else if (ratio >= 0.7) el.classList.add('text-orange-500');
+        else el.classList.add('text-muted');
+    };
+    input.addEventListener('input', update);
+    update();
+});
+
+/* ============================================================
+   DIRTY STATE + DRAFT AUTOSAVE
+============================================================ */
 const form = document.getElementById('contact-form');
-let formDirty = false;
-let isSubmitting = false;
-
-if (form) {
-    // Mark dirty on any input
-    form.addEventListener('input', () => { formDirty = true; });
-    form.addEventListener('change', () => { formDirty = true; });
-
-    // Clear on submit
-    form.addEventListener('submit', () => { isSubmitting = true; });
-
-    // Warn before leaving
-    window.addEventListener('beforeunload', (e) => {
-        if (formDirty && !isSubmitting) {
-            e.preventDefault();
-            e.returnValue = '';
-        }
-    });
-}
-
-// ============================================================
-// SAVE BUTTON FEEDBACK
-// ============================================================
+const statusBar = document.getElementById('status-bar');
+const statusIcon = document.getElementById('status-icon');
+const statusText = document.getElementById('status-text');
 const saveBtn = document.getElementById('contact-save-btn');
 const saveLabel = document.getElementById('contact-save-label');
+const saveIcon = document.getElementById('contact-save-icon');
+const DRAFT_KEY = 'lab_contact_draft_v2';
 
-if (form && saveBtn && saveLabel) {
-    form.addEventListener('submit', () => {
-        saveBtn.disabled = true;
-        saveBtn.classList.add('opacity-70', 'cursor-not-allowed');
-        saveLabel.textContent = 'Saving...';
-        saveBtn.innerHTML = `
-            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
-            <span>Saving changes...</span>
-        `;
+let formDirty = false;
+let draftTimer = null;
+let isSubmitting = false;
+let lastSavedAt = null;
+let savedIndicatorTimer = null;
+
+function serializeForm() {
+    if (!form) return null;
+    const data = {};
+    new FormData(form).forEach((value, key) => {
+        if (key === 'restore_draft') return;
+        data[key] = value;
+    });
+    return data;
+}
+
+function setDirty(dirty) {
+    formDirty = dirty;
+    updateStatusBar();
+}
+
+function updateStatusBar() {
+    if (!statusBar) return;
+    if (!formDirty) {
+        // Show "saved" indicator briefly if we just saved
+        if (lastSavedAt) {
+            statusBar.classList.remove('hidden');
+            statusBar.className = 'mb-5 p-3 rounded-xl flex items-center gap-3 text-xs ' +
+                'bg-teal/5 dark:bg-teal/10 border border-teal/20 text-teal';
+            if (statusIcon) statusIcon.className = 'fa-solid fa-circle-check shrink-0';
+            if (statusText) {
+                statusText.textContent = `Saved ${timeAgo(lastSavedAt)}`;
+                statusText.classList.add('font-mono');
+            }
+        } else {
+            statusBar.classList.add('hidden');
+        }
+        return;
+    }
+    statusBar.classList.remove('hidden');
+    statusBar.className = 'mb-5 p-3 rounded-xl flex items-center gap-3 text-xs ' +
+        'bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 ' +
+        'text-orange-700 dark:text-orange-300';
+    if (statusIcon) statusIcon.className = 'fa-solid fa-circle-exclamation shrink-0';
+    if (statusText) {
+        statusText.textContent = 'You have unsaved changes.';
+        statusText.classList.add('font-mono');
+    }
+}
+
+function timeAgo(ts) {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 3) return 'just now';
+    if (s < 60) return `${s}s ago`;
+    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+    return `${Math.floor(s / 3600)}h ago`;
+}
+
+// Refresh "saved Xs ago" label
+setInterval(() => {
+    if (!formDirty && lastSavedAt) updateStatusBar();
+}, 5000);
+
+function scheduleDraftSave() {
+    if (draftTimer) clearTimeout(draftTimer);
+    draftTimer = setTimeout(() => {
+        try {
+            const data = serializeForm();
+            if (data) localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+        } catch (e) {}
+    }, 1200);
+}
+
+function hasMeaningfulDraft() {
+    try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return null;
+        const draft = JSON.parse(raw);
+        if (!draft) return null;
+        // Only offer restore if the draft actually differs from server values
+        const current = {
+            email: emailInput?.value || '',
+            phone: phoneInput?.value || '',
+            location: locationInput?.value || '',
+            instagram: document.getElementById('contact-instagram')?.value || '',
+            tiktok: document.getElementById('contact-tiktok')?.value || '',
+            youtube: document.getElementById('contact-youtube')?.value || '',
+            github: document.getElementById('contact-github')?.value || ''
+        };
+        const differs = Object.keys(current).some(k => (draft[k] || '') !== current[k]);
+        return differs ? draft : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function restoreDraft() {
+    const draft = hasMeaningfulDraft();
+    if (!draft) return;
+
+    ['email', 'phone', 'location', 'instagram', 'tiktok', 'youtube', 'github'].forEach(key => {
+        const input = document.querySelector(`[name="${key}"]`);
+        if (input && draft[key] != null) input.value = draft[key];
+    });
+
+    // Refresh previews
+    ['contact-email', 'contact-phone', 'contact-location'].forEach(id => {
+        document.getElementById(id)?.dispatchEvent(new Event('input'));
+    });
+    document.querySelectorAll('.url-input').forEach(input => {
+        const statusEl = input.parentElement?.querySelector('.url-status');
+        updateUrlStatus(input, statusEl);
+    });
+    renderSocialPreview();
+
+    setDirty(true);
+    document.getElementById('restore-draft').value = '1';
+    document.getElementById('draft-banner')?.classList.add('hidden');
+
+    if (typeof showToast === 'function') showToast('Draft restored', 'info', 2000);
+}
+
+function dismissDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    document.getElementById('draft-banner')?.classList.add('hidden');
+}
+
+// On load: check for draft
+(function checkDraftOnLoad() {
+    const draft = hasMeaningfulDraft();
+    if (draft) {
+        document.getElementById('draft-banner')?.classList.remove('hidden');
+    }
+})();
+
+// Track changes
+if (form) {
+    form.addEventListener('input', () => {
+        if (!formDirty) setDirty(true);
+        scheduleDraftSave();
+    });
+    form.addEventListener('change', () => {
+        if (!formDirty) setDirty(true);
+        scheduleDraftSave();
     });
 }
 
-// ============================================================
-// RESET BUTTON — remove dirty flag on reset
-// ============================================================
-document.querySelectorAll('button[type="reset"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        setTimeout(() => { formDirty = false; }, 0);
-    });
+// Warn on nav
+window.addEventListener('beforeunload', (e) => {
+    if (formDirty && !isSubmitting) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
 });
+
+// Submit
+if (form) {
+    form.addEventListener('submit', (e) => {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            const firstInvalid = form.querySelector(':invalid');
+            firstInvalid?.focus();
+            if (firstInvalid) {
+                firstInvalid.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                setTimeout(() => {
+                    firstInvalid.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+                }, 2500);
+            }
+            return;
+        }
+
+        isSubmitting = true;
+        setDirty(false);
+        lastSavedAt = Date.now();
+        try { localStorage.removeItem(DRAFT_KEY); } catch (err) {}
+
+        if (saveBtn && saveLabel && saveIcon) {
+            saveBtn.disabled = true;
+            saveIcon.className = 'fa-solid fa-circle-notch fa-spin text-[10px]';
+            saveLabel.textContent = 'Saving…';
+        }
+    });
+}
+
+// Reset with two-click confirm
+let resetPending = false;
+function requestReset() {
+    if (!form) return;
+    if (!formDirty) {
+        performReset();
+        return;
+    }
+    if (resetPending) {
+        performReset();
+        return;
+    }
+    resetPending = true;
+    if (statusBar) {
+        statusBar.classList.remove('hidden');
+        statusBar.className = 'mb-5 p-3 rounded-xl flex items-center gap-3 text-xs ' +
+            'bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 ' +
+            'text-red-700 dark:text-red-300';
+        if (statusIcon) statusIcon.className = 'fa-solid fa-triangle-exclamation shrink-0';
+        if (statusText) statusText.textContent = 'Click Reset again to discard all changes.';
+    }
+    setTimeout(() => {
+        resetPending = false;
+        updateStatusBar();
+    }, 4000);
+}
+
+function performReset() {
+    if (!form) return;
+    form.reset();
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    setDirty(false);
+    resetPending = false;
+    lastSavedAt = null;
+
+    // Refresh previews
+    ['contact-email', 'contact-phone', 'contact-location'].forEach(id => {
+        document.getElementById(id)?.dispatchEvent(new Event('input'));
+    });
+    document.querySelectorAll('.url-input').forEach(input => {
+        const statusEl = input.parentElement?.querySelector('.url-status');
+        updateUrlStatus(input, statusEl);
+    });
+    renderSocialPreview();
+
+    if (typeof showToast === 'function') showToast('Form reset', 'info', 1600);
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    // Cmd/Ctrl + S
+    if (cmd && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        form?.requestSubmit();
+        return;
+    }
+
+    // Cmd/Ctrl + Enter
+    if (cmd && e.key === 'Enter') {
+        e.preventDefault();
+        form?.requestSubmit();
+        return;
+    }
+
+    // Esc: dismiss draft banner / cancel reset
+    if (e.key === 'Escape') {
+        const banner = document.getElementById('draft-banner');
+        if (banner && !banner.classList.contains('hidden')) {
+            dismissDraft();
+            return;
+        }
+        if (resetPending) {
+            resetPending = false;
+            updateStatusBar();
+        }
+    }
+});
+
+/* ============================================================
+   ESCAPE HELPER
+============================================================ */
+function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+// Sync initial preview
+emailInput?.dispatchEvent(new Event('input'));
+phoneInput?.dispatchEvent(new Event('input'));
+locationInput?.dispatchEvent(new Event('input'));
+renderSocialPreview();
 </script>
 
 <style>
-    /* Prevent the sticky action bar from overflowing on mobile */
+    /* Sticky bar edge-to-edge on mobile */
     @media (max-width: 640px) {
         #contact-form .sticky {
             margin-left: -1rem;
@@ -550,9 +1047,15 @@ document.querySelectorAll('button[type="reset"]').forEach(btn => {
         }
     }
 
-    /* Smooth transitions for hover states */
+    /* Smooth transitions */
     input, button {
-        transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+        transition: border-color 0.15s ease, background-color 0.15s ease,
+                    color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .animate-pulse { animation: none !important; }
     }
 </style>
 

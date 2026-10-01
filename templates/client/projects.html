@@ -1,12 +1,9 @@
 {% extends 'client/base.html' %}
 {% block title %}My Projects{% endblock %}
-{% block page_title %}My Projects{% endblock %}
-{% block page_subtitle %}All projects assigned to you.{% endblock %}
-
-{% block content %}
+{% block breadcrumb %}Projects{% endblock %}
 
 {# ============================================================
-   SAFE STATS + COUNTS
+   SAFE STATS — must be before page_title/page_subtitle
 ============================================================ #}
 {% set ns = namespace(
     total=0,
@@ -28,32 +25,61 @@
     {% endfor %}
 {% endif %}
 
+{% block page_title %}My Projects{% endblock %}
+{% block page_subtitle %}
+    {% if projects %}
+        {{ ns.total }} project{% if ns.total != 1 %}s{% endif %}
+        {% if ns.in_progress > 0 %}· {{ ns.in_progress }} active{% endif %}
+        {% if ns.review > 0 %}· {{ ns.review }} in review{% endif %}
+    {% else %}
+        All projects assigned to you.
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+{% if projects %}
+<button type="button"
+        onclick="window.location.reload()"
+        class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+               text-[12px] font-medium
+               text-muted bg-canvas dark:bg-gray-800
+               border border-line dark:border-gray-700
+               hover:text-electric hover:border-electric/40 transition"
+        title="Refresh (⌘R)">
+    <i class="fa-solid fa-rotate text-[10px]" aria-hidden="true"></i>
+    <span>Refresh</span>
+</button>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
 {# ============================================================
-   EMPTY STATE (no projects at all)
+   EMPTY STATE
 ============================================================ #}
 {% if not projects %}
-<div class="glass-card rounded-2xl p-12 sm:p-16 text-center border border-slate-800">
-    <div class="w-20 h-20 rounded-full
-                bg-gradient-to-br from-cyan-500/20 to-purple-500/20
-                border border-cyan-500/30
-                flex items-center justify-center mx-auto mb-6">
-        <i class="fa-solid fa-folder-open text-3xl text-cyan-400"
+<div class="card p-12 sm:p-16 text-center">
+    <div class="w-20 h-20 mx-auto rounded-full
+                bg-electric/10 border border-electric/20
+                flex items-center justify-center mb-6">
+        <i class="fa-solid fa-folder-open text-3xl text-electric"
            aria-hidden="true"></i>
     </div>
-    <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
-        No Projects Yet
+    <h3 class="text-lg font-semibold text-ink dark:text-surface tracking-tight mb-2">
+        No projects yet
     </h3>
-    <p class="text-slate-400 text-sm font-mono max-w-md mx-auto leading-relaxed">
-        Your active and past projects will appear here once your project manager assigns them.
+    <p class="text-muted text-sm max-w-md mx-auto leading-relaxed">
+        Your active and past projects will appear here once assigned.
         In the meantime, feel free to send us a message.
     </p>
     <a href="{{ url_for('client_messages') }}"
-       class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl
-              text-xs font-mono font-bold
-              bg-gradient-to-r from-cyan-400 to-emerald-400
-              text-slate-950 hover:brightness-110 transition active:scale-[0.98]">
-        <i class="fa-solid fa-comments" aria-hidden="true"></i>
-        Contact Support
+       class="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-full
+              text-sm font-medium text-white
+              bg-ink dark:bg-white dark:text-ink
+              hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+              transition-colors">
+        <i class="fa-solid fa-comments text-[11px]" aria-hidden="true"></i>
+        Contact support
     </a>
 </div>
 
@@ -62,81 +88,147 @@
 {# ============================================================
    SUMMARY STATS
 ============================================================ #}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-6">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
-                    uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-layer-group text-cyan-400" aria-hidden="true"></i>
-            Total
+    {# Total #}
+    <button type="button"
+            onclick="filterProjects('all')"
+            data-kpi="all"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Total</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.total }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-layer-group text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.total }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">All projects</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
-                    uppercase tracking-wider mb-1">
-            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"
-                  aria-hidden="true"></span>
-            Active
+    {# Active #}
+    <button type="button"
+            onclick="filterProjects('in_progress')"
+            data-kpi="in_progress"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Active</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.in_progress }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <span class="w-2 h-2 rounded-full bg-electric animate-pulse"
+                      aria-hidden="true"></span>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.in_progress }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">In progress</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
-                    uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-check text-emerald-400" aria-hidden="true"></i>
-            Completed
+    {# Completed #}
+    <button type="button"
+            onclick="filterProjects('completed')"
+            data-kpi="completed"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Completed</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.completed }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-check text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.completed }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">Finished</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400
-                    uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-hourglass-half text-orange-400" aria-hidden="true"></i>
-            Review
+    {# Review #}
+    <button type="button"
+            onclick="filterProjects('review')"
+            data-kpi="review"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Review</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.review }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-orange-500/10 border border-orange-500/20 text-orange-500
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-hourglass-half text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.review }}
-        </div>
-    </div>
-
+        <p class="text-[10px] font-mono text-muted">Awaiting your approval</p>
+    </button>
 </div>
 
 {# ============================================================
-   TOOLBAR: SEARCH + FILTER + SORT
+   TOOLBAR
 ============================================================ #}
-<div class="glass-card rounded-2xl border border-slate-800 p-3 sm:p-4 mb-5 sm:mb-6">
+<div class="card p-4 mb-6 sticky top-0 lg:top-20 z-20
+            bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md">
     <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
 
         {# Search #}
         <div class="relative flex-1 lg:max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
-                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                      text-muted text-xs pointer-events-none" aria-hidden="true"></i>
             <input type="text"
                    id="project-search"
-                   placeholder="Search by title, service, or stage..."
+                   placeholder="Search by title, service, or stage…"
                    autocomplete="off"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
-                          bg-slate-900 border border-slate-800
-                          text-sm text-white placeholder-slate-500
-                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                          transition">
+                   spellcheck="false"
+                   aria-label="Search projects"
+                   class="w-full pl-10 pr-10 py-2.5 rounded-xl
+                          bg-canvas dark:bg-gray-800/50
+                          border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface placeholder-muted
+                          focus:outline-none focus:border-electric
+                          focus:ring-2 focus:ring-electric/20 transition">
+            <button type="button"
+                    id="search-clear"
+                    onclick="clearSearch()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2
+                           w-7 h-7 rounded-md flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-surface dark:hover:bg-gray-700 transition"
+                    aria-label="Clear search">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
         </div>
 
-        {# Filter tabs #}
+        {# Filter chips #}
         <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
-                    overflow-x-auto pb-1 lg:pb-0
-                    -mx-3 px-3 lg:mx-0 lg:px-0 lg:flex-1
-                    scrollbar-thin">
+                    overflow-x-auto scrollbar-none
+                    -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-1"
+             role="tablist"
+             aria-label="Filter projects by status">
             {% set filters = [
                 ('all',         'All',         ns.total),
                 ('in_progress', 'Active',      ns.in_progress),
@@ -145,44 +237,90 @@
                 ('on_hold',     'On Hold',     ns.on_hold)
             ] %}
             {% for key, label, count in filters %}
+            {% if count > 0 or key == 'all' %}
             <button type="button"
                     onclick="filterProjects('{{ key }}')"
                     data-filter="{{ key }}"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg whitespace-nowrap
-                           transition
+                    role="tab"
+                    aria-selected="{% if key == 'all' %}true{% else %}false{% endif %}"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
                            {% if key == 'all' %}
-                               bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                               bg-ink dark:bg-white text-white dark:text-ink
                            {% else %}
-                               bg-slate-900 text-slate-400 border border-slate-800
-                               hover:text-white
+                               bg-canvas dark:bg-gray-800 text-muted
+                               border border-line dark:border-gray-700
+                               hover:text-ink dark:hover:text-surface
                            {% endif %}">
                 {{ label }}
-                <span class="opacity-60 ml-0.5">({{ count }})</span>
+                <span class="opacity-70 tabular-nums ml-1">{{ count }}</span>
             </button>
+            {% endif %}
             {% endfor %}
         </div>
 
-        {# Sort #}
-        <div class="shrink-0">
-            <label for="project-sort" class="sr-only">Sort projects</label>
+        {# Sort + View toggle #}
+        <div class="flex items-center gap-2 shrink-0">
+
             <div class="relative">
+                <label for="project-sort" class="sr-only">Sort projects</label>
                 <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
-                          text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                          text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                 <select id="project-sort"
                         class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
-                               bg-slate-900 border border-slate-800
-                               text-xs font-mono text-slate-200 cursor-pointer
-                               focus:outline-none focus:border-cyan-400 transition">
+                               bg-canvas dark:bg-gray-800/50
+                               border border-line dark:border-gray-700
+                               text-xs font-mono text-ink dark:text-surface cursor-pointer
+                               focus:outline-none focus:border-electric transition">
                     <option value="newest">Newest first</option>
                     <option value="oldest">Oldest first</option>
                     <option value="progress">Most progress</option>
                     <option value="name">Name (A–Z)</option>
                 </select>
                 <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
-                          text-slate-500 text-[10px] pointer-events-none" aria-hidden="true"></i>
+                          text-muted text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+
+            {# Grid / List toggle #}
+            <div class="hidden sm:inline-flex items-center rounded-full p-0.5
+                        bg-canvas dark:bg-gray-800
+                        border border-line dark:border-gray-700">
+                <button type="button"
+                        onclick="setView('grid')"
+                        data-view-btn="grid"
+                        class="view-btn w-8 h-8 rounded-full flex items-center justify-center
+                               text-electric bg-white dark:bg-gray-900 shadow-sm
+                               transition"
+                        aria-label="Grid view"
+                        title="Grid view">
+                    <i class="fa-solid fa-grip text-xs" aria-hidden="true"></i>
+                </button>
+                <button type="button"
+                        onclick="setView('list')"
+                        data-view-btn="list"
+                        class="view-btn w-8 h-8 rounded-full flex items-center justify-center
+                               text-muted hover:text-ink dark:hover:text-surface
+                               transition"
+                        aria-label="List view"
+                        title="List view">
+                    <i class="fa-solid fa-list text-xs" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
+    </div>
 
+    {# Hint row #}
+    <div class="mt-3 pt-3 border-t border-line dark:border-gray-700
+                text-[10px] font-mono text-muted flex items-center gap-2 flex-wrap">
+        <i class="fa-solid fa-circle-info text-electric shrink-0" aria-hidden="true"></i>
+        <span>
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">/</kbd>
+            search ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Enter</kbd>
+            details ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Esc</kbd>
+            close
+        </span>
     </div>
 </div>
 
@@ -203,185 +341,347 @@
         {% set created_at = (p.get('created_at') if p is mapping else (p.created_at if p.created_at is defined else none)) %}
         {% set p_id = p._id if p._id is defined else p.get('_id') if p is mapping else '' %}
 
-        {# Numeric coercion — critical for inline style #}
         {% set progress_num = progress|int if progress is number else 0 %}
         {% set progress_num = 0 if progress_num < 0 else (100 if progress_num > 100 else progress_num) %}
 
-        {# Timestamp for sorting #}
         {% set created_ts = created_at.timestamp() if created_at and created_at.strftime is defined else 0 %}
         {% set created_display = created_at.strftime('%b %d, %Y') if created_at and created_at.strftime is defined else '' %}
 
-        {# Short id #}
         {% set id_str = p_id|string %}
         {% set id_short = id_str[:8] %}
 
-        <article class="project-card glass-card rounded-2xl p-5 sm:p-6
-                        border border-slate-800
-                        hover:border-cyan-500/40 hover:shadow-lg hover:shadow-cyan-500/5
-                        hover:-translate-y-0.5
-                        transition-all duration-200
-                        flex flex-col"
+        {% if st == 'in_progress' %}
+            {% set status_label = 'Active' %}
+            {% set status_icon = 'fa-bolt' %}
+            {% set status_classes = 'bg-electric/10 text-electric border-electric/30' %}
+        {% elif st == 'review' %}
+            {% set status_label = 'Review' %}
+            {% set status_icon = 'fa-clock' %}
+            {% set status_classes = 'bg-orange-500/10 text-orange-500 border-orange-500/30' %}
+        {% elif st == 'completed' %}
+            {% set status_label = 'Completed' %}
+            {% set status_icon = 'fa-check' %}
+            {% set status_classes = 'bg-teal/10 text-teal border-teal/30' %}
+        {% else %}
+            {% set status_label = 'On Hold' %}
+            {% set status_icon = 'fa-pause' %}
+            {% set status_classes = 'bg-muted/10 text-muted border-line dark:border-gray-700' %}
+        {% endif %}
+
+        <article class="project-card card card-hover p-5 sm:p-6
+                        flex flex-col cursor-pointer
+                        focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric"
                  data-status="{{ st }}"
                  data-search="{{ (title ~ ' ' ~ service ~ ' ' ~ stage_label)|lower }}"
                  data-timestamp="{{ created_ts }}"
                  data-progress="{{ progress_num }}"
-                 data-name="{{ title|lower }}">
+                 data-name="{{ title|lower }}"
+                 data-project-id="{{ p_id }}"
+                 data-title="{{ title|e }}"
+                 data-service="{{ service|e }}"
+                 data-timeline="{{ timeline|e }}"
+                 data-stage="{{ stage_label|e }}"
+                 data-created="{{ created_display }}"
+                 role="button"
+                 tabindex="0"
+                 aria-label="View details for {{ title|e }}">
 
-            {# ---------- HEADER ---------- #}
+            {# Header #}
             <header class="flex items-start justify-between gap-3 mb-4">
                 <div class="min-w-0 flex-1">
-                    <h3 class="font-mono-heading font-bold text-base sm:text-lg text-white
-                               line-clamp-2 leading-tight"
+                    <h3 class="text-base sm:text-lg font-semibold text-ink dark:text-surface
+                               leading-tight line-clamp-2 tracking-tight"
                         title="{{ title }}">
                         {{ title }}
                     </h3>
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1
-                                mt-1.5 text-[10px] font-mono text-slate-500">
+                                mt-1.5 text-[10px] font-mono text-muted">
                         {% if id_short %}
-                        <span class="inline-flex items-center gap-1">
-                            <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
-                            {{ id_short }}
-                        </span>
+                        <button type="button"
+                                onclick="event.stopPropagation(); copyText('{{ id_str }}', 'Project ID')"
+                                class="inline-flex items-center gap-1
+                                       hover:text-electric transition group">
+                            <i class="fa-solid fa-hashtag text-[9px]" aria-hidden="true"></i>
+                            <span>{{ id_short }}</span>
+                            <i class="fa-regular fa-copy text-[8px] opacity-0
+                                      group-hover:opacity-70 transition-opacity"
+                               aria-hidden="true"></i>
+                        </button>
                         {% endif %}
                         {% if created_display %}
                         <span class="inline-flex items-center gap-1">
-                            <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                            <i class="fa-regular fa-calendar text-[9px]" aria-hidden="true"></i>
                             {{ created_display }}
                         </span>
                         {% endif %}
                     </div>
                 </div>
 
-                {# Status badge #}
-                {% if st == 'in_progress' %}
                 <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-                             text-[10px] font-bold uppercase whitespace-nowrap
-                             bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                             text-[10px] font-mono uppercase whitespace-nowrap
+                             {{ status_classes }}">
+                    {% if st == 'in_progress' %}
+                    <span class="w-1.5 h-1.5 rounded-full bg-electric animate-pulse"
                           aria-hidden="true"></span>
-                    Active
+                    {% else %}
+                    <i class="fa-solid {{ status_icon }} text-[8px]" aria-hidden="true"></i>
+                    {% endif %}
+                    {{ status_label }}
                 </span>
-                {% elif st == 'review' %}
-                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-                             text-[10px] font-bold uppercase whitespace-nowrap
-                             bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                    <i class="fa-solid fa-clock text-[8px]" aria-hidden="true"></i>
-                    Review
-                </span>
-                {% elif st == 'completed' %}
-                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-                             text-[10px] font-bold uppercase whitespace-nowrap
-                             bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
-                    Done
-                </span>
-                {% else %}
-                <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-                             text-[10px] font-bold uppercase whitespace-nowrap
-                             bg-slate-500/10 text-slate-400 border border-slate-500/20">
-                    <i class="fa-solid fa-pause text-[8px]" aria-hidden="true"></i>
-                    Hold
-                </span>
-                {% endif %}
             </header>
 
-            {# ---------- META GRID ---------- #}
+            {# Meta grid #}
             <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
-                <div class="p-2.5 sm:p-3 rounded-lg bg-black/30 border border-white/5 min-w-0">
-                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">
+                <div class="p-2.5 rounded-lg
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700 min-w-0">
+                    <p class="text-[9px] font-mono text-muted uppercase tracking-widest mb-1">
                         Service
                     </p>
-                    <p class="text-xs text-white font-mono truncate"
+                    <p class="text-xs text-ink dark:text-surface truncate"
                        title="{{ service or '—' }}">
                         {{ service or '—' }}
                     </p>
                 </div>
-                <div class="p-2.5 sm:p-3 rounded-lg bg-black/30 border border-white/5 min-w-0">
-                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">
+                <div class="p-2.5 rounded-lg
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700 min-w-0">
+                    <p class="text-[9px] font-mono text-muted uppercase tracking-widest mb-1">
                         Timeline
                     </p>
-                    <p class="text-xs text-white font-mono truncate"
+                    <p class="text-xs text-ink dark:text-surface truncate"
                        title="{{ timeline or '—' }}">
                         {{ timeline or '—' }}
                     </p>
                 </div>
-                <div class="p-2.5 sm:p-3 rounded-lg bg-black/30 border border-white/5 min-w-0">
-                    <p class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">
+                <div class="p-2.5 rounded-lg
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700 min-w-0">
+                    <p class="text-[9px] font-mono text-muted uppercase tracking-widest mb-1">
                         Stage
                     </p>
-                    <p class="text-xs text-cyan-400 font-mono truncate"
+                    <p class="text-xs text-electric truncate"
                        title="{{ stage_label or '—' }}">
                         {{ stage_label or '—' }}
                     </p>
                 </div>
             </div>
 
-            {# ---------- PROGRESS ---------- #}
+            {# Progress #}
             <div class="mt-auto">
-                <div class="flex justify-between text-xs mb-2 gap-2">
-                    <span class="text-slate-400 font-mono uppercase tracking-wider text-[10px]">
-                        Overall Progress
+                <div class="flex justify-between text-[10px] mb-2 gap-2">
+                    <span class="text-muted font-mono uppercase tracking-widest">
+                        Overall progress
                     </span>
-                    <span class="text-cyan-400 font-bold font-mono shrink-0">
+                    <span class="text-electric font-mono font-semibold shrink-0 tabular-nums">
                         {{ progress_num }}%
                     </span>
                 </div>
-                <div class="w-full bg-slate-800 rounded-full h-2.5 border border-slate-700
-                            overflow-hidden"
+                <div class="w-full bg-canvas dark:bg-gray-800
+                            rounded-full h-2 overflow-hidden
+                            border border-line dark:border-gray-700"
                      role="progressbar"
                      aria-valuenow="{{ progress_num }}"
                      aria-valuemin="0"
                      aria-valuemax="100"
                      aria-label="{{ title }} progress">
-                    <div class="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500
-                                h-full rounded-full transition-all duration-500"
+                    <div class="progress-fill
+                                bg-gradient-to-r from-electric to-teal
+                                h-full rounded-full transition-all duration-700"
                          style="width: {{ progress_num }}%"></div>
                 </div>
             </div>
-
         </article>
     {% endfor %}
-
 </div>
 
-{# ============================================================
-   NO RESULTS (hidden by default)
-============================================================ #}
+{# No results #}
 <div id="no-results"
-     class="hidden glass-card rounded-2xl p-10 sm:p-12 text-center
-            border border-slate-800">
-    <div class="w-16 h-16 rounded-full mx-auto mb-4
-                bg-slate-900 border border-slate-800
-                flex items-center justify-center">
-        <i class="fa-solid fa-magnifying-glass text-2xl text-slate-500"
+     class="hidden card p-12 text-center">
+    <div class="w-14 h-14 mx-auto rounded-full
+                bg-canvas dark:bg-gray-800
+                border border-line dark:border-gray-700
+                flex items-center justify-center mb-3">
+        <i class="fa-solid fa-magnifying-glass text-xl text-muted"
            aria-hidden="true"></i>
     </div>
-    <h3 class="font-mono-heading font-bold text-white text-sm mb-1">
-        No Projects Match
-    </h3>
-    <p class="text-slate-400 text-xs font-mono mb-4">
-        Try adjusting your search or filter.
+    <p class="text-ink dark:text-surface text-sm font-medium">No matches</p>
+    <p class="text-muted text-xs font-mono mt-1">
+        Try a different search or filter.
     </p>
     <button type="button"
             onclick="resetFilters()"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl
-                   text-[11px] font-mono font-bold
-                   bg-cyan-500/15 text-cyan-300 border border-cyan-500/30
-                   hover:bg-cyan-500/25 transition">
-        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-        Clear Filters
+            class="mt-4 inline-flex items-center gap-1.5
+                   px-4 py-2 rounded-full text-xs font-medium
+                   bg-canvas dark:bg-gray-800
+                   text-ink dark:text-surface
+                   border border-line dark:border-gray-700
+                   hover:border-ink dark:hover:border-surface transition">
+        <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
+        Clear filters
     </button>
 </div>
 
 {% endif %}
 
+{# ============================================================
+   PROJECT DETAILS MODAL
+============================================================ #}
+<div id="project-modal"
+     class="fixed inset-0 z-[110] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="project-modal-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeProjectModal()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-lg card shadow-2xl
+                bg-white dark:bg-[#141414]
+                max-h-[85vh] flex flex-col overflow-hidden">
+        <header class="p-5 border-b border-line dark:border-gray-700
+                       flex items-start justify-between gap-4 shrink-0">
+            <div class="min-w-0 flex-1">
+                <h3 id="project-modal-title"
+                    class="text-base font-semibold text-ink dark:text-surface
+                           tracking-tight line-clamp-2">
+                    —
+                </h3>
+                <p id="project-modal-id"
+                   class="text-[10px] font-mono text-muted mt-1">
+                    —
+                </p>
+            </div>
+            <button type="button"
+                    onclick="closeProjectModal()"
+                    class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-canvas dark:hover:bg-gray-800 transition"
+                    aria-label="Close">
+                <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <div class="p-5 overflow-y-auto flex-1 space-y-4">
+            <div id="project-modal-status"></div>
+
+            <div id="project-modal-meta"
+                 class="grid grid-cols-2 gap-3"></div>
+
+            <div id="project-modal-progress"></div>
+        </div>
+
+        <footer class="p-4 border-t border-line dark:border-gray-700
+                       flex items-center justify-end shrink-0
+                       bg-canvas dark:bg-gray-800/40">
+            <button type="button"
+                    onclick="closeProjectModal()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-ink dark:text-surface
+                           bg-white dark:bg-gray-900
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                Close
+            </button>
+        </footer>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[120] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// FILTER + SEARCH + SORT
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2400) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    if (!text) return;
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => announce(true), () => announce(false));
+        return;
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) { announce(false); }
+}
+
+/* ============================================================
+   FILTER / SORT / VIEW
+============================================================ */
 let currentFilter = 'all';
 let currentSearch = '';
 let currentSort = 'newest';
+let currentView = 'grid';
 
 function applyFilters() {
     const cards = document.querySelectorAll('.project-card');
@@ -391,7 +691,6 @@ function applyFilters() {
     cards.forEach(card => {
         const status = card.dataset.status || '';
         const haystack = card.dataset.search || '';
-
         const matchesFilter = (currentFilter === 'all' || status === currentFilter);
         const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
 
@@ -403,10 +702,15 @@ function applyFilters() {
         }
     });
 
-    // Toggle no-results
-    if (noResults) {
-        noResults.classList.toggle('hidden', visible > 0);
-    }
+    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+
+    document.querySelectorAll('[data-kpi]').forEach(kpi => {
+        const isActive = kpi.dataset.kpi === currentFilter;
+        kpi.classList.toggle('ring-2', isActive);
+        kpi.classList.toggle('ring-electric/30', isActive);
+    });
+
+    updateClearButton();
 }
 
 function filterProjects(status) {
@@ -414,12 +718,17 @@ function filterProjects(status) {
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         const isActive = btn.dataset.filter === status;
-        btn.classList.toggle('bg-cyan-500/20', isActive);
-        btn.classList.toggle('text-cyan-300', isActive);
-        btn.classList.toggle('border-cyan-500/40', isActive);
-        btn.classList.toggle('bg-slate-900', !isActive);
-        btn.classList.toggle('text-slate-400', !isActive);
-        btn.classList.toggle('border-slate-800', !isActive);
+        btn.classList.toggle('bg-ink', isActive);
+        btn.classList.toggle('dark:bg-white', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('dark:text-ink', isActive);
+        btn.classList.toggle('bg-canvas', !isActive);
+        btn.classList.toggle('dark:bg-gray-800', !isActive);
+        btn.classList.toggle('text-muted', !isActive);
+        btn.classList.toggle('border', !isActive);
+        btn.classList.toggle('border-line', !isActive);
+        btn.classList.toggle('dark:border-gray-700', !isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     applyFilters();
@@ -429,7 +738,26 @@ function resetFilters() {
     currentSearch = '';
     const searchInput = document.getElementById('project-search');
     if (searchInput) searchInput.value = '';
+    updateClearButton();
     filterProjects('all');
+}
+
+function clearSearch() {
+    const searchInput = document.getElementById('project-search');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    currentSearch = '';
+    updateClearButton();
+    applyFilters();
+}
+
+function updateClearButton() {
+    const searchInput = document.getElementById('project-search');
+    const clearBtn = document.getElementById('search-clear');
+    if (!searchInput || !clearBtn) return;
+    clearBtn.classList.toggle('hidden', !searchInput.value);
 }
 
 function sortProjects(order) {
@@ -450,24 +778,137 @@ function sortProjects(order) {
             case 'oldest':   return tsA - tsB;
             case 'progress': return progB - progA;
             case 'name':     return nameA.localeCompare(nameB);
-            case 'newest':
             default:         return tsB - tsA;
         }
     });
 
     cards.forEach(card => grid.appendChild(card));
+    applyFilters();
 }
 
-// Wire up search
+function setView(view) {
+    currentView = view;
+    const grid = document.getElementById('projects-grid');
+    if (!grid) return;
+
+    if (view === 'list') {
+        grid.classList.remove('md:grid-cols-2', 'xl:grid-cols-3');
+        grid.classList.add('md:grid-cols-1');
+    } else {
+        grid.classList.remove('md:grid-cols-1');
+        grid.classList.add('md:grid-cols-2', 'xl:grid-cols-3');
+    }
+
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        const isActive = btn.dataset.viewBtn === view;
+        btn.classList.toggle('bg-white', isActive);
+        btn.classList.toggle('dark:bg-gray-900', isActive);
+        btn.classList.toggle('text-electric', isActive);
+        btn.classList.toggle('shadow-sm', isActive);
+        btn.classList.toggle('text-muted', !isActive);
+    });
+
+    try { localStorage.setItem('client-projects-view', view); } catch (e) {}
+}
+
+/* ============================================================
+   PROJECT DETAILS MODAL
+============================================================ */
+function openProjectModal(card) {
+    const modal = document.getElementById('project-modal');
+    if (!modal || !card) return;
+
+    const title = card.dataset.title || '—';
+    const id = card.dataset.projectId || '';
+    const service = card.dataset.service || '—';
+    const timeline = card.dataset.timeline || '—';
+    const stage = card.dataset.stage || '—';
+    const created = card.dataset.created || '—';
+    const progress = parseInt(card.dataset.progress) || 0;
+    const status = card.dataset.status || 'on_hold';
+
+    document.getElementById('project-modal-title').textContent = title;
+    document.getElementById('project-modal-id').textContent = id ? `#${id.slice(0, 8)}` : '';
+
+    // Status pill
+    const statusMap = {
+        'in_progress': { label: 'Active', classes: 'bg-electric/10 text-electric border-electric/30', icon: 'fa-bolt' },
+        'review':      { label: 'Review', classes: 'bg-orange-500/10 text-orange-500 border-orange-500/30', icon: 'fa-clock' },
+        'completed':   { label: 'Completed', classes: 'bg-teal/10 text-teal border-teal/30', icon: 'fa-check' },
+        'on_hold':     { label: 'On Hold', classes: 'bg-muted/10 text-muted border-line dark:border-gray-700', icon: 'fa-pause' }
+    };
+    const info = statusMap[status] || statusMap['on_hold'];
+    document.getElementById('project-modal-status').innerHTML = `
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                         text-xs font-mono uppercase ${info.classes}">
+                <i class="fa-solid ${info.icon} text-[10px]"></i>
+                ${info.label}
+            </span>
+        </div>
+    `;
+
+    // Meta grid
+    document.getElementById('project-modal-meta').innerHTML = `
+        <div class="p-3 rounded-lg bg-canvas dark:bg-gray-800/50 border border-line dark:border-gray-700">
+            <p class="text-[10px] font-mono text-muted uppercase tracking-widest mb-1">Service</p>
+            <p class="text-sm text-ink dark:text-surface truncate">${escapeHtml(service)}</p>
+        </div>
+        <div class="p-3 rounded-lg bg-canvas dark:bg-gray-800/50 border border-line dark:border-gray-700">
+            <p class="text-[10px] font-mono text-muted uppercase tracking-widest mb-1">Timeline</p>
+            <p class="text-sm text-ink dark:text-surface truncate">${escapeHtml(timeline)}</p>
+        </div>
+        <div class="p-3 rounded-lg bg-canvas dark:bg-gray-800/50 border border-line dark:border-gray-700">
+            <p class="text-[10px] font-mono text-muted uppercase tracking-widest mb-1">Stage</p>
+            <p class="text-sm text-electric truncate">${escapeHtml(stage)}</p>
+        </div>
+        <div class="p-3 rounded-lg bg-canvas dark:bg-gray-800/50 border border-line dark:border-gray-700">
+            <p class="text-[10px] font-mono text-muted uppercase tracking-widest mb-1">Created</p>
+            <p class="text-sm text-ink dark:text-surface truncate">${escapeHtml(created)}</p>
+        </div>
+    `;
+
+    // Progress
+    document.getElementById('project-modal-progress').innerHTML = `
+        <div>
+            <div class="flex justify-between text-xs mb-2">
+                <span class="text-muted font-mono uppercase tracking-widest text-[10px]">Progress</span>
+                <span class="text-electric font-mono font-bold tabular-nums">${progress}%</span>
+            </div>
+            <div class="w-full bg-canvas dark:bg-gray-800 rounded-full h-2 overflow-hidden
+                        border border-line dark:border-gray-700">
+                <div class="bg-gradient-to-r from-electric to-teal h-full rounded-full"
+                     style="width: ${progress}%"></div>
+            </div>
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.querySelector('button')?.focus(), 50);
+}
+
+function closeProjectModal() {
+    const modal = document.getElementById('project-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+/* ============================================================
+   WIRE UP
+============================================================ */
 const searchInput = document.getElementById('project-search');
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
         currentSearch = (e.target.value || '').toLowerCase().trim();
+        updateClearButton();
         applyFilters();
     });
 }
 
-// Wire up sort
 const sortSelect = document.getElementById('project-sort');
 if (sortSelect) {
     sortSelect.addEventListener('change', (e) => {
@@ -475,10 +916,95 @@ if (sortSelect) {
         sortProjects(currentSort);
     });
 }
+
+// Card clicks → modal
+document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('button, a')) return;
+        openProjectModal(card);
+    });
+    card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openProjectModal(card);
+        }
+    });
+});
+
+/* ============================================================
+   PROGRESS BAR ANIMATION
+============================================================ */
+(function animateProgressBars() {
+    const bars = document.querySelectorAll('.progress-fill');
+    if (bars.length === 0) return;
+    if (!('IntersectionObserver' in window)) return;
+
+    bars.forEach(bar => {
+        const target = bar.style.width;
+        bar.style.width = '0%';
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    requestAnimationFrame(() => {
+                        bar.style.width = target;
+                    });
+                    io.unobserve(bar);
+                }
+            });
+        }, { threshold: 0.3 });
+        io.observe(bar);
+    });
+})();
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('project-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeProjectModal();
+            return;
+        }
+
+        if (document.activeElement === searchInput) {
+            searchInput.blur();
+        } else if (currentSearch || currentFilter !== 'all') {
+            resetFilters();
+        }
+        return;
+    }
+
+    if (isTyping || cmd || e.altKey) return;
+
+    if (e.key === '/') {
+        e.preventDefault();
+        searchInput?.focus();
+    }
+});
+
+/* ============================================================
+   INIT
+============================================================ */
+(function restoreView() {
+    try {
+        const saved = localStorage.getItem('client-projects-view');
+        if (saved === 'list') setView('list');
+        else setView('grid');
+    } catch (e) { setView('grid'); }
+})();
+
+updateClearButton();
+applyFilters();
 </script>
 
 <style>
-    /* Line clamp utility */
+    /* Line clamp */
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -486,19 +1012,35 @@ if (sortSelect) {
         overflow: hidden;
     }
 
-    /* Focus-visible ring */
-    *:focus-visible {
-        outline: 2px solid rgba(0, 242, 254, 0.6);
-        outline-offset: 2px;
+    /* Hide scrollbars */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom select arrow */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 12px;
     }
 
-    /* Thin scrollbar for filter tabs */
-    .scrollbar-thin::-webkit-scrollbar {
-        height: 4px;
+    /* List view: project cards become a single column */
+    #projects-grid.md\:grid-cols-1 .project-card {
+        padding: 1rem 1.25rem;
     }
-    .scrollbar-thin::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.3);
-        border-radius: 2px;
+
+    /* Card hover */
+    .project-card:hover {
+        border-color: #D4D4D8;
+    }
+    .dark .project-card:hover {
+        border-color: #333333;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .animate-pulse { animation: none !important; }
     }
 </style>
 

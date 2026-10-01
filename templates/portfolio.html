@@ -42,174 +42,196 @@
 
 {% block content %}
 
-<section class="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative z-10"
+<section class="relative overflow-hidden py-12 sm:py-16 lg:py-20"
          aria-labelledby="portfolio-heading">
 
-    {# ============================================================
-       HEADER: badge + title + filter tabs
-    ============================================================ #}
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-12">
+    <!-- Subtle mesh backdrop -->
+    <div class="absolute inset-0 mesh-hero opacity-60 pointer-events-none" aria-hidden="true"></div>
 
-        <div class="space-y-3">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/50 border border-purple-500/30 text-xs font-mono text-purple-300">
-                <i class="fa-solid fa-folder-open" aria-hidden="true"></i> PORTFOLIO & RECENT WORK
-            </div>
-            <h1 id="portfolio-heading"
-                class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-mono-heading leading-tight">
-                Featured <span class="text-gradient-purple">Projects</span>
-            </h1>
-            <p class="text-slate-400 text-sm sm:text-base max-w-2xl">
-                A selection of photo, video, motion graphics, brand design and software projects — crafted with precision.
-            </p>
+    <div class="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+
+        <!-- Breadcrumb-style label -->
+        <div class="text-xs font-mono text-muted uppercase tracking-widest mb-8 reveal">
+            / Portfolio
         </div>
-
-        {# ---------- Filter Tabs ---------- #}
-        <nav class="flex flex-wrap gap-2 text-xs font-mono"
-             role="navigation"
-             aria-label="Filter portfolio by category">
-
-            {% set categories = [
-                ('all', 'All Work', 'fa-th-large'),
-                ('visual', 'Photo & Retouch', 'fa-camera'),
-                ('video', 'Video & Motion', 'fa-film'),
-                ('code', 'Websites & Software', 'fa-code'),
-                ('brand', 'Graphic Design', 'fa-palette')
-            ] %}
-
-            {% for key, label, icon in categories %}
-            <a href="{{ url_for('portfolio', category=key) }}"
-               aria-current="{% if active_category == key %}page{% else %}false{% endif %}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition whitespace-nowrap
-                      {% if active_category == key %}
-                          bg-cyan-500 text-slate-950 font-bold shadow-md shadow-cyan-500/20
-                      {% else %}
-                          glass-card text-slate-300 hover:text-white hover:border-slate-600
-                      {% endif %}">
-                <i class="fa-solid {{ icon }} text-[10px]" aria-hidden="true"></i>
-                <span>{{ label }}</span>
-            </a>
-            {% endfor %}
-        </nav>
-    </div>
-
-    {# ============================================================
-       RESULTS COUNT (optional, good for UX + SEO)
-    ============================================================ #}
-    {% if portfolio|length > 0 %}
-    <p class="text-xs font-mono text-slate-500 mb-6">
-        Showing <span class="text-cyan-400 font-bold">{{ portfolio|length }}</span>
-        {% if active_category != 'all' %} project{% if portfolio|length != 1 %}s{% endif %} in this category{% else %} total project{% if portfolio|length != 1 %}s{% endif %}{% endif %}
-    </p>
-    {% endif %}
-
-    {# ============================================================
-       GRID
-    ============================================================ #}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-
-        {% for item in portfolio %}
-        <article class="portfolio-card glass-card rounded-2xl overflow-hidden border border-slate-800 glass-card-hover group flex flex-col"
-                 itemscope itemtype="https://schema.org/CreativeWork">
-
-            {# ---------- Image ---------- #}
-            <div class="relative aspect-video overflow-hidden bg-slate-900 shrink-0">
-                <img src="{{ item.image }}"
-                     alt="{{ item.title }} — {{ item.category }} project by The Media Scientist, Kumasi Ghana"
-                     loading="lazy"
-                     decoding="async"
-                     itemprop="image"
-                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-
-                {# Gradient overlay for readability #}
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                {# Category chip #}
-                <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-slate-950/85 backdrop-blur-sm text-[10px] font-mono text-cyan-300 border border-slate-700">
-                    {{ item.category }}
-                </div>
-
-                {# Hover CTA hint #}
-                <div class="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cyan-500 text-slate-950 text-[10px] font-mono font-bold">
-                        View <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
-                    </span>
-                </div>
-            </div>
-
-            {# ---------- Content ---------- #}
-            <div class="p-5 flex flex-col flex-1">
-                <h2 class="font-mono-heading font-bold text-base sm:text-lg text-white group-hover:text-cyan-300 transition-colors"
-                    itemprop="name">
-                    {{ item.title }}
-                </h2>
-
-                <p class="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed line-clamp-2"
-                   itemprop="description">
-                    {{ item.description }}
-                </p>
-
-                {# ---------- Tools footer ---------- #}
-                {% if item.tools %}
-                <div class="mt-auto pt-4 flex items-center gap-2 text-[10px] font-mono text-slate-500 border-t border-slate-800/60">
-                    <i class="fa-solid fa-toolbox text-cyan-400/60" aria-hidden="true"></i>
-                    <span class="truncate">{{ item.tools }}</span>
-                </div>
-                {% endif %}
-            </div>
-
-        </article>
-        {% else %}
 
         {# ============================================================
-           EMPTY STATE
+           HEADER: title + filter tabs
         ============================================================ #}
-        <div class="col-span-full glass-card rounded-2xl border border-slate-800 p-12 sm:p-16 text-center">
-            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 flex items-center justify-center mx-auto mb-6">
-                <i class="fa-solid fa-folder-open text-3xl text-purple-400" aria-hidden="true"></i>
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10 sm:mb-14 reveal">
+
+            <div class="space-y-4 max-w-2xl">
+                <h1 id="portfolio-heading"
+                    class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.1] text-ink dark:text-surface">
+                    Selected work,
+                    <br>
+                    <span class="font-serif-display italic font-normal text-electric">worth showing.</span>
+                </h1>
+                <p class="text-muted text-[15px] leading-relaxed">
+                    A curated look at photo, video, motion graphics, brand design and software projects — crafted with precision.
+                </p>
             </div>
-            <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
-                No projects in this category yet
-            </h3>
-            <p class="text-slate-400 text-sm font-mono max-w-md mx-auto">
-                Check back soon or explore other categories. New work is added regularly.
-            </p>
-            <div class="flex flex-wrap justify-center gap-3 mt-6">
-                <a href="{{ url_for('portfolio', category='all') }}"
-                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-mono font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:brightness-110 transition">
-                    <i class="fa-solid fa-th-large" aria-hidden="true"></i> View All Work
+
+            {# ---------- Filter Tabs ---------- #}
+            <nav class="flex flex-wrap gap-2 text-xs font-mono"
+                 role="tablist"
+                 aria-label="Filter portfolio by category">
+
+                {% set categories = [
+                    ('all', 'All Work', 'fa-th-large'),
+                    ('visual', 'Photo', 'fa-camera'),
+                    ('video', 'Video & Motion', 'fa-film'),
+                    ('code', 'Code', 'fa-code'),
+                    ('brand', 'Design', 'fa-palette')
+                ] %}
+
+                {% for key, label, icon in categories %}
+                <a href="{{ url_for('portfolio', category=key) }}"
+                   role="tab"
+                   aria-selected="{% if active_category == key %}true{% else %}false{% endif %}"
+                   class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full transition-all whitespace-nowrap
+                          {% if active_category == key %}
+                              bg-ink dark:bg-white text-white dark:text-ink font-medium shadow-sm
+                          {% else %}
+                              bg-white dark:bg-gray-800 text-muted border border-line dark:border-gray-700 hover:text-ink dark:hover:text-surface hover:border-ink/30 dark:hover:border-gray-600
+                          {% endif %}">
+                    <i class="fa-solid {{ icon }} text-[10px]" aria-hidden="true"></i>
+                    <span>{{ label }}</span>
                 </a>
-                <a href="{{ url_for('contact') }}"
-                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-mono text-slate-200 glass-card hover:border-slate-600 transition">
-                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Start a Project
-                </a>
-            </div>
+                {% endfor %}
+            </nav>
         </div>
 
-        {% endfor %}
-    </div>
-
-    {# ============================================================
-       BOTTOM CTA
-    ============================================================ #}
-    {% if portfolio|length > 0 %}
-    <div class="mt-16 glass-card rounded-2xl p-8 sm:p-10 border border-slate-800 text-center">
-        <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
-            Want to be next on this list?
-        </h2>
-        <p class="text-slate-400 text-sm mt-3 max-w-xl mx-auto">
-            Let's craft something incredible for your brand — photo, video, design, or full-stack software.
+        {# ============================================================
+           RESULTS COUNT
+        ============================================================ #}
+        {% if portfolio|length > 0 %}
+        <p class="text-xs font-mono text-muted mb-8 reveal" aria-live="polite">
+            Showing <span class="text-electric font-semibold">{{ portfolio|length }}</span>
+            {% if active_category != 'all' %}
+                project{% if portfolio|length != 1 %}s{% endif %} in this category
+            {% else %}
+                total project{% if portfolio|length != 1 %}s{% endif %}
+            {% endif %}
         </p>
-        <a href="{{ url_for('contact') }}"
-           class="inline-flex items-center gap-2 mt-6 px-8 py-3.5 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:brightness-110 transition">
-            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Start Your Project
-        </a>
-    </div>
-    {% endif %}
+        {% endif %}
 
+        {# ============================================================
+           GRID
+        ============================================================ #}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+
+            {% for item in portfolio %}
+            <article class="card overflow-hidden group flex flex-col reveal"
+                     itemscope itemtype="https://schema.org/CreativeWork">
+
+                {# ---------- Image ---------- #}
+                <div class="relative aspect-[4/3] overflow-hidden bg-surface dark:bg-gray-800 shrink-0">
+                    <img src="{{ item.image }}"
+                         alt="{{ item.title }} — {{ item.category }} project by The Media Scientist, Kumasi Ghana"
+                         loading="lazy"
+                         decoding="async"
+                         itemprop="image"
+                         class="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500">
+
+                    {# Gradient overlay for readability #}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true"></div>
+
+                    {# Category chip #}
+                    <div class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/95 dark:bg-ink/90 backdrop-blur-sm text-[10px] font-mono text-ink dark:text-surface border border-line dark:border-gray-700">
+                        {{ item.category }}
+                    </div>
+
+                    {# Hover CTA hint #}
+                    <div class="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-electric text-white text-[10px] font-mono font-medium">
+                            View <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </div>
+
+                {# ---------- Content ---------- #}
+                <div class="p-5 flex flex-col flex-1">
+                    <h2 class="font-semibold text-base text-ink dark:text-surface group-hover:text-electric transition-colors line-clamp-1"
+                        itemprop="name">
+                        {{ item.title }}
+                    </h2>
+
+                    <p class="text-[13px] text-muted mt-1.5 leading-relaxed line-clamp-2"
+                       itemprop="description">
+                        {{ item.description }}
+                    </p>
+
+                    {# ---------- Tools footer ---------- #}
+                    {% if item.tools %}
+                    <div class="mt-auto pt-4 flex items-center gap-2 text-[10px] font-mono text-muted border-t border-line dark:border-gray-700 mt-4">
+                        <i class="fa-solid fa-toolbox text-electric/60" aria-hidden="true"></i>
+                        <span class="truncate">{{ item.tools }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </article>
+            {% else %}
+
+            {# ============================================================
+               EMPTY STATE
+            ============================================================ #}
+            <div class="col-span-full card p-12 sm:p-16 text-center reveal">
+                <div class="w-20 h-20 rounded-full bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700 flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-regular fa-folder-open text-3xl text-muted" aria-hidden="true"></i>
+                </div>
+                <h3 class="font-semibold text-ink dark:text-surface text-lg mb-2">
+                    No projects in this category yet
+                </h3>
+                <p class="text-muted text-sm max-w-md mx-auto leading-relaxed">
+                    Check back soon or explore other categories. New work is added regularly.
+                </p>
+                <div class="flex flex-wrap justify-center gap-3 mt-8">
+                    <a href="{{ url_for('portfolio', category='all') }}"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium text-white bg-ink dark:bg-white dark:text-ink hover:bg-electric dark:hover:bg-electric dark:hover:text-white transition-colors">
+                        <i class="fa-solid fa-th-large" aria-hidden="true"></i> View all work
+                    </a>
+                    <a href="{{ url_for('contact') }}"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium text-ink dark:text-surface border border-line dark:border-gray-700 hover:border-ink dark:hover:border-surface transition-colors">
+                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Start a project
+                    </a>
+                </div>
+            </div>
+
+            {% endfor %}
+        </div>
+
+        {# ============================================================
+           BOTTOM CTA
+        ============================================================ #}
+        {% if portfolio|length > 0 %}
+        <div class="mt-16 sm:mt-20 card p-8 sm:p-12 text-center reveal">
+            <h2 class="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-ink dark:text-surface">
+                Want to be next on this list?
+            </h2>
+            <p class="text-muted text-[15px] mt-3 max-w-xl mx-auto leading-relaxed">
+                Let's craft something incredible for your brand — photo, video, design, or full-stack software.
+            </p>
+            <a href="{{ url_for('contact') }}"
+               class="inline-flex items-center gap-2 mt-8 px-7 py-3.5 rounded-full font-medium text-sm text-white bg-ink dark:bg-white dark:text-ink hover:bg-electric dark:hover:bg-electric dark:hover:text-white transition-colors group">
+                <i class="fa-solid fa-paper-plane text-[11px] transition-transform group-hover:translate-x-0.5" aria-hidden="true"></i>
+                Start your project
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
 </section>
 
 <style>
-    /* Line clamp helper (in case Tailwind CDN doesn't load line-clamp plugin) */
+    /* Line clamp helper (fallback if Tailwind line-clamp plugin not available) */
+    .line-clamp-1 {
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -219,11 +241,18 @@
 
     /* Fine-tune portfolio cards on narrow viewports */
     @media (max-width: 400px) {
-        .portfolio-card h2 {
+        .card h2 {
             font-size: 0.95rem;
         }
-        .portfolio-card p {
+        .card p {
             font-size: 0.75rem;
+        }
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        .group-hover\:scale-\[1\.04\] {
+            transform: none !important;
         }
     }
 </style>

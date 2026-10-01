@@ -1,13 +1,8 @@
 {% extends 'base.html' %}
 
-{# ============================================================
-   SEO: Page-specific overrides
-============================================================ #}
-{% block seo_title %}Services & Pricing | The Media Scientist — Video, Photo, Design & Web{% endblock %}
+{% block seo_title %}Services & Pricing | The Media Scientist{% endblock %}
 {% block seo_description %}Explore service packages and pricing from The Media Scientist. Video production, photography, motion graphics, graphic design, web development and digital marketing plans in Ghana Cedis.{% endblock %}
-{% block seo_keywords %}media production pricing Ghana, video editing packages, photography prices Ghana, motion graphics pricing, web development Ghana, digital marketing packages{% endblock %}
-
-{% block og_type %}website{% endblock %}
+{% block seo_keywords %}media production pricing Ghana, video editing packages, photography prices Ghana, motion graphics pricing, web development Ghana{% endblock %}
 {% block og_title %}Services & Pricing — The Media Scientist{% endblock %}
 {% block og_description %}Transparent packages for video, photo, design, motion, web & marketing.{% endblock %}
 
@@ -20,9 +15,6 @@
 }
 {% endblock %}
 
-{# ============================================================
-   Structured data: full Service list with offers
-============================================================ #}
 {% block structured_data_extra %}
 ,{
   "@type": "OfferCatalog",
@@ -37,8 +29,6 @@
       "position": {{ loop.index }},
       "name": "{{ svc.title }}",
       "description": "{{ svc.description|replace('"', '\\"') }}",
-      "category": "{{ svc.slug if svc.slug else svc.title }}",
-      "availability": "https://schema.org/InStock",
       "priceCurrency": "GHS"
     }{% if not loop.last %},{% endif %}
     {% endfor %}
@@ -46,303 +36,297 @@
 }
 {% endblock %}
 
-{# ============================================================
-   Page title
-============================================================ #}
 {% block title %}Services | The Media Scientist{% endblock %}
 
 {% block content %}
 
-<section class="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative z-10"
-         aria-labelledby="services-heading">
+<!-- ============================================================
+     HEADER
+============================================================ -->
+<section class="relative overflow-hidden pt-16 sm:pt-24 lg:pt-28 pb-16">
+    <div class="absolute inset-0 mesh-hero opacity-60 pointer-events-none" aria-hidden="true"></div>
 
-    {# ============================================================
-       HEADER
-    ============================================================ #}
-    <header class="text-center max-w-3xl mx-auto mb-10 sm:mb-16 space-y-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-xs font-mono text-cyan-300">
-            <i class="fa-solid fa-tags" aria-hidden="true"></i> SERVICES & PRICING PLANS
+    <div class="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 text-center">
+        <div class="text-xs font-mono text-muted uppercase tracking-widest mb-8 reveal">
+            / Services
         </div>
-        <h1 id="services-heading"
-            class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-mono-heading leading-tight">
-            Service Packages & <span class="text-gradient-cyan">Pricing Plans</span>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05] max-w-3xl mx-auto mb-6 text-ink dark:text-surface reveal">
+            Packages built for
+            <span class="font-serif-display italic font-normal text-electric">real work.</span>
         </h1>
-        <p class="text-slate-400 text-sm sm:text-base lg:text-lg leading-relaxed">
-            Transparent packages in Ghana Cedis tailored to elevate your business, personal brand, or project.
-            Custom quotes available on request.
+
+        <p class="text-lg text-muted max-w-2xl mx-auto leading-relaxed reveal">
+            Transparent pricing in Ghana Cedis. Custom quotes available on request.
         </p>
+    </div>
+</section>
 
-        {# Trust badges #}
-        <div class="flex flex-wrap justify-center gap-3 pt-2 text-[10px] sm:text-xs font-mono">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-emerald-300">
-                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> 100% Satisfaction
-            </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-950/40 border border-purple-500/20 text-purple-300">
-                <i class="fa-solid fa-clock" aria-hidden="true"></i> Fast Turnaround
-            </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-950/40 border border-cyan-500/20 text-cyan-300">
-                <i class="fa-solid fa-globe" aria-hidden="true"></i> Worldwide Remote
-            </span>
-        </div>
-    </header>
-
-    {# ============================================================
-       SERVICES GRID
-    ============================================================ #}
-    {% if services %}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+<!-- ============================================================
+     SERVICES LIST
+============================================================ -->
+<section class="pb-20 sm:pb-28">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8">
 
         {% for svc in services %}
-        {% set svc_color = svc.color if svc.color else 'cyan' %}
-        <article class="glass-card rounded-2xl p-5 sm:p-6 lg:p-8 border border-slate-800 flex flex-col justify-between space-y-5 sm:space-y-6"
-                 itemscope itemtype="https://schema.org/Service">
+        {% set accent = 'electric' if loop.index is odd else 'teal' %}
 
-            <div class="space-y-5">
+        <article class="card p-6 sm:p-10 reveal group relative overflow-hidden">
+            <!-- Subtle hover glow -->
+            <div class="absolute inset-0 bg-gradient-to-br from-{{ accent }}/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" aria-hidden="true"></div>
 
-                {# Icon + badge row — responsive #}
-                <div class="flex items-center justify-between gap-3 flex-wrap">
-                    <div class="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-xl
-                                bg-{{ svc_color }}-500/10 border border-{{ svc_color }}-500/30
-                                flex items-center justify-center text-{{ svc_color }}-400 text-lg sm:text-xl">
-                        <i class="fa-solid {{ svc.icon }}" aria-hidden="true"></i>
+            <div class="relative grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+
+                <!-- Left: icon + title + desc -->
+                <div class="lg:col-span-5 space-y-5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-{{ accent }}/10 border border-{{ accent }}/20 flex items-center justify-center text-{{ accent }} text-lg sm:text-xl transition-transform group-hover:scale-105">
+                            <i class="fa-solid {{ svc.icon or 'fa-cog' }}" aria-hidden="true"></i>
+                        </div>
+                        <span class="font-mono text-[10px] text-muted uppercase tracking-widest">Service 0{{ loop.index }}</span>
                     </div>
-                    <span class="text-[10px] sm:text-xs font-mono text-{{ svc_color }}-400 uppercase tracking-widest
-                                 bg-{{ svc_color }}-950/60 px-2.5 py-1 rounded-full
-                                 border border-{{ svc_color }}-500/30 whitespace-nowrap">
-                        SERVICE {{ '%02d' % loop.index }}
-                    </span>
+
+                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-ink dark:text-surface leading-tight">
+                        {{ svc.title }}
+                    </h2>
+
+                    <p class="text-muted leading-relaxed text-[15px]">
+                        {{ svc.description }}
+                    </p>
+
+                    <a href="{{ url_for('contact') }}" class="inline-flex items-center gap-2 text-sm font-medium text-ink dark:text-surface hover:text-{{ accent }} transition-colors group/link">
+                        Book this service
+                        <i class="fa-solid fa-arrow-right text-[10px] transition-transform group-hover/link:translate-x-0.5" aria-hidden="true"></i>
+                    </a>
                 </div>
 
-                {# Title #}
-                <h2 class="font-mono-heading font-bold text-xl sm:text-2xl lg:text-3xl text-white leading-tight"
-                    itemprop="name">
-                    {{ svc.title }}
-                </h2>
+                <!-- Right: plans -->
+                <div class="lg:col-span-7">
+                    {% if svc.plans %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        {% for plan in svc.plans %}
+                        <div class="relative p-5 rounded-xl bg-canvas dark:bg-gray-800/50 border border-line dark:border-gray-700 hover:border-{{ accent }}/40 transition-colors group/plan">
 
-                {# Description #}
-                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed"
-                   itemprop="description">
-                    {{ svc.description }}
-                </p>
+                            {# Popular badge on first plan #}
+                            {% if loop.first and svc.plans|length > 1 %}
+                            <span class="absolute -top-2.5 left-4 px-2 py-0.5 rounded-full bg-{{ accent }} text-white text-[9px] font-mono font-medium uppercase tracking-widest">
+                                Popular
+                            </span>
+                            {% endif %}
 
-                {# Plans #}
-                {% if svc.plans %}
-                <div class="mt-5 sm:mt-6 space-y-3 sm:space-y-4" itemprop="offers" itemscope itemtype="https://schema.org/OfferCatalog">
-                    {% for plan in svc.plans %}
-                    <div class="p-3.5 sm:p-4 rounded-xl bg-slate-900/90 border border-slate-800
-                                hover:border-{{ svc_color }}-500/40 transition-colors">
-                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 sm:gap-2 mb-1.5">
-                            <span class="font-mono font-bold text-sm text-{{ svc_color }}-300">
+                            <h3 class="font-semibold text-ink dark:text-surface text-sm leading-tight mb-3">
                                 {{ plan.name }}
-                            </span>
-                            <span class="font-mono text-xs sm:text-sm font-bold text-emeraldMint whitespace-nowrap">
+                            </h3>
+
+                            <div class="text-lg sm:text-xl font-semibold text-{{ accent }} font-mono mb-3">
                                 {{ plan.price }}
-                            </span>
+                            </div>
+
+                            <p class="text-xs text-muted leading-relaxed">
+                                {{ plan.desc }}
+                            </p>
                         </div>
-                        <p class="text-xs text-slate-400 leading-relaxed">
-                            {{ plan.desc }}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="p-8 rounded-xl bg-canvas dark:bg-gray-800/50 border border-dashed border-line dark:border-gray-700 text-center">
+                        <i class="fa-solid fa-comments text-muted text-xl mb-3" aria-hidden="true"></i>
+                        <p class="text-sm text-muted">
+                            Custom pricing available.
+                            <a href="{{ url_for('contact') }}" class="text-electric hover:underline font-medium">Contact us</a>
+                            for a quote.
                         </p>
                     </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
-                {% endif %}
-            </div>
-
-            {# Book button #}
-            <div class="pt-4 border-t border-slate-800">
-                <a href="{{ url_for('contact') }}"
-                   class="w-full py-3.5 rounded-xl font-mono text-xs font-bold text-slate-950
-                          bg-cyan-400 hover:bg-cyan-300
-                          transition-all active:scale-[0.98]
-                          flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                    Book {{ svc.title }} Plan
-                </a>
             </div>
         </article>
+        {% else %}
+
+        <!-- ============================================================
+             EMPTY STATE
+        ============================================================ -->
+        <div class="card p-12 sm:p-16 text-center reveal">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700 flex items-center justify-center text-ink dark:text-surface mb-6">
+                <i class="fa-solid fa-tags text-2xl" aria-hidden="true"></i>
+            </div>
+            <h2 class="text-2xl font-semibold text-ink dark:text-surface mb-3">Services loading soon</h2>
+            <p class="text-muted max-w-md mx-auto mb-8 leading-relaxed">
+                Packages are being updated. Reach out for a custom quote in the meantime.
+            </p>
+            <a href="{{ url_for('contact') }}" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-ink dark:bg-white text-white dark:text-ink text-sm font-medium hover:bg-electric dark:hover:bg-electric dark:hover:text-white transition-colors group">
+                Request a quote
+                <i class="fa-solid fa-arrow-right text-[10px] transition-transform group-hover:translate-x-0.5" aria-hidden="true"></i>
+            </a>
+        </div>
         {% endfor %}
 
     </div>
-    {% else %}
+</section>
 
-    {# Empty state #}
-    <div class="glass-card rounded-2xl border border-slate-800 p-12 sm:p-16 text-center max-w-2xl mx-auto">
-        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-6">
-            <i class="fa-solid fa-tags text-3xl text-cyan-400" aria-hidden="true"></i>
-        </div>
-        <h3 class="font-mono-heading font-bold text-white text-lg mb-2">
-            Services Loading Soon
-        </h3>
-        <p class="text-slate-400 text-sm font-mono max-w-md mx-auto">
-            Our service packages are being updated. In the meantime, reach out for a custom quote.
-        </p>
-        <a href="{{ url_for('contact') }}"
-           class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-xl text-xs font-mono font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:brightness-110 transition">
-            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Request Custom Quote
-        </a>
-    </div>
-
-    {% endif %}
-
-    {# ============================================================
-       WHY CHOOSE US — 4-column feature grid
-    ============================================================ #}
-    {% if services %}
-    <div class="mt-16 sm:mt-20">
-        <div class="text-center max-w-2xl mx-auto mb-10">
-            <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
-                Why Work With <span class="text-gradient-purple">The Media Scientist</span>
+<!-- ============================================================
+     WHY WORK WITH ME
+============================================================ -->
+{% if services %}
+<section class="py-20 sm:py-28 bg-canvas dark:bg-[#0F0F0F] border-y border-line dark:border-gray-800">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+        <div class="text-center max-w-2xl mx-auto mb-16 reveal">
+            <div class="text-xs font-mono text-muted uppercase tracking-widest mb-4">/ Why me</div>
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink dark:text-surface leading-tight">
+                Why work with
+                <span class="font-serif-display italic font-normal text-electric">The Media Scientist.</span>
             </h2>
-            <p class="text-slate-400 text-sm mt-3">
-                Every project gets the same level of care, whether it's a single photo or a full app.
-            </p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {% set features = [
-                ('fa-bolt', 'cyan', 'Fast Turnaround', 'Most projects delivered within agreed timelines, often ahead of schedule.'),
-                ('fa-award', 'purple', 'Premium Quality', 'Studio-grade production, professional color grading, and pixel-perfect editing.'),
-                ('fa-headset', 'emerald', 'Direct Communication', 'No middlemen. You talk directly to the person doing the work.'),
-                ('fa-infinity', 'cyan', 'Revisions Included', 'Each plan includes revision rounds to make sure you\'re 100% happy.')
+                ('fa-bolt', 'Fast turnaround', 'Most projects delivered within agreed timelines, often ahead.'),
+                ('fa-award', 'Premium quality', 'Studio-grade production and pixel-perfect editing.'),
+                ('fa-headset', 'Direct communication', 'No middlemen — you talk directly to the maker.'),
+                ('fa-infinity', 'Revisions included', 'Each plan includes revision rounds to nail the result.')
             ] %}
-            {% for icon, color, title, desc in features %}
-            <div class="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 hover:border-{{ color }}-500/40 transition-colors">
-                <div class="w-11 h-11 rounded-xl bg-{{ color }}-500/10 border border-{{ color }}-500/30 flex items-center justify-center text-{{ color }}-400 text-lg mb-4">
+            {% for icon, title, desc in features %}
+            <div class="card p-6 reveal group">
+                <div class="w-10 h-10 rounded-xl bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700 flex items-center justify-center text-ink dark:text-surface mb-5 transition-all duration-300 group-hover:bg-electric group-hover:text-white group-hover:border-electric group-hover:scale-110">
                     <i class="fa-solid {{ icon }}" aria-hidden="true"></i>
                 </div>
-                <h3 class="font-mono-heading font-bold text-sm sm:text-base text-white mb-2">
-                    {{ title }}
-                </h3>
-                <p class="text-xs text-slate-400 leading-relaxed">
-                    {{ desc }}
-                </p>
+                <h3 class="text-base font-semibold text-ink dark:text-surface mb-2">{{ title }}</h3>
+                <p class="text-sm text-muted leading-relaxed">{{ desc }}</p>
             </div>
             {% endfor %}
         </div>
     </div>
-    {% endif %}
+</section>
+{% endif %}
 
-    {# ============================================================
-       PROCESS — 4-step timeline
-    ============================================================ #}
-    {% if services %}
-    <div class="mt-16 sm:mt-20 glass-card rounded-2xl p-6 sm:p-10 border border-slate-800">
-        <div class="text-center mb-10">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-xs font-mono text-emerald-300 mb-3">
-                <i class="fa-solid fa-route" aria-hidden="true"></i> HOW IT WORKS
-            </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
-                Simple 4-Step <span class="text-gradient-mint">Process</span>
+<!-- ============================================================
+     PROCESS
+============================================================ -->
+{% if services %}
+<section class="py-20 sm:py-28">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+        <div class="text-center max-w-2xl mx-auto mb-16 reveal">
+            <div class="text-xs font-mono text-muted uppercase tracking-widest mb-4">/ Process</div>
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink dark:text-surface leading-tight">
+                A simple
+                <span class="font-serif-display italic font-normal text-electric">4-step</span>
+                process.
             </h2>
         </div>
 
-        <ol class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6 relative">
+            <!-- Connecting line (desktop only) -->
+            <div class="hidden lg:block absolute top-8 left-[12.5%] right-[12.5%] h-px bg-line dark:bg-gray-800" aria-hidden="true"></div>
+
             {% set steps = [
-                ('01', 'Share Your Idea', 'Fill out the contact form with your goals, budget, and timeline.'),
-                ('02', 'Get a Plan', 'I\'ll send you a tailored proposal with pricing and delivery dates.'),
-                ('03', 'Collaborate', 'We work together — you review drafts, I refine. Revisions included.'),
-                ('04', 'Deliver', 'Final files delivered in your preferred formats. Ready to launch.')
+                ('01', 'Share your idea', 'Fill out the contact form with your goals, budget, and timeline.'),
+                ('02', 'Get a plan', "I'll send you a tailored proposal with pricing and dates."),
+                ('03', 'Collaborate', 'We work together — you review drafts, I refine.'),
+                ('04', 'Deliver', 'Final files delivered in your preferred formats.')
             ] %}
             {% for num, title, desc in steps %}
-            <li class="relative">
-                <div class="flex items-center gap-3 mb-3">
-                    <span class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 text-slate-950 font-mono font-bold text-sm flex items-center justify-center shrink-0">
-                        {{ num }}
-                    </span>
-                    <h3 class="font-mono-heading font-bold text-sm sm:text-base text-white">
-                        {{ title }}
-                    </h3>
+            <div class="reveal relative">
+                <div class="w-16 h-16 rounded-full bg-white dark:bg-ink border-2 border-line dark:border-gray-700 flex items-center justify-center mb-5 relative z-10 transition-colors hover:border-electric">
+                    <span class="font-serif-display italic text-2xl text-electric">{{ num }}</span>
                 </div>
-                <p class="text-xs text-slate-400 leading-relaxed pl-[52px]">
-                    {{ desc }}
-                </p>
-            </li>
+                <h3 class="text-base font-semibold text-ink dark:text-surface mb-2">{{ title }}</h3>
+                <p class="text-sm text-muted leading-relaxed">{{ desc }}</p>
+            </div>
             {% endfor %}
-        </ol>
+        </div>
     </div>
-    {% endif %}
+</section>
+{% endif %}
 
-    {# ============================================================
-       FAQ — SEO rich content
-    ============================================================ #}
-    {% if services %}
-    <div class="mt-16 sm:mt-20 max-w-3xl mx-auto">
-        <div class="text-center mb-8">
-            <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
-                Frequently Asked <span class="text-gradient-cyan">Questions</span>
+<!-- ============================================================
+     FAQ
+============================================================ -->
+{% if services %}
+<section class="py-20 sm:py-28 bg-canvas dark:bg-[#0F0F0F] border-y border-line dark:border-gray-800">
+    <div class="max-w-3xl mx-auto px-5 sm:px-8">
+        <div class="text-center mb-12 reveal">
+            <div class="text-xs font-mono text-muted uppercase tracking-widest mb-4">/ FAQ</div>
+            <h2 class="text-3xl sm:text-4xl font-semibold tracking-tight text-ink dark:text-surface leading-tight">
+                Frequently asked
+                <span class="font-serif-display italic font-normal text-electric">questions.</span>
             </h2>
         </div>
 
         {% set faqs = [
             ('How do I pay?', 'I accept bank transfer, Mobile Money (MTN, Vodafone, AirtelTigo) and card payments via Paystack. Typically 50% upfront, 50% on delivery.'),
-            ('Do you work with clients outside Ghana?', 'Absolutely. Over 60% of my clients are international. All remote work is done via email, WhatsApp, or Google Meet. Payment via Paystack or bank transfer.'),
-            ('What if I need revisions?', 'Each plan includes revision rounds. If you need extra beyond that, I charge a small hourly rate — but it rarely comes to that.'),
-            ('How long does a project take?', 'Depends on the scope. Photo retouching: 1–3 days. Video editing: 3–7 days. Web development: 1–4 weeks. Full commercial productions: custom timeline.'),
-            ('Can I get a custom package?', 'Yes! The listed packages are starting points. If you need something different, reach out and we\'ll build a custom quote.')
+            ('Do you work with clients outside Ghana?', 'Absolutely. Over 60% of my clients are international. All remote work is done via email, WhatsApp, or Google Meet.'),
+            ('What if I need revisions?', 'Each plan includes revision rounds. Extra revisions can be arranged at a small hourly rate.'),
+            ('How long does a project take?', 'Photo retouching: 1–3 days. Video editing: 3–7 days. Web development: 1–4 weeks. Commercial productions: custom timeline.'),
+            ('Can I get a custom package?', "Yes. The listed packages are starting points. Reach out and we'll build a custom quote.")
         ] %}
         <div class="space-y-3">
             {% for q, a in faqs %}
-            <details class="glass-card rounded-xl border border-slate-800 group open:border-cyan-500/40 transition-colors">
-                <summary class="p-4 sm:p-5 flex items-center justify-between gap-4 cursor-pointer list-none">
-                    <span class="font-mono-heading font-bold text-sm sm:text-base text-white pr-2">
-                        {{ q }}
+            <details class="card group p-0 overflow-hidden transition-colors hover:border-electric/30">
+                <summary class="p-5 flex items-center justify-between gap-4 cursor-pointer list-none select-none">
+                    <span class="font-medium text-ink dark:text-surface text-[15px] pr-2">{{ q }}</span>
+                    <span class="w-7 h-7 rounded-full bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700 flex items-center justify-center shrink-0 transition-all duration-300 group-open:bg-electric group-open:border-electric group-open:rotate-45">
+                        <i class="fa-solid fa-plus text-[10px] text-ink dark:text-surface group-open:text-white transition-colors" aria-hidden="true"></i>
                     </span>
-                    <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform shrink-0" aria-hidden="true"></i>
                 </summary>
-                <div class="px-4 sm:px-5 pb-4 sm:pb-5 -mt-1">
-                    <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                        {{ a }}
-                    </p>
+                <div class="px-5 pb-5 -mt-1 text-sm text-muted leading-relaxed">
+                    {{ a }}
                 </div>
             </details>
             {% endfor %}
         </div>
     </div>
-    {% endif %}
+</section>
+{% endif %}
 
-    {# ============================================================
-       BOTTOM CTA
-    ============================================================ #}
-    <div class="mt-16 glass-card rounded-2xl p-8 sm:p-10 border border-slate-800 text-center">
-        <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-heading">
-            Not sure which plan fits?
-        </h2>
-        <p class="text-slate-400 text-sm mt-3 max-w-xl mx-auto">
-            Send me your project brief and I'll recommend the best package — or design a custom one just for you.
-        </p>
-        <div class="flex flex-wrap justify-center gap-3 mt-6">
-            <a href="{{ url_for('contact') }}"
-               class="inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:brightness-110 transition">
-                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Get a Custom Quote
-            </a>
-            <a href="{{ url_for('portfolio') }}"
-               class="inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl font-mono text-xs text-slate-200 glass-card hover:border-slate-600 transition">
-                <i class="fa-regular fa-folder-open text-cyan-400" aria-hidden="true"></i> See Past Work
-            </a>
+<!-- ============================================================
+     CTA
+============================================================ -->
+<section class="py-20 sm:py-28">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+        <div class="card p-10 sm:p-16 text-center relative overflow-hidden reveal">
+            <!-- Decorative gradient -->
+            <div class="absolute inset-0 mesh-hero opacity-40 pointer-events-none" aria-hidden="true"></div>
+
+            <div class="relative">
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink dark:text-surface leading-tight mb-4">
+                    Not sure which plan fits?
+                </h2>
+                <p class="text-lg text-muted max-w-xl mx-auto mb-8 leading-relaxed">
+                    Send me your brief and I'll recommend the best package — or design a custom one just for you.
+                </p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <a href="{{ url_for('contact') }}" class="inline-flex items-center gap-2 px-7 py-4 rounded-full bg-ink dark:bg-white text-white dark:text-ink text-sm font-medium hover:bg-electric dark:hover:bg-electric dark:hover:text-white transition-colors group">
+                        Get a custom quote
+                        <i class="fa-solid fa-arrow-right text-[11px] transition-transform group-hover:translate-x-0.5" aria-hidden="true"></i>
+                    </a>
+                    <a href="{{ url_for('portfolio') }}" class="inline-flex items-center gap-2 px-7 py-4 rounded-full bg-white dark:bg-gray-800 text-ink dark:text-surface border border-line dark:border-gray-700 text-sm font-medium hover:border-ink dark:hover:border-surface transition-colors">
+                        See past work
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-
 </section>
 
 <style>
-    /* FAQ: hide default marker */
+    /* Hide default details marker */
     details summary::-webkit-details-marker { display: none; }
     details summary::marker { content: ''; }
 
-    /* FAQ: smooth reveal */
+    /* Smooth open animation for FAQ answer */
     details[open] > div {
-        animation: fadeIn 0.25s ease-out;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-4px); }
-        to { opacity: 1; transform: translateY(0); }
+        animation: faqReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Narrow phone: keep plan name readable */
-    @media (max-width: 400px) {
-        article h2 {
-            font-size: 1.15rem;
-        }
+    @keyframes faqReveal {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        details[open] > div { animation: none; }
+        .group-open\:rotate-45 { transform: none !important; }
     }
 </style>
 

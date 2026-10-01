@@ -103,16 +103,16 @@ class Config:
     # ------------------------------------------------------------
     # Paystack — optional (falls back to empty; app degrades gracefully)
     # ------------------------------------------------------------
-    PAYSTACK_SECRET_KEY = _env('PAYSTACK_SECRET_KEY', '')
-    PAYSTACK_PUBLIC_KEY = _env('PAYSTACK_PUBLIC_KEY', '')
+    PAYSTACK_SECRET_KEY = _env('PAYSTACK_SECRET_KEY')
+    PAYSTACK_PUBLIC_KEY = _env('PAYSTACK_PUBLIC_KEY')
 
     # ------------------------------------------------------------
     # Mail — optional (falls back to empty; mailer skips if unset)
     # ------------------------------------------------------------
     MAIL_SERVER = _env('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = _int_env('MAIL_PORT', 587)
-    MAIL_USERNAME = _env('MAIL_USERNAME', '')
-    MAIL_PASSWORD = _env('MAIL_PASSWORD', '')
+    MAIL_USERNAME = _env('MAIL_USERNAME')
+    MAIL_PASSWORD = _env('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = _env('MAIL_DEFAULT_SENDER', '')
 
     # ------------------------------------------------------------

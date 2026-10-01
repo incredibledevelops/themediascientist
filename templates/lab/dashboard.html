@@ -1,337 +1,489 @@
 {% extends 'lab/base.html' %}
 {% block title %}Dashboard{% endblock %}
-{% block page_title %}System Dashboard{% endblock %}
-{% block page_subtitle %}Welcome back, {{ current_user.name }}.{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+{% block page_title %}
+    {%- set hour = (now().hour if now is defined else 12) -%}
+    {%- if hour < 12 %}Good morning{% elif hour < 18 %}Good afternoon{% else %}Good evening{% endif -%},
+    {{ current_user.name.split(' ')[0] if current_user and current_user.name else 'Admin' }}
+{% endblock %}
+{% block page_subtitle %}
+    {% if stats.total_inquiries > 0 or stats.clients_count > 0 %}
+        Here's what's happening across your studio today.
+    {% else %}
+        Let's set up your studio — it only takes a few minutes.
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<button type="button"
+        onclick="window.location.reload()"
+        class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+               text-[12px] font-medium
+               text-muted bg-canvas dark:bg-gray-800
+               border border-line dark:border-gray-700
+               hover:text-electric hover:border-electric/40 transition"
+        title="Refresh (⌘R)">
+    <i class="fa-solid fa-rotate text-[10px]" aria-hidden="true"></i>
+    <span>Refresh</span>
+</button>
+{% endblock %}
 
 {% block content %}
 
 {# ============================================================
-   WELCOME / GETTING STARTED (shown if account is fresh)
+   GETTING STARTED (only when totally empty)
 ============================================================ #}
-{% if stats.total_inquiries == 0 and stats.clients_count == 0 and stats.projects_count == 0 and stats.portfolio_count == 0 %}
-<div class="glass-card rounded-2xl border border-cyan-500/30 bg-cyan-950/20 p-5 sm:p-6 mb-6 relative overflow-hidden">
-    <div class="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl"
-         aria-hidden="true"></div>
+{% set is_empty = stats.total_inquiries == 0
+    and stats.clients_count == 0
+    and stats.projects_count == 0
+    and stats.portfolio_count == 0 %}
 
-    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-500
-                    flex items-center justify-center shrink-0">
-            <i class="fa-solid fa-rocket text-white text-xl" aria-hidden="true"></i>
+{% if is_empty %}
+<section class="card p-6 mb-6 relative overflow-hidden">
+    <div class="absolute inset-0 mesh-hero opacity-60 pointer-events-none" aria-hidden="true"></div>
+
+    <div class="relative flex flex-col sm:flex-row sm:items-center gap-4 mb-5">
+        <div class="w-12 h-12 rounded-2xl bg-electric flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-rocket text-white text-lg" aria-hidden="true"></i>
         </div>
-        <div class="flex-1">
-            <h2 class="font-mono-heading font-bold text-white text-base sm:text-lg">
+        <div class="flex-1 min-w-0">
+            <h2 class="text-base sm:text-lg font-semibold text-ink dark:text-surface tracking-tight">
                 Welcome to your Lab Console
             </h2>
-            <p class="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                Set up your site in a few minutes. Add portfolio items, services, and your first client to get started.
+            <p class="text-sm text-muted mt-1 leading-relaxed">
+                Three quick steps to get your studio online.
             </p>
         </div>
+    </div>
+
+    <div class="relative grid grid-cols-1 sm:grid-cols-3 gap-3">
         <a href="{{ url_for('lab_portfolio') }}"
-           class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
-                  text-xs font-mono font-bold text-slate-950
-                  bg-gradient-to-r from-cyan-400 to-emerald-400
-                  hover:brightness-110 transition active:scale-[0.98]">
-            <i class="fa-solid fa-plus" aria-hidden="true"></i>
-            Add Portfolio Item
+           class="group flex items-start gap-3 p-4 rounded-xl
+                  bg-white/70 dark:bg-gray-800/50
+                  border border-line dark:border-gray-700
+                  hover:border-electric/40 hover:bg-electric/[0.03]
+                  transition">
+            <div class="shrink-0 w-8 h-8 rounded-lg bg-electric/10 border border-electric/20
+                        text-electric flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-folder-plus text-xs" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-medium text-ink dark:text-surface">Add portfolio</p>
+                <p class="text-[11px] text-muted mt-0.5">Show off your best work.</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('lab_services') }}"
+           class="group flex items-start gap-3 p-4 rounded-xl
+                  bg-white/70 dark:bg-gray-800/50
+                  border border-line dark:border-gray-700
+                  hover:border-electric/40 hover:bg-electric/[0.03]
+                  transition">
+            <div class="shrink-0 w-8 h-8 rounded-lg bg-electric/10 border border-electric/20
+                        text-electric flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-tags text-xs" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-medium text-ink dark:text-surface">Set up services</p>
+                <p class="text-[11px] text-muted mt-0.5">Define your offerings & pricing.</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('lab_clients') }}"
+           class="group flex items-start gap-3 p-4 rounded-xl
+                  bg-white/70 dark:bg-gray-800/50
+                  border border-line dark:border-gray-700
+                  hover:border-electric/40 hover:bg-electric/[0.03]
+                  transition">
+            <div class="shrink-0 w-8 h-8 rounded-lg bg-electric/10 border border-electric/20
+                        text-electric flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-user-plus text-xs" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-medium text-ink dark:text-surface">Invite a client</p>
+                <p class="text-[11px] text-muted mt-0.5">Give them portal access.</p>
+            </div>
         </a>
     </div>
-</div>
+</section>
 {% endif %}
 
 {# ============================================================
-   KPI METRIC CARDS
+   NEEDS ATTENTION (only when there's something to act on)
 ============================================================ #}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+{% set has_attention = (stats.new_inquiries and stats.new_inquiries > 0)
+    or (stats.overdue_invoices and stats.overdue_invoices > 0) %}
 
-    {# --- Inquiries --- #}
+{% if has_attention %}
+<section class="card p-4 sm:p-5 mb-6
+                border-orange-500/20 dark:border-orange-500/20
+                bg-orange-50/50 dark:bg-orange-950/10">
+    <div class="flex items-start gap-3">
+        <div class="w-9 h-9 shrink-0 rounded-lg
+                    bg-orange-500/15 border border-orange-500/30
+                    text-orange-500 flex items-center justify-center">
+            <i class="fa-solid fa-bolt text-sm" aria-hidden="true"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-ink dark:text-surface">
+                Needs your attention
+            </p>
+            <div class="mt-2 flex flex-wrap gap-2">
+                {% if stats.new_inquiries and stats.new_inquiries > 0 %}
+                <a href="{{ url_for('lab_inquiries') }}?status=new"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                          text-[11px] font-medium
+                          bg-white dark:bg-gray-900
+                          text-orange-600 dark:text-orange-400
+                          border border-orange-500/30
+                          hover:border-orange-500/60 transition">
+                    <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"
+                          aria-hidden="true"></span>
+                    {{ stats.new_inquiries }} new inquir{{ 'y' if stats.new_inquiries == 1 else 'ies' }}
+                </a>
+                {% endif %}
+                {% if stats.overdue_invoices and stats.overdue_invoices > 0 %}
+                <a href="{{ url_for('lab_clients') }}"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                          text-[11px] font-medium
+                          bg-white dark:bg-gray-900
+                          text-red-600 dark:text-red-400
+                          border border-red-500/30
+                          hover:border-red-500/60 transition">
+                    <i class="fa-solid fa-triangle-exclamation text-[9px]" aria-hidden="true"></i>
+                    {{ stats.overdue_invoices }} overdue invoice{{ 's' if stats.overdue_invoices != 1 else '' }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ============================================================
+   DATE + ACTIVITY
+============================================================ #}
+<div class="mb-6 flex flex-wrap items-center gap-3 text-xs font-mono">
+    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
+                 bg-white dark:bg-gray-800
+                 border border-line dark:border-gray-700 text-muted">
+        <i class="fa-regular fa-calendar text-electric" aria-hidden="true"></i>
+        <span id="live-date">{{ now().strftime('%A, %d %B %Y') if now is defined else '' }}</span>
+    </span>
+    <span id="live-time-pill"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
+                 bg-white dark:bg-gray-800
+                 border border-line dark:border-gray-700 text-muted"
+          aria-live="polite">
+        <i class="fa-regular fa-clock text-teal" aria-hidden="true"></i>
+        <span id="live-time">--:--</span>
+    </span>
+</div>
+
+{# ============================================================
+   KPI CARDS
+============================================================ #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+    {# Inquiries #}
     <a href="{{ url_for('lab_inquiries') }}"
-       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
-              hover:border-cyan-500/40 transition-colors group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl
-                    group-hover:bg-cyan-500/20 transition" aria-hidden="true"></div>
-        <div class="relative z-10 flex justify-between items-start mb-3">
+       class="card card-hover p-5 group relative overflow-hidden
+              focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-4">
             <div class="min-w-0">
-                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                    Inquiries
-                </p>
-                <h3 class="text-2xl sm:text-3xl font-bold font-mono text-white mt-1 tabular-nums">
+                <p class="text-[11px] font-mono text-muted uppercase tracking-widest">Inquiries</p>
+                <h3 class="text-3xl font-semibold text-ink dark:text-surface mt-2
+                           tabular-nums tracking-tight">
                     {{ stats.total_inquiries }}
                 </h3>
             </div>
-            <div class="shrink-0 w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30
-                        flex items-center justify-center text-cyan-400
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
                         group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-envelope-open-text text-sm" aria-hidden="true"></i>
             </div>
         </div>
-        <div class="relative z-10 flex items-center justify-between gap-2">
-            <span class="text-[10px] font-mono text-slate-500">
-                All time
+        <div class="flex items-center justify-between gap-2 text-[11px] font-mono">
+            {% if stats.new_inquiries and stats.new_inquiries > 0 %}
+            <span class="text-electric flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-electric animate-pulse"
+                      aria-hidden="true"></span>
+                {{ stats.new_inquiries }} new
             </span>
-            <span class="text-[10px] font-mono text-cyan-400 flex items-center gap-1
+            {% else %}
+            <span class="text-muted">All time</span>
+            {% endif %}
+            <span class="text-electric flex items-center gap-1
                          opacity-0 group-hover:opacity-100 transition-opacity">
-                View
-                <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+                View <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
             </span>
         </div>
     </a>
 
-    {# --- Clients --- #}
+    {# Clients #}
     <a href="{{ url_for('lab_clients') }}"
-       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
-              hover:border-purple-500/40 transition-colors group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl
-                    group-hover:bg-purple-500/20 transition" aria-hidden="true"></div>
-        <div class="relative z-10 flex justify-between items-start mb-3">
+       class="card card-hover p-5 group relative overflow-hidden
+              focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-4">
             <div class="min-w-0">
-                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                    Clients
-                </p>
-                <h3 class="text-2xl sm:text-3xl font-bold font-mono text-white mt-1 tabular-nums">
+                <p class="text-[11px] font-mono text-muted uppercase tracking-widest">Clients</p>
+                <h3 class="text-3xl font-semibold text-ink dark:text-surface mt-2
+                           tabular-nums tracking-tight">
                     {{ stats.clients_count }}
                 </h3>
             </div>
-            <div class="shrink-0 w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/30
-                        flex items-center justify-center text-purple-400
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center
                         group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-user-group text-sm" aria-hidden="true"></i>
             </div>
         </div>
-        <div class="relative z-10 flex items-center justify-between gap-2">
-            <span class="text-[10px] font-mono text-slate-500">
-                Active accounts
-            </span>
-            <span class="text-[10px] font-mono text-purple-400 flex items-center gap-1
+        <div class="flex items-center justify-between gap-2 text-[11px] font-mono">
+            <span class="text-muted">Active accounts</span>
+            <span class="text-teal flex items-center gap-1
                          opacity-0 group-hover:opacity-100 transition-opacity">
-                View
-                <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+                View <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
             </span>
         </div>
     </a>
 
-    {# --- Projects --- #}
+    {# Projects #}
     <a href="{{ url_for('lab_clients') }}"
-       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
-              hover:border-emerald-500/40 transition-colors group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl
-                    group-hover:bg-emerald-500/20 transition" aria-hidden="true"></div>
-        <div class="relative z-10 flex justify-between items-start mb-3">
+       class="card card-hover p-5 group relative overflow-hidden
+              focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-4">
             <div class="min-w-0">
-                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                    Projects
-                </p>
-                <h3 class="text-2xl sm:text-3xl font-bold font-mono text-white mt-1 tabular-nums">
+                <p class="text-[11px] font-mono text-muted uppercase tracking-widest">Projects</p>
+                <h3 class="text-3xl font-semibold text-ink dark:text-surface mt-2
+                           tabular-nums tracking-tight">
                     {{ stats.projects_count }}
                 </h3>
             </div>
-            <div class="shrink-0 w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30
-                        flex items-center justify-center text-emeraldMint
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
                         group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-bolt text-sm" aria-hidden="true"></i>
             </div>
         </div>
-        <div class="relative z-10 flex items-center justify-between gap-2">
-            <span class="text-[10px] font-mono text-slate-500">
-                Total managed
-            </span>
-            <span class="text-[10px] font-mono text-emerald-400 flex items-center gap-1
+        <div class="flex items-center justify-between gap-2 text-[11px] font-mono">
+            <span class="text-muted">Total managed</span>
+            <span class="text-electric flex items-center gap-1
                          opacity-0 group-hover:opacity-100 transition-opacity">
-                View
-                <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+                View <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
             </span>
         </div>
     </a>
 
-    {# --- Portfolio --- #}
+    {# Portfolio #}
     <a href="{{ url_for('lab_portfolio') }}"
-       class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800
-              hover:border-orange-500/40 transition-colors group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl
-                    group-hover:bg-orange-500/20 transition" aria-hidden="true"></div>
-        <div class="relative z-10 flex justify-between items-start mb-3">
+       class="card card-hover p-5 group relative overflow-hidden
+              focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-4">
             <div class="min-w-0">
-                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                    Portfolio
-                </p>
-                <h3 class="text-2xl sm:text-3xl font-bold font-mono text-white mt-1 tabular-nums">
+                <p class="text-[11px] font-mono text-muted uppercase tracking-widest">Portfolio</p>
+                <h3 class="text-3xl font-semibold text-ink dark:text-surface mt-2
+                           tabular-nums tracking-tight">
                     {{ stats.portfolio_count }}
                 </h3>
             </div>
-            <div class="shrink-0 w-9 h-9 rounded-lg bg-orange-500/10 border border-orange-500/30
-                        flex items-center justify-center text-orange-400
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center
                         group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
+                <i class="fa-regular fa-eye text-sm" aria-hidden="true"></i>
             </div>
         </div>
-        <div class="relative z-10 flex items-center justify-between gap-2">
-            <span class="text-[10px] font-mono text-slate-500">
-                Public items
-            </span>
-            <span class="text-[10px] font-mono text-orange-400 flex items-center gap-1
+        <div class="flex items-center justify-between gap-2 text-[11px] font-mono">
+            <span class="text-muted">Public items</span>
+            <span class="text-teal flex items-center gap-1
                          opacity-0 group-hover:opacity-100 transition-opacity">
-                View
-                <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+                View <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
             </span>
         </div>
     </a>
-
 </div>
 
 {# ============================================================
    QUICK ACTIONS
 ============================================================ #}
-<div class="mt-4 glass-card rounded-2xl border border-slate-800 p-4 sm:p-5">
-    <div class="flex items-center justify-between gap-3 mb-3">
-        <h3 class="font-mono-heading font-bold text-white text-sm flex items-center gap-2">
-            <i class="fa-solid fa-bolt text-yellow-400" aria-hidden="true"></i>
+<div class="card p-5 mb-6">
+    <div class="flex items-center justify-between gap-3 mb-4">
+        <h3 class="text-sm font-semibold text-ink dark:text-surface
+                   flex items-center gap-2 tracking-tight">
+            <i class="fa-solid fa-bolt text-electric text-xs" aria-hidden="true"></i>
             Quick Actions
         </h3>
-        <span class="text-[10px] font-mono text-slate-500 hidden sm:block">
-            Jump to common tasks
+        <span class="text-[10px] font-mono text-muted hidden sm:block">
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800
+                        border border-line dark:border-gray-700">N</kbd>
+            new client ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800
+                        border border-line dark:border-gray-700">P</kbd>
+            portfolio
         </span>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-
-        <a href="{{ url_for('lab_client_create') if false else url_for('lab_clients') }}"
+        <a href="{{ url_for('lab_clients') }}#add-client-details"
            class="flex items-center gap-2 px-3 py-2.5 rounded-xl
-                  bg-slate-900 border border-slate-800
-                  hover:border-cyan-500/40 hover:bg-cyan-500/5 transition
-                  text-xs font-mono text-slate-200 group">
-            <i class="fa-solid fa-user-plus text-cyan-400 group-hover:scale-110 transition-transform"
-               aria-hidden="true"></i>
+                  bg-canvas dark:bg-gray-800/50
+                  border border-line dark:border-gray-700
+                  hover:border-electric hover:bg-electric/5 transition
+                  text-xs font-medium text-ink dark:text-surface group
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+            <i class="fa-solid fa-user-plus text-electric text-[11px]
+                      group-hover:scale-110 transition-transform" aria-hidden="true"></i>
             <span class="truncate">New Client</span>
-        </a>
-
-        <a href="{{ url_for('lab_clients') }}"
-           class="flex items-center gap-2 px-3 py-2.5 rounded-xl
-                  bg-slate-900 border border-slate-800
-                  hover:border-emerald-500/40 hover:bg-emerald-500/5 transition
-                  text-xs font-mono text-slate-200 group">
-            <i class="fa-solid fa-bolt text-emerald-400 group-hover:scale-110 transition-transform"
-               aria-hidden="true"></i>
-            <span class="truncate">New Project</span>
         </a>
 
         <a href="{{ url_for('lab_portfolio') }}"
            class="flex items-center gap-2 px-3 py-2.5 rounded-xl
-                  bg-slate-900 border border-slate-800
-                  hover:border-orange-500/40 hover:bg-orange-500/5 transition
-                  text-xs font-mono text-slate-200 group">
-            <i class="fa-solid fa-folder-plus text-orange-400 group-hover:scale-110 transition-transform"
-               aria-hidden="true"></i>
+                  bg-canvas dark:bg-gray-800/50
+                  border border-line dark:border-gray-700
+                  hover:border-electric hover:bg-electric/5 transition
+                  text-xs font-medium text-ink dark:text-surface group
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+            <i class="fa-solid fa-folder-plus text-electric text-[11px]
+                      group-hover:scale-110 transition-transform" aria-hidden="true"></i>
             <span class="truncate">Portfolio</span>
         </a>
 
         <a href="{{ url_for('lab_services') }}"
            class="flex items-center gap-2 px-3 py-2.5 rounded-xl
-                  bg-slate-900 border border-slate-800
-                  hover:border-purple-500/40 hover:bg-purple-500/5 transition
-                  text-xs font-mono text-slate-200 group">
-            <i class="fa-solid fa-tags text-purple-400 group-hover:scale-110 transition-transform"
-               aria-hidden="true"></i>
+                  bg-canvas dark:bg-gray-800/50
+                  border border-line dark:border-gray-700
+                  hover:border-electric hover:bg-electric/5 transition
+                  text-xs font-medium text-ink dark:text-surface group
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+            <i class="fa-solid fa-tags text-electric text-[11px]
+                      group-hover:scale-110 transition-transform" aria-hidden="true"></i>
             <span class="truncate">Services</span>
+        </a>
+
+        <a href="{{ url_for('lab_inquiries') }}"
+           class="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                  bg-canvas dark:bg-gray-800/50
+                  border border-line dark:border-gray-700
+                  hover:border-electric hover:bg-electric/5 transition
+                  text-xs font-medium text-ink dark:text-surface group
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+            <i class="fa-solid fa-inbox text-electric text-[11px]
+                      group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+            <span class="truncate">Inquiries</span>
         </a>
 
         <a href="{{ url_for('index') }}"
            target="_blank"
            rel="noopener noreferrer"
            class="col-span-2 sm:col-span-1 flex items-center gap-2 px-3 py-2.5 rounded-xl
-                  bg-slate-900 border border-slate-800
-                  hover:border-slate-600 transition
-                  text-xs font-mono text-slate-200 group">
-            <i class="fa-solid fa-arrow-up-right-from-square text-slate-400 group-hover:scale-110 transition-transform"
-               aria-hidden="true"></i>
+                  bg-canvas dark:bg-gray-800/50
+                  border border-line dark:border-gray-700
+                  hover:border-ink dark:hover:border-surface transition
+                  text-xs font-medium text-ink dark:text-surface group
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+            <i class="fa-solid fa-arrow-up-right-from-square text-muted text-[11px]
+                      group-hover:scale-110 transition-transform" aria-hidden="true"></i>
             <span class="truncate">View Site</span>
         </a>
-
     </div>
 </div>
 
 {# ============================================================
-   RECENT INQUIRIES + TOP PROJECTS
+   RECENT INQUIRIES + RIGHT COLUMN
 ============================================================ #}
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-    {# ---------- RECENT INQUIRIES ---------- #}
-    <section class="xl:col-span-2 glass-card rounded-2xl border border-slate-800 overflow-hidden flex flex-col">
-
-        <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+    {# Recent Inquiries #}
+    <section class="xl:col-span-2 card overflow-hidden flex flex-col">
+        <header class="px-5 py-4 border-b border-line dark:border-gray-700
                        flex items-center justify-between gap-3 shrink-0">
-            <h2 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
-                <i class="fa-solid fa-inbox text-cyan-400" aria-hidden="true"></i>
+            <h2 class="text-sm font-semibold text-ink dark:text-surface
+                       flex items-center gap-2 tracking-tight">
+                <i class="fa-solid fa-inbox text-electric text-xs" aria-hidden="true"></i>
                 Recent Inquiries
-                {% if stats.recent_inquiries|length > 0 %}
-                <span class="text-[10px] font-mono font-normal text-slate-500">
+                {% if stats.recent_inquiries and stats.recent_inquiries|length > 0 %}
+                <span class="text-[10px] font-mono font-normal text-muted tabular-nums">
                     ({{ stats.recent_inquiries|length }})
                 </span>
                 {% endif %}
             </h2>
             <a href="{{ url_for('lab_inquiries') }}"
-               class="text-[11px] font-mono text-cyan-400 hover:text-cyan-300
-                      inline-flex items-center gap-1 transition">
+               class="text-[11px] font-mono text-electric hover:text-electric/80
+                      inline-flex items-center gap-1 transition group">
                 View All
-                <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+                <i class="fa-solid fa-arrow-right text-[9px] transition-transform
+                          group-hover:translate-x-0.5" aria-hidden="true"></i>
             </a>
         </header>
 
-        {# ---------- DESKTOP TABLE (hidden below md) ---------- #}
+        {# Desktop table #}
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
-                               uppercase bg-slate-900/30">
-                        <th class="py-3 px-5">Client</th>
-                        <th class="py-3 px-5">Services</th>
-                        <th class="py-3 px-5">Budget</th>
-                        <th class="py-3 px-5 text-right">Status</th>
+                    <tr class="border-b border-line dark:border-gray-700 text-[10px] font-mono
+                               text-muted uppercase bg-canvas dark:bg-gray-800/40">
+                        <th scope="col" class="py-3 px-5 font-medium">Client</th>
+                        <th scope="col" class="py-3 px-5 font-medium">Services</th>
+                        <th scope="col" class="py-3 px-5 font-medium">Budget</th>
+                        <th scope="col" class="py-3 px-5 font-medium text-right">Status</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm">
                     {% for inq in stats.recent_inquiries %}
-                    <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
+                    <tr class="border-b border-line/60 dark:border-gray-800
+                               hover:bg-canvas dark:hover:bg-gray-800/30 transition cursor-pointer
+                               inquiry-row"
+                        data-href="{{ url_for('lab_inquiries') }}"
+                        tabindex="0">
                         <td class="py-4 px-5 max-w-xs">
-                            <div class="font-semibold text-white text-xs truncate">
+                            <div class="font-medium text-ink dark:text-surface text-xs truncate">
                                 {{ inq.name }}
                             </div>
-                            <div class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
+                            <div class="text-[10px] text-muted font-mono mt-0.5 truncate">
                                 {{ inq.email }}
                             </div>
                         </td>
                         <td class="py-4 px-5">
                             {% for svc in inq.services[:2] %}
-                            <span class="inline-block px-2 py-1 rounded
-                                         bg-cyan-950/60 border border-cyan-500/30
-                                         text-[10px] font-mono text-cyan-300
+                            <span class="inline-block px-2 py-0.5 rounded-md
+                                         bg-electric/10 border border-electric/20
+                                         text-[10px] font-mono text-electric
                                          mr-1 mb-1 whitespace-nowrap">
                                 {{ svc }}
                             </span>
                             {% endfor %}
                             {% if inq.services|length > 2 %}
-                            <span class="text-[10px] font-mono text-slate-500">
+                            <span class="text-[10px] font-mono text-muted">
                                 +{{ inq.services|length - 2 }}
                             </span>
                             {% endif %}
                         </td>
-                        <td class="py-4 px-5 text-xs text-emeraldMint font-mono whitespace-nowrap">
+                        <td class="py-4 px-5 text-xs text-teal font-mono whitespace-nowrap font-medium">
                             {{ inq.budget }}
                         </td>
                         <td class="py-4 px-5 text-right">
                             {% set st = inq.status|default('new') %}
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
                                          text-[10px] font-mono uppercase whitespace-nowrap
                                          {% if st == 'new' %}
-                                             bg-cyan-500/20 text-cyan-300 border border-cyan-500/30
-                                         {% elif st == 'replied' or st == 'read' %}
-                                             bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
+                                             bg-electric/10 text-electric border border-electric/30
+                                         {% elif st in ['replied', 'read'] %}
+                                             bg-teal/10 text-teal border border-teal/30
                                          {% elif st == 'closed' %}
-                                             bg-slate-500/20 text-slate-400 border border-slate-500/30
+                                             bg-muted/10 text-muted border border-line dark:border-gray-700
                                          {% else %}
-                                             bg-amber-500/20 text-amber-300 border border-amber-500/30
+                                             bg-orange-500/10 text-orange-600 dark:text-orange-400
+                                             border border-orange-500/30
                                          {% endif %}">
                                 {% if st == 'new' %}
-                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
-                                          aria-hidden="true"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-electric animate-pulse"
+                                      aria-hidden="true"></span>
                                 {% endif %}
                                 {{ st }}
                             </span>
@@ -339,11 +491,18 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" class="py-12 text-center">
-                            <i class="fa-solid fa-inbox text-3xl text-slate-700 mb-3"
-                               aria-hidden="true"></i>
-                            <p class="text-slate-400 text-xs font-mono">No inquiries yet.</p>
-                            <p class="text-slate-500 text-[10px] font-mono mt-1">
+                        <td colspan="4" class="py-16 text-center">
+                            <div class="w-14 h-14 mx-auto rounded-full
+                                        bg-canvas dark:bg-gray-800
+                                        border border-line dark:border-gray-700
+                                        flex items-center justify-center mb-3">
+                                <i class="fa-regular fa-inbox text-2xl text-muted"
+                                   aria-hidden="true"></i>
+                            </div>
+                            <p class="text-ink dark:text-surface text-sm font-medium">
+                                No inquiries yet
+                            </p>
+                            <p class="text-muted text-xs font-mono mt-1">
                                 New project requests will appear here.
                             </p>
                         </td>
@@ -353,62 +512,62 @@
             </table>
         </div>
 
-        {# ---------- MOBILE CARDS (hidden md and up) ---------- #}
-        <div class="md:hidden divide-y divide-slate-800/60">
+        {# Mobile cards #}
+        <div class="md:hidden divide-y divide-line dark:divide-gray-800">
             {% for inq in stats.recent_inquiries %}
-            <div class="p-4 space-y-3">
-
-                {# Row 1: name + status #}
+            <a href="{{ url_for('lab_inquiries') }}"
+               class="block p-4 space-y-3
+                      hover:bg-canvas dark:hover:bg-gray-800/30 transition">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0 flex-1">
-                        <p class="font-semibold text-white text-sm truncate">{{ inq.name }}</p>
-                        <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5">
+                        <p class="font-medium text-ink dark:text-surface text-sm truncate">
+                            {{ inq.name }}
+                        </p>
+                        <p class="text-[11px] font-mono text-muted truncate mt-0.5">
                             {{ inq.email }}
                         </p>
                     </div>
                     {% set st = inq.status|default('new') %}
-                    <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
+                    <span class="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full
                                  text-[10px] font-mono uppercase
                                  {% if st == 'new' %}
-                                     bg-cyan-500/20 text-cyan-300 border border-cyan-500/30
-                                 {% elif st == 'replied' or st == 'read' %}
-                                     bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
-                                 {% elif st == 'closed' %}
-                                     bg-slate-500/20 text-slate-400 border border-slate-500/30
+                                     bg-electric/10 text-electric border border-electric/30
+                                 {% elif st in ['replied', 'read'] %}
+                                     bg-teal/10 text-teal border border-teal/30
                                  {% else %}
-                                     bg-amber-500/20 text-amber-300 border border-amber-500/30
+                                     bg-muted/10 text-muted border border-line dark:border-gray-700
                                  {% endif %}">
                         {% if st == 'new' %}
-                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
-                                  aria-hidden="true"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-electric animate-pulse"
+                              aria-hidden="true"></span>
                         {% endif %}
                         {{ st }}
                     </span>
                 </div>
-
-                {# Row 2: services #}
                 <div class="flex flex-wrap gap-1.5">
                     {% for svc in inq.services %}
-                    <span class="px-2 py-0.5 rounded
-                                 bg-cyan-950/60 border border-cyan-500/30
-                                 text-[10px] font-mono text-cyan-300 whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded-md
+                                 bg-electric/10 border border-electric/20
+                                 text-[10px] font-mono text-electric whitespace-nowrap">
                         {{ svc }}
                     </span>
                     {% endfor %}
                 </div>
-
-                {# Row 3: budget #}
                 <div class="flex items-center justify-between gap-2 pt-1 text-[10px] font-mono">
-                    <span class="text-slate-500 uppercase tracking-wider">Budget</span>
-                    <span class="text-emeraldMint font-bold">{{ inq.budget }}</span>
+                    <span class="text-muted uppercase tracking-wider">Budget</span>
+                    <span class="text-teal font-semibold">{{ inq.budget }}</span>
                 </div>
-
-            </div>
+            </a>
             {% else %}
             <div class="p-12 text-center">
-                <i class="fa-solid fa-inbox text-3xl text-slate-700 mb-3" aria-hidden="true"></i>
-                <p class="text-slate-400 text-xs font-mono">No inquiries yet.</p>
-                <p class="text-slate-500 text-[10px] font-mono mt-1">
+                <div class="w-14 h-14 mx-auto rounded-full
+                            bg-canvas dark:bg-gray-800
+                            border border-line dark:border-gray-700
+                            flex items-center justify-center mb-3">
+                    <i class="fa-regular fa-inbox text-2xl text-muted" aria-hidden="true"></i>
+                </div>
+                <p class="text-ink dark:text-surface text-sm font-medium">No inquiries yet</p>
+                <p class="text-muted text-xs font-mono mt-1">
                     New project requests will appear here.
                 </p>
             </div>
@@ -416,108 +575,330 @@
         </div>
     </section>
 
-    {# ---------- RIGHT COLUMN ---------- #}
+    {# Right Column #}
     <aside class="space-y-6">
 
-        {# ---------- SYSTEM STATUS ---------- #}
-        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-            <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
+        {# System Status #}
+        <div class="card overflow-hidden">
+            <header class="px-5 py-4 border-b border-line dark:border-gray-700
                            flex items-center justify-between gap-3">
-                <h2 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-signal text-emeraldMint" aria-hidden="true"></i>
+                <h2 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-signal text-teal text-xs" aria-hidden="true"></i>
                     System Status
                 </h2>
-                <span class="flex items-center gap-1.5 text-[10px] font-mono text-emeraldMint">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emeraldMint animate-pulse"
+                <span class="flex items-center gap-1.5 text-[10px] font-mono text-teal">
+                    <span class="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"
                           aria-hidden="true"></span>
-                    Healthy
+                    All systems go
                 </span>
             </header>
 
-            <div class="p-4 sm:p-5 space-y-3">
-                <div class="flex items-center justify-between p-3 rounded-xl
-                            bg-slate-900/70 border border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-database text-cyan-400 text-xs" aria-hidden="true"></i>
-                        <span class="text-xs font-mono text-slate-300">Database</span>
+            <div class="p-4 space-y-2.5">
+                {% set systems = [
+                    ('fa-database', 'Database', 'Connected', 'PostgreSQL'),
+                    ('fa-envelope', 'Mailer', 'Ready', 'SMTP configured'),
+                    ('fa-credit-card', 'Paystack', 'Live', 'Payments enabled'),
+                    ('fa-cloud-arrow-up', 'Storage', 'Online', 'Uploads working')
+                ] %}
+                {% for icon, label, status, detail in systems %}
+                <div class="flex items-center justify-between gap-3 p-3 rounded-xl
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700
+                            group"
+                     title="{{ detail }}">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <i class="fa-solid {{ icon }} text-muted text-xs w-4 text-center shrink-0"
+                           aria-hidden="true"></i>
+                        <span class="text-xs font-mono text-ink dark:text-surface truncate">
+                            {{ label }}
+                        </span>
                     </div>
-                    <span class="text-[10px] font-mono text-emeraldMint">Connected</span>
+                    <span class="flex items-center gap-1.5 text-[10px] font-mono text-teal shrink-0">
+                        <span class="w-1.5 h-1.5 rounded-full bg-teal" aria-hidden="true"></span>
+                        {{ status }}
+                    </span>
                 </div>
-
-                <div class="flex items-center justify-between p-3 rounded-xl
-                            bg-slate-900/70 border border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-envelope text-purple-400 text-xs" aria-hidden="true"></i>
-                        <span class="text-xs font-mono text-slate-300">Mailer</span>
-                    </div>
-                    <span class="text-[10px] font-mono text-emeraldMint">Ready</span>
-                </div>
-
-                <div class="flex items-center justify-between p-3 rounded-xl
-                            bg-slate-900/70 border border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-credit-card text-emerald-400 text-xs" aria-hidden="true"></i>
-                        <span class="text-xs font-mono text-slate-300">Paystack</span>
-                    </div>
-                    <span class="text-[10px] font-mono text-emeraldMint">Live</span>
-                </div>
-
-                <div class="flex items-center justify-between p-3 rounded-xl
-                            bg-slate-900/70 border border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-cloud-arrow-up text-orange-400 text-xs" aria-hidden="true"></i>
-                        <span class="text-xs font-mono text-slate-300">Uploads</span>
-                    </div>
-                    <span class="text-[10px] font-mono text-emeraldMint">Online</span>
-                </div>
+                {% endfor %}
             </div>
 
-            <footer class="px-4 sm:px-5 py-3 border-t border-slate-800 bg-slate-900/30 text-center">
-                <p class="text-[10px] font-mono text-slate-500">
-                    Last checked <span class="text-slate-400">just now</span>
+            <footer class="px-5 py-3 border-t border-line dark:border-gray-700
+                           bg-canvas dark:bg-gray-800/40 text-center">
+                <p class="text-[10px] font-mono text-muted">
+                    Last checked
+                    <span id="status-time" class="text-ink dark:text-surface">just now</span>
                 </p>
             </footer>
         </div>
 
-        {# ---------- SITE LINKS ---------- #}
-        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-            <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50">
-                <h2 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-link text-purple-400" aria-hidden="true"></i>
+        {# Public Pages #}
+        <div class="card overflow-hidden">
+            <header class="px-5 py-4 border-b border-line dark:border-gray-700">
+                <h2 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-link text-electric text-xs" aria-hidden="true"></i>
                     Public Pages
                 </h2>
             </header>
 
-            <nav class="p-3 sm:p-4 space-y-1">
+            <nav class="p-3 space-y-0.5" aria-label="Public site pages">
                 {% set public_pages = [
-                    ('index', 'Home', 'fa-house', 'cyan'),
-                    ('about', 'About', 'fa-user', 'purple'),
-                    ('services', 'Services', 'fa-tags', 'emerald'),
-                    ('portfolio', 'Portfolio', 'fa-folder-open', 'orange'),
-                    ('contact', 'Contact', 'fa-envelope', 'cyan')
+                    ('index', 'Home', 'fa-house'),
+                    ('about', 'About', 'fa-user'),
+                    ('services', 'Services', 'fa-tags'),
+                    ('portfolio', 'Portfolio', 'fa-folder-open'),
+                    ('contact', 'Contact', 'fa-envelope')
                 ] %}
-                {% for endpoint, label, icon, color in public_pages %}
-                <a href="{{ url_for(endpoint) }}"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl
-                          text-xs font-mono text-slate-300
-                          hover:bg-{{ color }}-500/10 hover:text-white transition group">
-                    <span class="flex items-center gap-2.5">
-                        <i class="fa-solid {{ icon }} text-{{ color }}-400 w-4 text-center
-                                  group-hover:scale-110 transition-transform"
+                {% for endpoint, label, icon in public_pages %}
+                <div class="flex items-center gap-1 group">
+                    <a href="{{ url_for(endpoint) }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="flex-1 flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg
+                              text-xs font-mono text-muted min-w-0
+                              hover:bg-canvas dark:hover:bg-gray-800/50
+                              hover:text-electric transition">
+                        <span class="flex items-center gap-2.5 min-w-0">
+                            <i class="fa-solid {{ icon }} text-muted w-4 text-center shrink-0
+                                      group-hover:text-electric transition"
+                               aria-hidden="true"></i>
+                            <span class="truncate">{{ label }}</span>
+                        </span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-muted/50
+                                  group-hover:text-electric transition shrink-0"
                            aria-hidden="true"></i>
-                        {{ label }}
-                    </span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-600
-                              group-hover:text-slate-400 transition"
-                       aria-hidden="true"></i>
-                </a>
+                    </a>
+                    <button type="button"
+                            onclick="copyText('{{ request.url_root.rstrip('/') }}{{ url_for(endpoint) }}', '{{ label }} URL')"
+                            class="shrink-0 w-7 h-7 rounded-md flex items-center justify-center
+                                   text-muted/40 hover:text-electric hover:bg-electric/5
+                                   transition opacity-0 group-hover:opacity-100
+                                   focus:opacity-100"
+                            aria-label="Copy {{ label }} URL"
+                            title="Copy URL">
+                        <i class="fa-regular fa-copy text-[10px]" aria-hidden="true"></i>
+                    </button>
+                </div>
                 {% endfor %}
             </nav>
         </div>
 
+        {# Keyboard Shortcuts #}
+        <details class="card overflow-hidden group">
+            <summary class="px-5 py-4 cursor-pointer flex items-center justify-between gap-3
+                            list-none hover:bg-canvas dark:hover:bg-gray-800/40 transition">
+                <h2 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-regular fa-keyboard text-muted text-xs" aria-hidden="true"></i>
+                    Keyboard Shortcuts
+                </h2>
+                <i class="fa-solid fa-chevron-down text-muted text-[10px]
+                          group-open:rotate-180 transition-transform" aria-hidden="true"></i>
+            </summary>
+
+            <div class="px-5 pb-5 pt-1 space-y-2 text-[11px] font-mono">
+                {% set shortcuts = [
+                    ('⌘K', 'Command palette'),
+                    ('⌘B', 'Toggle sidebar'),
+                    ('/',   'Quick search'),
+                    ('N',   'New client'),
+                    ('P',   'Portfolio'),
+                    ('Esc', 'Close menu')
+                ] %}
+                {% for key, label in shortcuts %}
+                <div class="flex items-center justify-between gap-3">
+                    <span class="text-muted">{{ label }}</span>
+                    <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800
+                                border border-line dark:border-gray-700
+                                text-[10px] text-ink dark:text-surface">
+                        {{ key }}
+                    </kbd>
+                </div>
+                {% endfor %}
+            </div>
+        </details>
     </aside>
 </div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[110] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
+<script>
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2600) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    if (!text) return;
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+            () => announce(true),
+            () => announce(false)
+        );
+        return;
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) {
+        announce(false);
+    }
+}
+
+/* ============================================================
+   LIVE DATE + TIME + STATUS
+============================================================ */
+(function initLiveClocks() {
+    const dateEl = document.getElementById('live-date');
+    const timeEl = document.getElementById('live-time');
+    const statusEl = document.getElementById('status-time');
+
+    function update() {
+        const now = new Date();
+        if (dateEl) {
+            dateEl.textContent = now.toLocaleDateString('en-GB', {
+                weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+            });
+        }
+        if (timeEl) {
+            timeEl.textContent = now.toLocaleTimeString('en-US', {
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+        }
+    }
+    update();
+    setInterval(update, 30000); // update every 30s
+
+    // Status "checked Xs ago"
+    if (statusEl) {
+        let seconds = 0;
+        setInterval(() => {
+            seconds++;
+            if (seconds < 60) {
+                statusEl.textContent = seconds <= 2 ? 'just now' : `${seconds}s ago`;
+            } else if (seconds < 3600) {
+                statusEl.textContent = `${Math.floor(seconds / 60)}m ago`;
+            } else {
+                statusEl.textContent = `${Math.floor(seconds / 3600)}h ago`;
+            }
+        }, 1000);
+    }
+})();
+
+/* ============================================================
+   ROW CLICK → OPEN
+============================================================ */
+document.querySelectorAll('.inquiry-row').forEach(row => {
+    const url = row.dataset.href;
+    row.addEventListener('click', () => { if (url) window.location.href = url; });
+    row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (url) window.location.href = url;
+        }
+    });
+});
+
+/* ============================================================
+   KEYBOARD SHORTCUTS (page-level)
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    // Cmd/Ctrl + R → refresh
+    if (cmd && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        window.location.reload();
+        return;
+    }
+
+    if (isTyping || cmd || e.altKey) return;
+
+    if (e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        window.location.href = '{{ url_for('lab_clients') }}#add-client-details';
+    } else if (e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        window.location.href = '{{ url_for('lab_portfolio') }}';
+    } else if (e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        window.location.href = '{{ url_for('lab_inquiries') }}';
+    }
+});
+</script>
 
 {% endblock %}

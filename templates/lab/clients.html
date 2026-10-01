@@ -1,12 +1,27 @@
 {% extends 'lab/base.html' %}
 {% block title %}Clients{% endblock %}
+{% block breadcrumb %}Clients{% endblock %}
 {% block page_title %}Client Management{% endblock %}
 {% block page_subtitle %}Create client accounts, reset passwords, and manage access.{% endblock %}
+
+{% block page_actions %}
+<button type="button"
+        onclick="focusNewClient()"
+        class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+               text-[12px] font-medium
+               text-white bg-ink dark:bg-white dark:text-ink
+               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+               transition-colors"
+        title="New client (N)">
+    <i class="fa-solid fa-user-plus text-[10px]" aria-hidden="true"></i>
+    <span>New Client</span>
+</button>
+{% endblock %}
 
 {% block content %}
 
 {# ============================================================
-   STATS + SEARCH BAR
+   STATS
 ============================================================ #}
 {% set ns = namespace(active=0, inactive=0, total_pending=0) %}
 {% for c in clients %}
@@ -20,162 +35,282 @@
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-users text-cyan-400" aria-hidden="true"></i>
-            Total
+    {# Total #}
+    <button type="button"
+            onclick="filterClients('all')"
+            data-kpi="all"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Total</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ clients|length }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-users text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white">
-            {{ clients|length }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">All accounts</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>
-            Active
+    {# Active #}
+    <button type="button"
+            onclick="filterClients('active')"
+            data-kpi="active"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Active</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.active }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-circle-check text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white">
-            {{ ns.active }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">Live accounts</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-circle-pause text-red-400" aria-hidden="true"></i>
-            Inactive
+    {# Inactive #}
+    <button type="button"
+            onclick="filterClients('inactive')"
+            data-kpi="inactive"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Inactive</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.inactive }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-red-500/10 border border-red-500/20 text-red-500
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-circle-pause text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white">
-            {{ ns.inactive }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">Paused accounts</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800 col-span-2 lg:col-span-1">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-wallet text-orange-400" aria-hidden="true"></i>
-            Total Pending
+    {# Pending #}
+    <div class="card p-4 sm:p-5">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Total Pending</p>
+                <div class="text-lg sm:text-xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight truncate"
+                     title="GH₵ {{ '%.2f' % ns.total_pending }}">
+                    GH₵ {{ '%.2f' % ns.total_pending }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-orange-500/10 border border-orange-500/20 text-orange-500
+                        flex items-center justify-center">
+                <i class="fa-solid fa-wallet text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-base sm:text-xl font-bold font-mono text-white truncate">
-            GH₵ {{ '%.2f' % ns.total_pending }}
-        </div>
+        <p class="text-[10px] font-mono text-muted">Across all clients</p>
     </div>
-
 </div>
 
 {# ============================================================
-   SEARCH + FILTER BAR
+   SEARCH + FILTER TOOLBAR
 ============================================================ #}
-<div class="glass-card rounded-2xl border border-slate-800 p-4 mb-6">
-    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+<div class="card p-4 mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
 
-        {# Search input #}
-        <div class="relative flex-1">
+        {# Search #}
+        <div class="relative flex-1 lg:max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
-                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                      text-muted text-xs pointer-events-none" aria-hidden="true"></i>
             <input type="text"
                    id="client-search"
-                   placeholder="Search by name, email, or code..."
+                   placeholder="Search by name, email, or code…"
                    autocomplete="off"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
-                          bg-slate-900 border border-slate-800
-                          text-sm text-white placeholder-slate-500
-                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                          transition">
+                   spellcheck="false"
+                   aria-label="Search clients"
+                   class="w-full pl-10 pr-10 py-2.5 rounded-xl
+                          bg-canvas dark:bg-gray-800/50
+                          border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface placeholder-muted
+                          focus:outline-none focus:border-electric
+                          focus:ring-2 focus:ring-electric/20 transition">
+            <button type="button"
+                    id="search-clear"
+                    onclick="clearSearch()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2
+                           w-7 h-7 rounded-md flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-surface dark:hover:bg-gray-700 transition"
+                    aria-label="Clear search">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
         </div>
 
-        {# Filter tabs #}
-        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono">
+        {# Filter chips #}
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
+                    overflow-x-auto scrollbar-none -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-1"
+             role="tablist"
+             aria-label="Filter clients">
             <button type="button"
                     onclick="filterClients('all')"
                     data-filter="all"
-                    class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
-                           bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
-                           transition whitespace-nowrap">
+                    role="tab"
+                    aria-selected="true"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
+                           bg-ink dark:bg-white text-white dark:text-ink">
                 All
+                <span class="opacity-70 tabular-nums ml-1">{{ clients|length }}</span>
             </button>
             <button type="button"
                     onclick="filterClients('active')"
                     data-filter="active"
-                    class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
-                           bg-slate-900 text-slate-400 border border-slate-800
-                           hover:text-white transition whitespace-nowrap">
+                    role="tab"
+                    aria-selected="false"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
+                           bg-canvas dark:bg-gray-800 text-muted
+                           border border-line dark:border-gray-700
+                           hover:text-ink dark:hover:text-surface">
                 Active
+                <span class="opacity-70 tabular-nums ml-1">{{ ns.active }}</span>
             </button>
             <button type="button"
                     onclick="filterClients('inactive')"
                     data-filter="inactive"
-                    class="filter-btn flex-1 sm:flex-none px-3 py-2 rounded-lg
-                           bg-slate-900 text-slate-400 border border-slate-800
-                           hover:text-white transition whitespace-nowrap">
+                    role="tab"
+                    aria-selected="false"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
+                           bg-canvas dark:bg-gray-800 text-muted
+                           border border-line dark:border-gray-700
+                           hover:text-ink dark:hover:text-surface">
                 Inactive
+                <span class="opacity-70 tabular-nums ml-1">{{ ns.inactive }}</span>
             </button>
         </div>
 
+        {# Sort dropdown #}
+        <div class="shrink-0">
+            <label for="client-sort" class="sr-only">Sort clients</label>
+            <div class="relative">
+                <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
+                          text-muted text-xs pointer-events-none" aria-hidden="true"></i>
+                <select id="client-sort"
+                        class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
+                               bg-canvas dark:bg-gray-800/50
+                               border border-line dark:border-gray-700
+                               text-xs font-mono text-ink dark:text-surface cursor-pointer
+                               focus:outline-none focus:border-electric transition">
+                    <option value="newest">Newest first</option>
+                    <option value="name">Name (A–Z)</option>
+                    <option value="pending">Pending amount</option>
+                    <option value="projects">Project count</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
+                          text-muted text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+
+    {# Hint row #}
+    <div id="search-hint"
+         class="hidden mt-3 pt-3 border-t border-line dark:border-gray-700
+                text-[10px] font-mono text-muted flex items-center gap-2 flex-wrap">
+        <i class="fa-solid fa-circle-info text-electric shrink-0" aria-hidden="true"></i>
+        <span>
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Esc</kbd>
+            clear ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">/</kbd>
+            search ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">N</kbd>
+            new client
+        </span>
     </div>
 </div>
 
 {# ============================================================
-   MAIN GRID: Form (left) + List (right)
+   MAIN GRID
 ============================================================ #}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     {# ==========================================================
-       LEFT: Add New Client Form
+       LEFT: Add New Client
     ========================================================== #}
     <div class="lg:col-span-1">
 
-        {# Mobile: collapsible. Desktop: always visible #}
-        <details class="lg:!block group glass-card rounded-2xl border border-slate-800"
+        <details class="group card overflow-hidden lg:sticky lg:top-24"
+                 id="add-client-details"
                  {% if not clients %}open{% endif %}>
 
-            <summary class="lg:!hidden p-4 cursor-pointer flex items-center justify-between gap-3
-                            border-b border-slate-800 list-none">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-user-plus text-cyan-400" aria-hidden="true"></i>
+            <summary class="lg:hidden p-4 cursor-pointer flex items-center justify-between gap-3
+                            border-b border-line dark:border-gray-700 list-none">
+                <h3 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-user-plus text-electric text-xs" aria-hidden="true"></i>
                     Add New Client
                 </h3>
-                <i class="fa-solid fa-chevron-down text-slate-400 text-xs
+                <i class="fa-solid fa-chevron-down text-muted text-xs
                           group-open:rotate-180 transition-transform" aria-hidden="true"></i>
             </summary>
 
-            <div class="p-4 sm:p-5 border-b border-slate-800 hidden lg:block">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-user-plus text-cyan-400" aria-hidden="true"></i>
+            <div class="hidden lg:block p-5 border-b border-line dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-user-plus text-electric text-xs" aria-hidden="true"></i>
                     Add New Client
                 </h3>
-                <p class="text-[10px] font-mono text-slate-500 mt-1">
-                    Sends credentials to the email automatically.
+                <p class="text-[11px] text-muted mt-1">
+                    Credentials are sent to the client's email automatically.
                 </p>
             </div>
 
             <form method="POST"
                   action="{{ url_for('lab_client_create') }}"
                   id="create-client-form"
-                  class="p-4 sm:p-5 space-y-3.5">
+                  class="p-4 sm:p-5 space-y-4"
+                  novalidate>
 
                 <div>
-                    <label for="new-client-name" class="block text-[10px] font-mono text-slate-400
-                                                         uppercase tracking-wider mb-1.5">
-                        Client Name <span class="text-cyan-400">*</span>
+                    <label for="new-client-name"
+                           class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                        Client Name <span class="text-electric">*</span>
                     </label>
                     <input type="text"
                            id="new-client-name"
                            name="name"
                            required
                            maxlength="80"
-                           autocomplete="name"
+                           autocomplete="organization"
                            placeholder="e.g. STBM E-Commerce"
-                           class="w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
+                           class="w-full px-4 py-3 rounded-xl
+                                  bg-canvas dark:bg-gray-800/50
+                                  border border-line dark:border-gray-700
+                                  text-sm text-ink dark:text-surface placeholder-muted
+                                  focus:outline-none focus:border-electric
+                                  focus:ring-2 focus:ring-electric/20 transition">
                 </div>
 
                 <div>
-                    <label for="new-client-email" class="block text-[10px] font-mono text-slate-400
-                                                          uppercase tracking-wider mb-1.5">
-                        Email Address <span class="text-cyan-400">*</span>
+                    <label for="new-client-email"
+                           class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                        Email Address <span class="text-electric">*</span>
                     </label>
                     <input type="email"
                            id="new-client-email"
@@ -183,200 +318,267 @@
                            required
                            maxlength="120"
                            autocomplete="email"
+                           inputmode="email"
+                           spellcheck="false"
                            placeholder="client@email.com"
-                           class="w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
+                           class="w-full px-4 py-3 rounded-xl
+                                  bg-canvas dark:bg-gray-800/50
+                                  border border-line dark:border-gray-700
+                                  text-sm text-ink dark:text-surface placeholder-muted
+                                  focus:outline-none focus:border-electric
+                                  focus:ring-2 focus:ring-electric/20 transition">
                 </div>
 
-                <label class="flex items-start gap-2.5 p-3 rounded-xl
-                              bg-slate-900/70 border border-slate-800
-                              hover:border-cyan-500/30 transition cursor-pointer">
+                <label class="flex items-start gap-3 p-3 rounded-xl
+                              bg-canvas dark:bg-gray-800/40
+                              border border-line dark:border-gray-700
+                              hover:border-electric/30 transition cursor-pointer">
                     <input type="checkbox"
                            name="send_email"
                            checked
-                           class="mt-0.5 accent-cyan-400 w-4 h-4 shrink-0">
-                    <span class="text-xs font-mono text-slate-300 leading-snug">
+                           class="mt-0.5 accent-electric w-4 h-4 shrink-0">
+                    <span class="text-xs text-ink dark:text-surface leading-snug">
                         Email login credentials automatically
                     </span>
                 </label>
 
-                <div class="flex items-start gap-2 p-3 rounded-xl
-                            bg-cyan-950/30 border border-cyan-500/20">
-                    <i class="fa-solid fa-circle-info text-cyan-400 text-xs mt-0.5 shrink-0"
+                <div class="flex items-start gap-2.5 p-3 rounded-xl
+                            bg-electric/[0.04] dark:bg-electric/[0.08]
+                            border border-electric/20">
+                    <i class="fa-solid fa-circle-info text-electric text-xs mt-0.5 shrink-0"
                        aria-hidden="true"></i>
-                    <p class="text-[10px] font-mono text-cyan-300 leading-relaxed">
-                        A random 10-character password will be generated and sent to the client via email.
+                    <p class="text-[11px] text-electric/90 dark:text-electric/80 leading-relaxed">
+                        A random 10-character password will be generated and sent to the client.
                         They can change it after first login.
                     </p>
                 </div>
 
                 <button type="submit"
                         id="create-client-btn"
-                        class="w-full py-3 rounded-xl text-xs font-mono font-bold
-                               text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
-                               hover:brightness-110 transition active:scale-[0.98]
-                               inline-flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
-                    <span id="create-client-label">Create Client</span>
+                        class="w-full py-3 rounded-full
+                               text-xs font-medium text-white
+                               bg-ink dark:bg-white dark:text-ink
+                               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                               transition-colors
+                               inline-flex items-center justify-center gap-2
+                               disabled:opacity-70 disabled:cursor-wait">
+                    <i class="fa-solid fa-user-plus text-[10px]" data-create-icon aria-hidden="true"></i>
+                    <span data-create-label>Create Client</span>
                 </button>
-
             </form>
         </details>
-
     </div>
 
     {# ==========================================================
        RIGHT: Clients List
     ========================================================== #}
     <div class="lg:col-span-2">
-        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+        <div class="card overflow-hidden">
 
             {# Header #}
-            <div class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
-                        flex items-center justify-between gap-3">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
-                    <i class="fa-solid fa-user-group text-cyan-400" aria-hidden="true"></i>
+            <header class="p-4 sm:p-5 border-b border-line dark:border-gray-700
+                           flex items-center justify-between gap-3 flex-wrap">
+                <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-user-group text-electric text-xs" aria-hidden="true"></i>
                     All Clients
-                    <span class="text-[10px] font-mono font-normal text-slate-500"
-                          id="clients-count">
+                    <span class="text-[10px] font-mono text-muted font-normal tabular-nums"
+                          id="clients-count"
+                          aria-live="polite">
                         ({{ clients|length }})
                     </span>
                 </h3>
-            </div>
+            </header>
 
-            {# ============================================================
-               DESKTOP TABLE (hidden below lg)
-            ============================================================ #}
+            {# ---------- DESKTOP TABLE ---------- #}
             <div class="hidden lg:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
-                                   uppercase bg-slate-900/30">
-                            <th class="py-3 px-5">Client</th>
-                            <th class="py-3 px-5">Code</th>
-                            <th class="py-3 px-5 text-center">Projects</th>
-                            <th class="py-3 px-5 text-right">Pending</th>
-                            <th class="py-3 px-5 text-center">Status</th>
-                            <th class="py-3 px-5 text-right">Actions</th>
+                        <tr class="border-b border-line dark:border-gray-700
+                                   text-[10px] font-mono text-muted uppercase
+                                   bg-canvas dark:bg-gray-800/40">
+                            <th class="py-3 px-5 font-medium">Client</th>
+                            <th class="py-3 px-5 font-medium">Code</th>
+                            <th class="py-3 px-5 text-center font-medium">Projects</th>
+                            <th class="py-3 px-5 text-right font-medium">Pending</th>
+                            <th class="py-3 px-5 text-center font-medium">Status</th>
+                            <th class="py-3 px-5 text-right font-medium">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm">
                         {% for c in clients %}
-                        <tr class="client-row border-b border-slate-800/50
-                                   hover:bg-slate-800/30 transition"
+                        <tr class="client-row border-b border-line/60 dark:border-gray-800
+                                   hover:bg-canvas dark:hover:bg-gray-800/30 transition"
                             data-status="{{ 'active' if c.is_active else 'inactive' }}"
-                            data-search="{{ (c.name ~ ' ' ~ c.email ~ ' ' ~ (c.client_code or ''))|lower }}">
+                            data-search="{{ (c.name ~ ' ' ~ c.email ~ ' ' ~ (c.client_code or ''))|lower }}"
+                            data-name="{{ c.name|lower }}"
+                            data-pending="{{ c.pending_total or 0 }}"
+                            data-projects="{{ c.project_count or 0 }}">
 
+                            {# Client #}
                             <td class="py-4 px-5 max-w-xs">
-                                <div class="font-semibold text-white text-xs truncate">{{ c.name }}</div>
-                                <div class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
-                                    {{ c.email }}
+                                <div class="flex items-center gap-3">
+                                    <div class="shrink-0 w-9 h-9 rounded-full
+                                                bg-gradient-to-br from-electric to-teal
+                                                flex items-center justify-center
+                                                text-white font-bold text-xs">
+                                        {{ c.name[0]|upper if c.name else 'C' }}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-medium text-ink dark:text-surface text-sm truncate"
+                                           title="{{ c.name }}">
+                                            {{ c.name }}
+                                        </p>
+                                        <button type="button"
+                                                onclick="copyText('{{ c.email }}', 'Email')"
+                                                class="text-[11px] font-mono text-muted
+                                                       hover:text-electric transition
+                                                       truncate max-w-full inline-flex items-center gap-1 group">
+                                            <span class="truncate">{{ c.email }}</span>
+                                            <i class="fa-regular fa-copy text-[9px] opacity-0
+                                                      group-hover:opacity-70 transition-opacity shrink-0"
+                                               aria-hidden="true"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </td>
 
+                            {# Code #}
                             <td class="py-4 px-5">
                                 {% if c.client_code %}
-                                <span class="text-[10px] font-mono px-2 py-1 rounded
-                                             bg-purple-950/40 text-purple-300 border border-purple-500/30
-                                             whitespace-nowrap">
+                                <button type="button"
+                                        onclick="copyText('{{ c.client_code }}', 'Client code')"
+                                        class="text-[11px] font-mono px-2.5 py-1 rounded-md
+                                               bg-electric/8 text-electric
+                                               border border-electric/20
+                                               whitespace-nowrap
+                                               hover:bg-electric/15 hover:border-electric/40
+                                               transition inline-flex items-center gap-1.5 group">
                                     {{ c.client_code }}
-                                </span>
+                                    <i class="fa-regular fa-copy text-[9px] opacity-0
+                                              group-hover:opacity-70 transition-opacity"
+                                       aria-hidden="true"></i>
+                                </button>
                                 {% else %}
-                                <span class="text-slate-600 text-xs">—</span>
+                                <span class="text-muted text-xs">—</span>
                                 {% endif %}
                             </td>
 
-                            <td class="py-4 px-5 text-xs text-cyan-300 font-mono text-center">
-                                {{ c.project_count }}
+                            {# Projects #}
+                            <td class="py-4 px-5 text-xs text-electric font-mono text-center tabular-nums font-medium">
+                                {{ c.project_count or 0 }}
                             </td>
 
-                            <td class="py-4 px-5 text-xs text-emeraldMint font-mono text-right whitespace-nowrap">
+                            {# Pending #}
+                            <td class="py-4 px-5 text-xs font-mono text-right whitespace-nowrap tabular-nums
+                                       {% if (c.pending_total or 0) > 0 %}text-orange-500 font-medium{% else %}text-muted{% endif %}">
                                 GH₵ {{ '%.2f' % (c.pending_total or 0) }}
                             </td>
 
+                            {# Status #}
                             <td class="py-4 px-5 text-center">
                                 {% if c.is_active %}
-                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full
-                                             text-[10px] font-mono uppercase
-                                             bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                             text-[10px] font-mono uppercase whitespace-nowrap
+                                             bg-teal/10 text-teal border border-teal/30">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"
                                           aria-hidden="true"></span>
                                     Active
                                 </span>
                                 {% else %}
-                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full
-                                             text-[10px] font-mono uppercase
-                                             bg-red-500/20 text-red-300 border border-red-500/30">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                             text-[10px] font-mono uppercase whitespace-nowrap
+                                             bg-red-500/10 text-red-500 border border-red-500/30">
                                     <i class="fa-solid fa-pause text-[8px]" aria-hidden="true"></i>
                                     Inactive
                                 </span>
                                 {% endif %}
                             </td>
 
-                            <td class="py-4 px-5">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <a href="{{ url_for('lab_client_projects', client_id=c._id) }}"
-                                       class="w-9 h-9 rounded-lg bg-cyan-950/50 border border-cyan-500/30
-                                              flex items-center justify-center text-cyan-400
-                                              hover:bg-cyan-500/20 hover:border-cyan-500/50 transition"
-                                       title="Manage Projects"
-                                       aria-label="Manage projects for {{ c.name }}">
-                                        <i class="fa-solid fa-folder-open text-xs" aria-hidden="true"></i>
-                                    </a>
+                            {# Actions #}
+                            <td class="py-4 px-5 text-right">
+                                <div class="relative inline-block" data-menu-root>
+                                    <button type="button"
+                                            class="menu-trigger w-9 h-9 rounded-lg
+                                                   inline-flex items-center justify-center
+                                                   text-muted
+                                                   bg-canvas dark:bg-gray-800
+                                                   border border-line dark:border-gray-700
+                                                   hover:text-ink dark:hover:text-surface
+                                                   hover:border-ink dark:hover:border-surface
+                                                   transition"
+                                            aria-haspopup="menu"
+                                            aria-expanded="false"
+                                            aria-label="Actions for {{ c.name|e }}">
+                                        <i class="fa-solid fa-ellipsis text-sm" aria-hidden="true"></i>
+                                    </button>
 
-                                    <form method="POST"
-                                          action="{{ url_for('lab_client_reset_password', client_id=c._id) }}"
-                                          onsubmit="return confirm('Reset password for {{ c.name }} and email the new one?');">
-                                        <input type="hidden" name="send_email" value="on">
-                                        <button type="submit"
-                                                class="w-9 h-9 rounded-lg bg-amber-950/50 border border-amber-500/30
-                                                       flex items-center justify-center text-amber-400
-                                                       hover:bg-amber-500/20 hover:border-amber-500/50 transition"
-                                                title="Reset Password"
-                                                aria-label="Reset password for {{ c.name }}">
-                                            <i class="fa-solid fa-key text-xs" aria-hidden="true"></i>
-                                        </button>
-                                    </form>
+                                    <div class="menu-panel hidden absolute right-0 top-full mt-1 z-30
+                                                w-56 card shadow-xl overflow-hidden
+                                                bg-white dark:bg-[#141414]"
+                                         role="menu">
 
-                                    <form method="POST"
-                                          action="{{ url_for('lab_client_toggle', client_id=c._id) }}"
-                                          onsubmit="return confirm('{{ 'Deactivate' if c.is_active else 'Activate' }} {{ c.name }}?');">
-                                        <button type="submit"
-                                                class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700
-                                                       flex items-center justify-center
-                                                       hover:bg-slate-700 hover:border-slate-600 transition"
-                                                title="{{ 'Deactivate' if c.is_active else 'Activate' }}"
-                                                aria-label="{{ 'Deactivate' if c.is_active else 'Activate' }} {{ c.name }}">
-                                            <i class="fa-solid {% if c.is_active %}fa-toggle-on text-emerald-400{% else %}fa-toggle-off text-slate-400{% endif %} text-xs"
+                                        <a href="{{ url_for('lab_client_projects', client_id=c._id) }}"
+                                           class="flex items-center gap-2.5 px-3.5 py-2.5
+                                                  text-sm text-ink dark:text-surface
+                                                  hover:bg-canvas dark:hover:bg-gray-800 transition"
+                                           role="menuitem">
+                                            <i class="fa-solid fa-folder-open w-4 text-center text-xs text-electric"
                                                aria-hidden="true"></i>
-                                        </button>
-                                    </form>
+                                            Manage Projects
+                                        </a>
 
-                                    <form method="POST"
-                                          action="{{ url_for('lab_client_delete', client_id=c._id) }}"
-                                          onsubmit="return confirm('⚠️ Delete {{ c.name }} permanently? This will remove their account. Projects and invoices will remain in the database.');">
-                                        <button type="submit"
-                                                class="w-9 h-9 rounded-lg bg-red-950/50 border border-red-500/30
-                                                       flex items-center justify-center text-red-400
-                                                       hover:bg-red-500/20 hover:border-red-500/50 transition"
-                                                title="Delete"
-                                                aria-label="Delete {{ c.name }}">
-                                            <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                                        <button type="button"
+                                                onclick="requestResetPassword('{{ c.name|e }}', '{{ url_for('lab_client_reset_password', client_id=c._id) }}')"
+                                                class="w-full flex items-center gap-2.5 px-3.5 py-2.5
+                                                       text-sm text-ink dark:text-surface text-left
+                                                       hover:bg-canvas dark:hover:bg-gray-800 transition"
+                                                role="menuitem">
+                                            <i class="fa-solid fa-key w-4 text-center text-xs text-orange-500"
+                                               aria-hidden="true"></i>
+                                            Reset Password
                                         </button>
-                                    </form>
+
+                                        <button type="button"
+                                                onclick="requestToggle('{{ c.name|e }}', {{ 'true' if c.is_active else 'false' }}, '{{ url_for('lab_client_toggle', client_id=c._id) }}')"
+                                                class="w-full flex items-center gap-2.5 px-3.5 py-2.5
+                                                       text-sm text-ink dark:text-surface text-left
+                                                       hover:bg-canvas dark:hover:bg-gray-800 transition"
+                                                role="menuitem">
+                                            <i class="fa-solid {% if c.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %} w-4 text-center text-xs
+                                                      {% if c.is_active %}text-orange-500{% else %}text-teal{% endif %}"
+                                               aria-hidden="true"></i>
+                                            {{ 'Deactivate' if c.is_active else 'Activate' }} Account
+                                        </button>
+
+                                        <div class="border-t border-line dark:border-gray-700 my-1"></div>
+
+                                        <button type="button"
+                                                onclick="requestDelete('{{ c.name|e }}', '{{ url_for('lab_client_delete', client_id=c._id) }}')"
+                                                class="w-full flex items-center gap-2.5 px-3.5 py-2.5
+                                                       text-sm text-red-500 text-left
+                                                       hover:bg-red-500/5 transition"
+                                                role="menuitem">
+                                            <i class="fa-solid fa-trash w-4 text-center text-xs"
+                                               aria-hidden="true"></i>
+                                            Delete Client
+                                        </button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
                             <td colspan="6" class="py-16 text-center">
-                                <i class="fa-solid fa-user-group text-4xl text-slate-700 mb-3"
-                                   aria-hidden="true"></i>
-                                <p class="text-slate-400 text-xs font-mono">No clients yet.</p>
-                                <p class="text-slate-500 text-[10px] font-mono mt-1">
+                                <div class="w-16 h-16 mx-auto rounded-full
+                                            bg-canvas dark:bg-gray-800
+                                            border border-line dark:border-gray-700
+                                            flex items-center justify-center mb-3">
+                                    <i class="fa-solid fa-user-group text-2xl text-muted"
+                                       aria-hidden="true"></i>
+                                </div>
+                                <p class="text-ink dark:text-surface text-sm font-medium">No clients yet</p>
+                                <p class="text-muted text-xs font-mono mt-1">
                                     Create your first client to get started.
                                 </p>
                             </td>
@@ -386,150 +588,332 @@
                 </table>
             </div>
 
-            {# ============================================================
-               MOBILE CARD LIST (hidden lg and up)
-            ============================================================ #}
-            <div class="lg:hidden divide-y divide-slate-800/60">
+            {# ---------- MOBILE CARDS ---------- #}
+            <div class="lg:hidden divide-y divide-line dark:divide-gray-800">
                 {% for c in clients %}
                 <div class="client-row p-4 space-y-3"
                      data-status="{{ 'active' if c.is_active else 'inactive' }}"
-                     data-search="{{ (c.name ~ ' ' ~ c.email ~ ' ' ~ (c.client_code or ''))|lower }}">
+                     data-search="{{ (c.name ~ ' ' ~ c.email ~ ' ' ~ (c.client_code or ''))|lower }}"
+                     data-name="{{ c.name|lower }}"
+                     data-pending="{{ c.pending_total or 0 }}"
+                     data-projects="{{ c.project_count or 0 }}">
 
-                    {# Row 1: Name + Status #}
-                    <div class="flex items-start justify-between gap-3">
+                    {# Header #}
+                    <div class="flex items-start gap-3">
+                        <div class="shrink-0 w-11 h-11 rounded-full
+                                    bg-gradient-to-br from-electric to-teal
+                                    flex items-center justify-center
+                                    text-white font-bold text-sm">
+                            {{ c.name[0]|upper if c.name else 'C' }}
+                        </div>
                         <div class="min-w-0 flex-1">
-                            <h4 class="font-semibold text-white text-sm truncate">{{ c.name }}</h4>
-                            <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5">
+                            <h4 class="font-medium text-ink dark:text-surface text-sm truncate">
+                                {{ c.name }}
+                            </h4>
+                            <p class="text-[11px] font-mono text-muted truncate mt-0.5">
                                 {{ c.email }}
                             </p>
                         </div>
                         {% if c.is_active %}
                         <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
                                      text-[10px] font-mono uppercase
-                                     bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                                     bg-teal/10 text-teal border border-teal/30">
+                            <span class="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"
                                   aria-hidden="true"></span>
                             Active
                         </span>
                         {% else %}
                         <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
                                      text-[10px] font-mono uppercase
-                                     bg-red-500/20 text-red-300 border border-red-500/30">
+                                     bg-red-500/10 text-red-500 border border-red-500/30">
                             <i class="fa-solid fa-pause text-[8px]" aria-hidden="true"></i>
                             Inactive
                         </span>
                         {% endif %}
                     </div>
 
-                    {# Row 2: Meta grid #}
+                    {# Meta grid #}
                     <div class="grid grid-cols-3 gap-2 text-[10px] font-mono">
-                        <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800 min-w-0">
-                            <p class="text-slate-500 uppercase tracking-wider text-[8px] mb-0.5">Code</p>
-                            <p class="text-purple-300 truncate">{{ c.client_code or '—' }}</p>
+                        {% if c.client_code %}
+                        <button type="button"
+                                onclick="copyText('{{ c.client_code }}', 'Client code')"
+                                class="p-2 rounded-lg bg-canvas dark:bg-gray-800/50
+                                       border border-line dark:border-gray-700
+                                       text-left hover:border-electric/40 transition">
+                            <p class="text-muted uppercase tracking-wider text-[8px] mb-0.5">Code</p>
+                            <p class="text-electric truncate">{{ c.client_code }}</p>
+                        </button>
+                        {% else %}
+                        <div class="p-2 rounded-lg bg-canvas dark:bg-gray-800/50
+                                    border border-line dark:border-gray-700">
+                            <p class="text-muted uppercase tracking-wider text-[8px] mb-0.5">Code</p>
+                            <p class="text-muted">—</p>
                         </div>
-                        <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800 min-w-0">
-                            <p class="text-slate-500 uppercase tracking-wider text-[8px] mb-0.5">Projects</p>
-                            <p class="text-cyan-300">{{ c.project_count }}</p>
+                        {% endif %}
+                        <div class="p-2 rounded-lg bg-canvas dark:bg-gray-800/50
+                                    border border-line dark:border-gray-700">
+                            <p class="text-muted uppercase tracking-wider text-[8px] mb-0.5">Projects</p>
+                            <p class="text-electric font-medium">{{ c.project_count or 0 }}</p>
                         </div>
-                        <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800 min-w-0">
-                            <p class="text-slate-500 uppercase tracking-wider text-[8px] mb-0.5">Pending</p>
-                            <p class="text-emeraldMint truncate">GH₵ {{ '%.0f' % (c.pending_total or 0) }}</p>
+                        <div class="p-2 rounded-lg bg-canvas dark:bg-gray-800/50
+                                    border border-line dark:border-gray-700">
+                            <p class="text-muted uppercase tracking-wider text-[8px] mb-0.5">Pending</p>
+                            <p class="{% if (c.pending_total or 0) > 0 %}text-orange-500 font-medium{% else %}text-muted{% endif %} truncate">
+                                GH₵ {{ '%.0f' % (c.pending_total or 0) }}
+                            </p>
                         </div>
                     </div>
 
-                    {# Row 3: Actions (2-col grid on mobile) #}
+                    {# Actions #}
                     <div class="grid grid-cols-2 gap-2">
                         <a href="{{ url_for('lab_client_projects', client_id=c._id) }}"
                            class="inline-flex items-center justify-center gap-1.5
-                                  px-3 py-2.5 rounded-lg
-                                  bg-cyan-500/15 border border-cyan-500/30
-                                  text-xs font-mono font-bold text-cyan-300
-                                  hover:bg-cyan-500/25 transition active:scale-[0.98]">
-                            <i class="fa-solid fa-folder-open text-xs" aria-hidden="true"></i>
+                                  px-3 py-2.5 rounded-full
+                                  text-xs font-medium text-white
+                                  bg-ink dark:bg-white dark:text-ink
+                                  hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                                  transition-colors">
+                            <i class="fa-solid fa-folder-open text-[10px]" aria-hidden="true"></i>
                             Manage
                         </a>
 
-                        <form method="POST"
-                              action="{{ url_for('lab_client_reset_password', client_id=c._id) }}"
-                              onsubmit="return confirm('Reset password for {{ c.name }} and email the new one?');">
-                            <input type="hidden" name="send_email" value="on">
-                            <button type="submit"
-                                    class="w-full inline-flex items-center justify-center gap-1.5
-                                           px-3 py-2.5 rounded-lg
-                                           bg-amber-500/15 border border-amber-500/30
-                                           text-xs font-mono font-bold text-amber-300
-                                           hover:bg-amber-500/25 transition active:scale-[0.98]">
-                                <i class="fa-solid fa-key text-xs" aria-hidden="true"></i>
-                                Reset
-                            </button>
-                        </form>
+                        <button type="button"
+                                onclick="requestResetPassword('{{ c.name|e }}', '{{ url_for('lab_client_reset_password', client_id=c._id) }}')"
+                                class="inline-flex items-center justify-center gap-1.5
+                                       px-3 py-2.5 rounded-full
+                                       text-xs font-medium text-ink dark:text-surface
+                                       bg-canvas dark:bg-gray-800
+                                       border border-line dark:border-gray-700
+                                       hover:border-orange-500/40 hover:text-orange-500 transition">
+                            <i class="fa-solid fa-key text-[10px]" aria-hidden="true"></i>
+                            Reset
+                        </button>
 
-                        <form method="POST"
-                              action="{{ url_for('lab_client_toggle', client_id=c._id) }}"
-                              onsubmit="return confirm('{{ 'Deactivate' if c.is_active else 'Activate' }} {{ c.name }}?');">
-                            <button type="submit"
-                                    class="w-full inline-flex items-center justify-center gap-1.5
-                                           px-3 py-2.5 rounded-lg
-                                           bg-slate-800 border border-slate-700
-                                           text-xs font-mono font-bold
-                                           {% if c.is_active %}text-slate-300{% else %}text-emerald-300{% endif %}
-                                           hover:bg-slate-700 transition active:scale-[0.98]">
-                                <i class="fa-solid {% if c.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %} text-xs"
-                                   aria-hidden="true"></i>
-                                {{ 'Deactivate' if c.is_active else 'Activate' }}
-                            </button>
-                        </form>
+                        <button type="button"
+                                onclick="requestToggle('{{ c.name|e }}', {{ 'true' if c.is_active else 'false' }}, '{{ url_for('lab_client_toggle', client_id=c._id) }}')"
+                                class="inline-flex items-center justify-center gap-1.5
+                                       px-3 py-2.5 rounded-full
+                                       text-xs font-medium text-ink dark:text-surface
+                                       bg-canvas dark:bg-gray-800
+                                       border border-line dark:border-gray-700
+                                       hover:border-ink dark:hover:border-surface transition">
+                            <i class="fa-solid {% if c.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %} text-[10px]"
+                               aria-hidden="true"></i>
+                            {{ 'Deactivate' if c.is_active else 'Activate' }}
+                        </button>
 
-                        <form method="POST"
-                              action="{{ url_for('lab_client_delete', client_id=c._id) }}"
-                              onsubmit="return confirm('⚠️ Delete {{ c.name }} permanently? This will remove their account.');">
-                            <button type="submit"
-                                    class="w-full inline-flex items-center justify-center gap-1.5
-                                           px-3 py-2.5 rounded-lg
-                                           bg-red-500/15 border border-red-500/30
-                                           text-xs font-mono font-bold text-red-300
-                                           hover:bg-red-500/25 transition active:scale-[0.98]">
-                                <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
-                                Delete
-                            </button>
-                        </form>
+                        <button type="button"
+                                onclick="requestDelete('{{ c.name|e }}', '{{ url_for('lab_client_delete', client_id=c._id) }}')"
+                                class="inline-flex items-center justify-center gap-1.5
+                                       px-3 py-2.5 rounded-full
+                                       text-xs font-medium text-red-500
+                                       bg-red-500/5 border border-red-500/20
+                                       hover:bg-red-500/10 hover:border-red-500/40 transition">
+                            <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+                            Delete
+                        </button>
                     </div>
-
                 </div>
                 {% else %}
                 <div class="p-12 text-center">
-                    <i class="fa-solid fa-user-group text-4xl text-slate-700 mb-3"
-                       aria-hidden="true"></i>
-                    <p class="text-slate-400 text-xs font-mono">No clients yet.</p>
-                    <p class="text-slate-500 text-[10px] font-mono mt-1">
+                    <div class="w-16 h-16 mx-auto rounded-full
+                                bg-canvas dark:bg-gray-800
+                                border border-line dark:border-gray-700
+                                flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-user-group text-2xl text-muted" aria-hidden="true"></i>
+                    </div>
+                    <p class="text-ink dark:text-surface text-sm font-medium">No clients yet</p>
+                    <p class="text-muted text-xs font-mono mt-1">
                         Create your first client to get started.
                     </p>
                 </div>
                 {% endfor %}
             </div>
 
-            {# ============================================================
-               NO RESULTS (shown when filter/search returns nothing)
-            ============================================================ #}
-            <div id="no-results" class="hidden p-12 text-center">
-                <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
-                   aria-hidden="true"></i>
-                <p class="text-slate-400 text-xs font-mono">No clients match your search.</p>
+            {# ---------- NO RESULTS ---------- #}
+            <div id="no-results" class="hidden p-12 text-center
+                                        border-t border-line dark:border-gray-700">
+                <div class="w-14 h-14 mx-auto rounded-full
+                            bg-canvas dark:bg-gray-800
+                            border border-line dark:border-gray-700
+                            flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-magnifying-glass text-xl text-muted" aria-hidden="true"></i>
+                </div>
+                <p class="text-ink dark:text-surface text-sm font-medium">No matches</p>
+                <p class="text-muted text-xs font-mono mt-1">
+                    Try a different search or filter.
+                </p>
                 <button type="button"
                         onclick="resetFilters()"
-                        class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+                        class="mt-4 inline-flex items-center gap-1.5
+                               px-4 py-2 rounded-full text-xs font-medium
+                               bg-canvas dark:bg-gray-800
+                               text-ink dark:text-surface
+                               border border-line dark:border-gray-700
+                               hover:border-ink dark:hover:border-surface transition">
+                    <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
                     Clear filters
                 </button>
             </div>
-
         </div>
     </div>
 </div>
 
+{# ============================================================
+   CONFIRM MODAL (shared)
+============================================================ #}
+<div id="confirm-modal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="confirm-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeConfirmModal()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-sm card p-5 sm:p-6 shadow-2xl
+                bg-white dark:bg-[#141414]">
+        <div class="flex items-start gap-3 mb-4">
+            <div id="confirm-icon-wrap"
+                 class="w-10 h-10 shrink-0 rounded-full
+                        bg-red-500/10 border border-red-500/20
+                        flex items-center justify-center text-red-500">
+                <i id="confirm-icon" class="fa-solid fa-triangle-exclamation text-sm"
+                   aria-hidden="true"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 id="confirm-title"
+                    class="text-sm font-semibold text-ink dark:text-surface">
+                    Are you sure?
+                </h3>
+                <p id="confirm-message"
+                   class="text-xs text-muted mt-1 leading-relaxed">
+                    This action cannot be undone.
+                </p>
+            </div>
+        </div>
+
+        <div id="confirm-extra" class="hidden mb-4"></div>
+
+        <div class="flex items-center justify-end gap-2">
+            <button type="button"
+                    onclick="closeConfirmModal()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-ink dark:text-surface
+                           bg-canvas dark:bg-gray-800
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                Cancel
+            </button>
+            <form id="confirm-form" method="POST" action="">
+                <button type="submit"
+                        id="confirm-submit"
+                        class="px-4 py-2 rounded-full text-xs font-medium text-white
+                               bg-red-500 hover:bg-red-600 transition">
+                    Confirm
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[110] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// SEARCH + FILTER
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 3000) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg
+                        text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => announce(true), () => announce(false));
+        return;
+    }
+
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) {
+        announce(false);
+    }
+}
+
+/* ============================================================
+   SEARCH + FILTER + SORT
+============================================================ */
 let currentFilter = 'all';
 let currentSearch = '';
 
@@ -540,7 +924,6 @@ function applyFilters() {
     rows.forEach(row => {
         const status = row.dataset.status || '';
         const haystack = row.dataset.search || '';
-
         const matchesFilter = (currentFilter === 'all' || status === currentFilter);
         const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
 
@@ -552,7 +935,6 @@ function applyFilters() {
         }
     });
 
-    // Update count
     const countEl = document.getElementById('clients-count');
     if (countEl) {
         const total = rows.length;
@@ -561,25 +943,36 @@ function applyFilters() {
             : `(${visible} of ${total})`;
     }
 
-    // No-results state
     const noResults = document.getElementById('no-results');
-    if (noResults) {
-        noResults.classList.toggle('hidden', visible > 0);
-    }
+    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+
+    const hint = document.getElementById('search-hint');
+    if (hint) hint.classList.toggle('hidden', !currentSearch && currentFilter === 'all');
+
+    // Sync KPI highlight
+    document.querySelectorAll('[data-kpi]').forEach(kpi => {
+        const isActive = kpi.dataset.kpi === currentFilter;
+        kpi.classList.toggle('ring-2', isActive);
+        kpi.classList.toggle('ring-electric/30', isActive);
+    });
 }
 
 function filterClients(filter) {
     currentFilter = filter;
 
-    // Update active button style
     document.querySelectorAll('.filter-btn').forEach(btn => {
         const isActive = btn.dataset.filter === filter;
-        btn.classList.toggle('bg-cyan-500/20', isActive);
-        btn.classList.toggle('text-cyan-300', isActive);
-        btn.classList.toggle('border-cyan-500/40', isActive);
-        btn.classList.toggle('bg-slate-900', !isActive);
-        btn.classList.toggle('text-slate-400', !isActive);
-        btn.classList.toggle('border-slate-800', !isActive);
+        btn.classList.toggle('bg-ink', isActive);
+        btn.classList.toggle('dark:bg-white', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('dark:text-ink', isActive);
+        btn.classList.toggle('bg-canvas', !isActive);
+        btn.classList.toggle('dark:bg-gray-800', !isActive);
+        btn.classList.toggle('text-muted', !isActive);
+        btn.classList.toggle('border', !isActive);
+        btn.classList.toggle('border-line', !isActive);
+        btn.classList.toggle('dark:border-gray-700', !isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     applyFilters();
@@ -589,63 +982,325 @@ function resetFilters() {
     currentSearch = '';
     const searchInput = document.getElementById('client-search');
     if (searchInput) searchInput.value = '';
+    updateClearButton();
     filterClients('all');
 }
 
-// Wire up the search input
+function clearSearch() {
+    const searchInput = document.getElementById('client-search');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    currentSearch = '';
+    updateClearButton();
+    applyFilters();
+}
+
+function updateClearButton() {
+    const searchInput = document.getElementById('client-search');
+    const clearBtn = document.getElementById('search-clear');
+    if (!searchInput || !clearBtn) return;
+    clearBtn.classList.toggle('hidden', !searchInput.value);
+}
+
 const searchInput = document.getElementById('client-search');
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
         currentSearch = (e.target.value || '').toLowerCase().trim();
+        updateClearButton();
         applyFilters();
     });
 }
 
-// ============================================================
-// SUBMIT FEEDBACK ON "CREATE CLIENT"
-// ============================================================
-const createForm = document.getElementById('create-client-form');
-const createBtn = document.getElementById('create-client-btn');
-const createLabel = document.getElementById('create-client-label');
+/* ============================================================
+   SORT
+============================================================ */
+const sortSelect = document.getElementById('client-sort');
+if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => sortClients(e.target.value));
+}
 
-if (createForm && createBtn) {
-    createForm.addEventListener('submit', () => {
-        createBtn.disabled = true;
-        createBtn.classList.add('opacity-70', 'cursor-not-allowed');
-        if (createLabel) {
-            createLabel.textContent = 'Creating...';
+function sortClients(order) {
+    const containers = [
+        document.querySelector('table tbody'),
+        document.querySelector('.lg\\:hidden.divide-y')
+    ].filter(Boolean);
+
+    containers.forEach(container => {
+        const rows = Array.from(container.querySelectorAll('.client-row'));
+        if (rows.length === 0) return;
+
+        rows.sort((a, b) => {
+            const nameA = (a.dataset.name || '').toLowerCase();
+            const nameB = (b.dataset.name || '').toLowerCase();
+            const pendingA = parseFloat(a.dataset.pending) || 0;
+            const pendingB = parseFloat(b.dataset.pending) || 0;
+            const projA = parseInt(a.dataset.projects) || 0;
+            const projB = parseInt(b.dataset.projects) || 0;
+
+            switch (order) {
+                case 'name':     return nameA.localeCompare(nameB);
+                case 'pending':  return pendingB - pendingA;
+                case 'projects': return projB - projA;
+                default:         return 0; // newest = server order
+            }
+        });
+        rows.forEach(r => container.appendChild(r));
+    });
+
+    // Preserve filter state
+    applyFilters();
+}
+
+/* ============================================================
+   ACTION MENU (desktop)
+============================================================ */
+document.querySelectorAll('[data-menu-root]').forEach(root => {
+    const trigger = root.querySelector('.menu-trigger');
+    const panel = root.querySelector('.menu-panel');
+    if (!trigger || !panel) return;
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !panel.classList.contains('hidden');
+
+        // Close all other menus
+        document.querySelectorAll('.menu-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.menu-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+
+        if (!isOpen) {
+            panel.classList.remove('hidden');
+            panel.classList.add('dropdown-panel');
+            trigger.setAttribute('aria-expanded', 'true');
         }
-        createBtn.innerHTML = `
-            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
-            <span>Sending credentials...</span>
-        `;
+    });
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-menu-root]')) {
+        document.querySelectorAll('.menu-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.menu-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.menu-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.menu-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+    }
+});
+
+/* ============================================================
+   CONFIRM MODAL
+============================================================ */
+function openConfirmModal({ title, message, actionUrl, confirmLabel = 'Confirm', type = 'danger', extra = null }) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-message');
+    const form = document.getElementById('confirm-form');
+    const submitBtn = document.getElementById('confirm-submit');
+    const iconWrap = document.getElementById('confirm-icon-wrap');
+    const icon = document.getElementById('confirm-icon');
+    const extraEl = document.getElementById('confirm-extra');
+
+    if (!modal || !form) return;
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    form.setAttribute('action', actionUrl);
+
+    // Type-specific styling
+    if (type === 'danger') {
+        iconWrap.className = 'w-10 h-10 shrink-0 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500';
+        icon.className = 'fa-solid fa-triangle-exclamation text-sm';
+        submitBtn.className = 'px-4 py-2 rounded-full text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition';
+    } else if (type === 'warning') {
+        iconWrap.className = 'w-10 h-10 shrink-0 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500';
+        icon.className = 'fa-solid fa-triangle-exclamation text-sm';
+        submitBtn.className = 'px-4 py-2 rounded-full text-xs font-medium text-white bg-orange-500 hover:bg-orange-600 transition';
+    } else {
+        iconWrap.className = 'w-10 h-10 shrink-0 rounded-full bg-electric/10 border border-electric/20 flex items-center justify-center text-electric';
+        icon.className = 'fa-solid fa-circle-info text-sm';
+        submitBtn.className = 'px-4 py-2 rounded-full text-xs font-medium text-white bg-electric hover:bg-electric/90 transition';
+    }
+    submitBtn.textContent = confirmLabel;
+
+    // Extra content
+    if (extra) {
+        extraEl.innerHTML = extra;
+        extraEl.classList.remove('hidden');
+    } else {
+        extraEl.innerHTML = '';
+        extraEl.classList.add('hidden');
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.querySelector('button[type="button"]')?.focus(), 50);
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeConfirmModal();
+});
+
+/* ============================================================
+   CONFIRMATION HELPERS
+============================================================ */
+function requestDelete(name, actionUrl) {
+    openConfirmModal({
+        title: 'Delete client permanently?',
+        message: `"${name}" will lose account access. Their projects, invoices, and files will remain in the database for record-keeping.`,
+        actionUrl,
+        confirmLabel: 'Delete Client',
+        type: 'danger'
     });
 }
+
+function requestResetPassword(name, actionUrl) {
+    openConfirmModal({
+        title: 'Reset password?',
+        message: `A new random password will be generated for "${name}" and emailed to them. Their current password will stop working immediately.`,
+        actionUrl,
+        confirmLabel: 'Reset & Send',
+        type: 'warning',
+        extra: `
+            <input type="hidden" name="send_email" value="on">
+            <label class="flex items-start gap-2.5 p-3 rounded-xl
+                          bg-canvas dark:bg-gray-800/40
+                          border border-line dark:border-gray-700 cursor-pointer">
+                <input type="checkbox" name="send_email" value="on" checked
+                       class="mt-0.5 accent-electric w-4 h-4 shrink-0">
+                <span class="text-xs text-ink dark:text-surface leading-snug">
+                    Email the new password to the client
+                </span>
+            </label>
+        `
+    });
+}
+
+function requestToggle(name, isActive, actionUrl) {
+    const action = isActive ? 'Deactivate' : 'Activate';
+    openConfirmModal({
+        title: `${action} "${name}"?`,
+        message: isActive
+            ? 'They will not be able to log in until reactivated. Their data will be preserved.'
+            : 'They will regain access to their client portal immediately.',
+        actionUrl,
+        confirmLabel: action,
+        type: isActive ? 'warning' : 'info'
+    });
+}
+
+/* ============================================================
+   FORM SUBMIT FEEDBACK
+============================================================ */
+const createForm = document.getElementById('create-client-form');
+if (createForm) {
+    createForm.addEventListener('submit', () => {
+        if (!createForm.checkValidity()) return;
+
+        const btn = document.getElementById('create-client-btn');
+        const icon = btn?.querySelector('[data-create-icon]');
+        const label = btn?.querySelector('[data-create-label]');
+        if (btn) {
+            btn.disabled = true;
+            if (icon) icon.className = 'fa-solid fa-circle-notch fa-spin text-[10px]';
+            if (label) label.textContent = 'Creating account…';
+        }
+    });
+}
+
+/* ============================================================
+   FOCUS NEW CLIENT
+============================================================ */
+function focusNewClient() {
+    const details = document.getElementById('add-client-details');
+    if (details) details.setAttribute('open', '');
+    const nameInput = document.getElementById('new-client-name');
+    if (nameInput) {
+        nameInput.focus();
+        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    if (e.key === '/' && !isTyping && !cmd && !e.altKey) {
+        e.preventDefault();
+        document.getElementById('client-search')?.focus();
+        return;
+    }
+
+    if (e.key === 'Escape') {
+        if (document.activeElement === searchInput) {
+            searchInput.blur();
+        } else if (currentSearch || currentFilter !== 'all') {
+            resetFilters();
+        }
+        return;
+    }
+
+    if (e.key.toLowerCase() === 'n' && !isTyping && !cmd && !e.altKey) {
+        e.preventDefault();
+        focusNewClient();
+    }
+});
+
+/* ============================================================
+   INIT
+============================================================ */
+updateClearButton();
 </script>
 
 <style>
-    /* Hide default <details> marker */
+    /* Hide details marker */
     details summary::-webkit-details-marker { display: none; }
     details summary::marker { content: ''; }
 
-    /* Force the <details> open on desktop — pure CSS override */
+    /* Force open on desktop */
     @media (min-width: 1024px) {
-        details[open] > summary,
-        details > summary {
-            display: none;
-        }
-        details > *:not(summary) {
-            display: revert !important;
-        }
+        #add-client-details > summary { display: none; }
     }
 
-    /* Smooth reveal on open */
+    /* Details open animation */
     details[open] > *:not(summary) {
         animation: fadeIn 0.2s ease-out;
     }
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-4px); }
         to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hide scrollbars */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom select arrow */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 12px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
 </style>
 

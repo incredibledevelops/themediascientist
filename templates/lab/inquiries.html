@@ -1,304 +1,656 @@
 {% extends 'lab/base.html' %}
 {% block title %}Inquiries{% endblock %}
+{% block breadcrumb %}Inquiries{% endblock %}
 {% block page_title %}Project Inquiries{% endblock %}
 {% block page_subtitle %}Manage all incoming client inquiries.{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('lab_clients') }}#add-client-details"
+   class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+          text-[12px] font-medium
+          text-white bg-ink dark:bg-white dark:text-ink
+          hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+          transition-colors"
+   title="Convert to client (N)">
+    <i class="fa-solid fa-user-plus text-[10px]" aria-hidden="true"></i>
+    <span>New Client</span>
+</a>
+{% endblock %}
 
 {% block content %}
 
 {# ============================================================
-   STATS ROW
+   STATS
 ============================================================ #}
 {% set ns = namespace(new=0, read=0, replied=0, closed=0) %}
 {% for inq in inquiries %}
     {% set st = inq.status|default('new') %}
-    {% if st == 'new' %}
-        {% set ns.new = ns.new + 1 %}
-    {% elif st == 'read' %}
-        {% set ns.read = ns.read + 1 %}
-    {% elif st == 'replied' %}
-        {% set ns.replied = ns.replied + 1 %}
-    {% elif st == 'closed' %}
-        {% set ns.closed = ns.closed + 1 %}
+    {% if st == 'new' %}{% set ns.new = ns.new + 1 %}
+    {% elif st == 'read' %}{% set ns.read = ns.read + 1 %}
+    {% elif st == 'replied' %}{% set ns.replied = ns.replied + 1 %}
+    {% elif st == 'closed' %}{% set ns.closed = ns.closed + 1 %}
     {% endif %}
 {% endfor %}
 
+{# ============================================================
+   ATTENTION BANNER
+============================================================ #}
+{% if ns.new > 0 %}
+<section class="card p-4 sm:p-5 mb-6
+                border-orange-500/20
+                bg-orange-50/50 dark:bg-orange-950/10">
+    <div class="flex items-start gap-3">
+        <div class="w-10 h-10 shrink-0 rounded-xl
+                    bg-orange-500/15 border border-orange-500/30
+                    text-orange-500 flex items-center justify-center">
+            <i class="fa-solid fa-bolt text-sm" aria-hidden="true"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-ink dark:text-surface">
+                {{ ns.new }} new inquir{{ 'y' if ns.new == 1 else 'ies' }} waiting for a reply
+            </p>
+            <p class="text-[11px] text-muted mt-0.5">
+                Respond within 24 hours to keep your response rate high.
+            </p>
+        </div>
+        <button type="button"
+                onclick="filterInquiries('new')"
+                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       text-[11px] font-medium
+                       bg-white dark:bg-gray-900
+                       text-orange-600 dark:text-orange-400
+                       border border-orange-500/30
+                       hover:border-orange-500/60 transition">
+            View
+            <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+        </button>
+    </div>
+</section>
+{% endif %}
+
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-inbox text-cyan-400" aria-hidden="true"></i>
-            Total
+    {# Total #}
+    <button type="button"
+            onclick="filterInquiries('all')"
+            data-kpi="all"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Total</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ inquiries|length }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-inbox text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ inquiries|length }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">All time</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" aria-hidden="true"></span>
-            New
+    {# New #}
+    <button type="button"
+            onclick="filterInquiries('new')"
+            data-kpi="new"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">New</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.new }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-orange-500/10 border border-orange-500/20 text-orange-500
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-circle-dot text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.new }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">
+            {% if ns.new > 0 %}Needs reply{% else %}All caught up{% endif %}
+        </p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-reply text-emerald-400" aria-hidden="true"></i>
-            Replied
+    {# Replied #}
+    <button type="button"
+            onclick="filterInquiries('replied')"
+            data-kpi="replied"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Replied</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.replied }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-reply text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.replied }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">In conversation</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-circle-check text-slate-400" aria-hidden="true"></i>
-            Closed
+    {# Closed #}
+    <button type="button"
+            onclick="filterInquiries('closed')"
+            data-kpi="closed"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Closed</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.closed }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-muted/10 border border-line dark:border-gray-700 text-muted
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-circle-check text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.closed }}
-        </div>
-    </div>
-
+        <p class="text-[10px] font-mono text-muted">Archived</p>
+    </button>
 </div>
 
 {# ============================================================
-   SEARCH + FILTER BAR
+   TOOLBAR
 ============================================================ #}
-<div class="glass-card rounded-2xl border border-slate-800 p-4 mb-6">
-    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+<div class="card p-4 mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
 
-        {# Search input #}
-        <div class="relative flex-1">
+        {# Search #}
+        <div class="relative flex-1 lg:max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
-                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                      text-muted text-xs pointer-events-none" aria-hidden="true"></i>
             <input type="text"
                    id="inquiry-search"
-                   placeholder="Search by name, email, or message content..."
+                   placeholder="Search by name, email, or message…"
                    autocomplete="off"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
-                          bg-slate-900 border border-slate-800
-                          text-sm text-white placeholder-slate-500
-                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                          transition">
+                   spellcheck="false"
+                   aria-label="Search inquiries"
+                   class="w-full pl-10 pr-10 py-2.5 rounded-xl
+                          bg-canvas dark:bg-gray-800/50
+                          border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface placeholder-muted
+                          focus:outline-none focus:border-electric
+                          focus:ring-2 focus:ring-electric/20 transition">
+            <button type="button"
+                    id="search-clear"
+                    onclick="clearSearch()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2
+                           w-7 h-7 rounded-md flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-surface dark:hover:bg-gray-700 transition"
+                    aria-label="Clear search">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
         </div>
 
-        {# Filter tabs #}
-        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono overflow-x-auto
-                    pb-1 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+        {# Filter chips #}
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
+                    overflow-x-auto scrollbar-none
+                    -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-1"
+             role="tablist"
+             aria-label="Filter inquiries">
             <button type="button"
                     onclick="filterInquiries('all')"
                     data-filter="all"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
-                           bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
-                           transition whitespace-nowrap">
+                    role="tab"
+                    aria-selected="true"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
+                           bg-ink dark:bg-white text-white dark:text-ink">
                 All
+                <span class="opacity-70 tabular-nums ml-1">{{ inquiries|length }}</span>
             </button>
             <button type="button"
                     onclick="filterInquiries('new')"
                     data-filter="new"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
-                           bg-slate-900 text-slate-400 border border-slate-800
-                           hover:text-white transition whitespace-nowrap">
+                    role="tab"
+                    aria-selected="false"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
+                           bg-canvas dark:bg-gray-800 text-muted
+                           border border-line dark:border-gray-700
+                           hover:text-ink dark:hover:text-surface">
                 New
+                <span class="opacity-70 tabular-nums ml-1">{{ ns.new }}</span>
             </button>
             <button type="button"
                     onclick="filterInquiries('read')"
                     data-filter="read"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
-                           bg-slate-900 text-slate-400 border border-slate-800
-                           hover:text-white transition whitespace-nowrap">
+                    role="tab"
+                    aria-selected="false"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
+                           bg-canvas dark:bg-gray-800 text-muted
+                           border border-line dark:border-gray-700
+                           hover:text-ink dark:hover:text-surface">
                 Read
+                <span class="opacity-70 tabular-nums ml-1">{{ ns.read }}</span>
             </button>
             <button type="button"
                     onclick="filterInquiries('replied')"
                     data-filter="replied"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
-                           bg-slate-900 text-slate-400 border border-slate-800
-                           hover:text-white transition whitespace-nowrap">
+                    role="tab"
+                    aria-selected="false"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
+                           bg-canvas dark:bg-gray-800 text-muted
+                           border border-line dark:border-gray-700
+                           hover:text-ink dark:hover:text-surface">
                 Replied
+                <span class="opacity-70 tabular-nums ml-1">{{ ns.replied }}</span>
             </button>
             <button type="button"
                     onclick="filterInquiries('closed')"
                     data-filter="closed"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg
-                           bg-slate-900 text-slate-400 border border-slate-800
-                           hover:text-white transition whitespace-nowrap">
+                    role="tab"
+                    aria-selected="false"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
+                           bg-canvas dark:bg-gray-800 text-muted
+                           border border-line dark:border-gray-700
+                           hover:text-ink dark:hover:text-surface">
                 Closed
+                <span class="opacity-70 tabular-nums ml-1">{{ ns.closed }}</span>
             </button>
         </div>
 
+        {# Sort #}
+        <div class="shrink-0">
+            <label for="inquiry-sort" class="sr-only">Sort inquiries</label>
+            <div class="relative">
+                <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
+                          text-muted text-xs pointer-events-none" aria-hidden="true"></i>
+                <select id="inquiry-sort"
+                        class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
+                               bg-canvas dark:bg-gray-800/50
+                               border border-line dark:border-gray-700
+                               text-xs font-mono text-ink dark:text-surface cursor-pointer
+                               focus:outline-none focus:border-electric transition">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="name">Name (A–Z)</option>
+                    <option value="status">Status</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
+                          text-muted text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+        </div>
     </div>
+
+    {# Hint row #}
+    <div id="search-hint"
+         class="hidden mt-3 pt-3 border-t border-line dark:border-gray-700
+                text-[10px] font-mono text-muted flex items-center gap-2 flex-wrap">
+        <i class="fa-solid fa-circle-info text-electric shrink-0" aria-hidden="true"></i>
+        <span>
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Esc</kbd>
+            clear ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">/</kbd>
+            search ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">J</kbd>/<kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">K</kbd>
+            navigate ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">R</kbd>
+            reply
+        </span>
+    </div>
+</div>
+
+{# ============================================================
+   BULK ACTION BAR (only when selection active)
+============================================================ #}
+<div id="bulk-bar"
+     class="hidden sticky top-20 z-20 mb-4 card p-3
+            bg-electric/[0.03] dark:bg-electric/[0.06]
+            border-electric/30 flex items-center gap-3 flex-wrap">
+    <span class="inline-flex items-center gap-2 text-xs font-mono text-electric">
+        <i class="fa-solid fa-check-square" aria-hidden="true"></i>
+        <span id="bulk-count">0 selected</span>
+    </span>
+
+    <div class="flex-1"></div>
+
+    <button type="button"
+            onclick="requestBulkStatus('read')"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                   text-[11px] font-medium
+                   bg-canvas dark:bg-gray-800
+                   text-ink dark:text-surface
+                   border border-line dark:border-gray-700
+                   hover:border-ink dark:hover:border-surface transition">
+        Mark as Read
+    </button>
+    <button type="button"
+            onclick="requestBulkStatus('closed')"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                   text-[11px] font-medium
+                   bg-canvas dark:bg-gray-800
+                   text-ink dark:text-surface
+                   border border-line dark:border-gray-700
+                   hover:border-ink dark:hover:border-surface transition">
+        Mark as Closed
+    </button>
+    <button type="button"
+            onclick="requestBulkDelete()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                   text-[11px] font-medium text-red-500
+                   bg-red-500/5 border border-red-500/20
+                   hover:bg-red-500/10 hover:border-red-500/40 transition">
+        <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+        Delete
+    </button>
+    <button type="button"
+            onclick="clearSelection()"
+            class="w-7 h-7 rounded-full flex items-center justify-center
+                   text-muted hover:text-ink dark:hover:text-surface
+                   hover:bg-surface dark:hover:bg-gray-800 transition"
+            aria-label="Clear selection">
+        <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+    </button>
 </div>
 
 {# ============================================================
    MAIN CARD
 ============================================================ #}
-<div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+<div class="card overflow-hidden">
 
     {# Header #}
-    <div class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
-                flex items-center justify-between gap-3">
-        <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
-            <i class="fa-solid fa-inbox text-cyan-400" aria-hidden="true"></i>
+    <header class="p-4 sm:p-5 border-b border-line dark:border-gray-700
+                   flex items-center justify-between gap-3 flex-wrap">
+        <h2 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                   flex items-center gap-2 tracking-tight">
+            <i class="fa-solid fa-inbox text-electric text-xs" aria-hidden="true"></i>
             All Inquiries
-            <span class="text-[10px] font-mono font-normal text-slate-500"
-                  id="inquiries-count">
+            <span class="text-[10px] font-mono text-muted font-normal tabular-nums"
+                  id="inquiries-count"
+                  aria-live="polite">
                 ({{ inquiries|length }})
             </span>
-        </h3>
-    </div>
+        </h2>
+
+        {% if inquiries %}
+        <button type="button"
+                onclick="toggleSelectAll()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       text-[11px] font-medium text-muted
+                       bg-canvas dark:bg-gray-800
+                       border border-line dark:border-gray-700
+                       hover:text-ink dark:hover:text-surface
+                       hover:border-ink dark:hover:border-surface transition"
+                title="Select all (A)">
+            <i class="fa-regular fa-square-check text-[10px]" aria-hidden="true"></i>
+            <span id="select-all-label">Select all</span>
+        </button>
+        {% endif %}
+    </header>
 
     {# ============================================================
-       DESKTOP TABLE (hidden below lg)
+       DESKTOP TABLE
     ============================================================ #}
     <div class="hidden lg:block overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse" role="grid">
             <thead>
-                <tr class="border-b border-slate-800 text-[10px] font-mono text-slate-400
-                           uppercase bg-slate-900/30">
-                    <th class="py-3 px-5">Client</th>
-                    <th class="py-3 px-5">Services</th>
-                    <th class="py-3 px-5">Budget</th>
-                    <th class="py-3 px-5">Message</th>
-                    <th class="py-3 px-5">Date</th>
-                    <th class="py-3 px-5">Status</th>
-                    <th class="py-3 px-5 text-right">Actions</th>
+                <tr class="border-b border-line dark:border-gray-700
+                           text-[10px] font-mono text-muted uppercase
+                           bg-canvas dark:bg-gray-800/40">
+                    <th scope="col" class="w-10 py-3 px-3">
+                        <input type="checkbox"
+                               id="select-all-checkbox"
+                               onchange="toggleSelectAll(this.checked)"
+                               class="rounded border-line dark:border-gray-700
+                                      accent-electric cursor-pointer"
+                               aria-label="Select all inquiries">
+                    </th>
+                    <th scope="col" class="py-3 px-4 font-medium">Client</th>
+                    <th scope="col" class="py-3 px-4 font-medium">Services</th>
+                    <th scope="col" class="py-3 px-4 font-medium">Budget</th>
+                    <th scope="col" class="py-3 px-4 font-medium">Message</th>
+                    <th scope="col" class="py-3 px-4 font-medium">Date</th>
+                    <th scope="col" class="py-3 px-4 font-medium">Status</th>
+                    <th scope="col" class="py-3 px-4 text-right font-medium">Actions</th>
                 </tr>
             </thead>
             <tbody class="text-sm">
                 {% for inq in inquiries %}
                 {% set st = inq.status|default('new') %}
-                <tr class="inquiry-row border-b border-slate-800/50
-                           hover:bg-slate-800/30 transition"
+                <tr class="inquiry-row border-b border-line/60 dark:border-gray-800
+                           hover:bg-canvas dark:hover:bg-gray-800/30 transition
+                           {% if st == 'new' %}bg-electric/[0.02]{% endif %}"
                     data-status="{{ st }}"
-                    data-search="{{ (inq.name ~ ' ' ~ inq.email ~ ' ' ~ (inq.message or '') ~ ' ' ~ (inq.services|join(' ')))|lower }}">
+                    data-name="{{ inq.name|lower }}"
+                    data-created="{{ inq.created_at.timestamp() if inq.created_at and inq.created_at.strftime is defined else 0 }}"
+                    data-search="{{ (inq.name ~ ' ' ~ inq.email ~ ' ' ~ (inq.message or '') ~ ' ' ~ (inq.services|join(' ')))|lower }}"
+                    data-inquiry-id="{{ inq._id }}"
+                    tabindex="0">
+
+                    <td class="py-4 px-3">
+                        <input type="checkbox"
+                               class="row-checkbox rounded border-line dark:border-gray-700
+                                      accent-electric cursor-pointer"
+                               data-id="{{ inq._id }}"
+                               aria-label="Select inquiry from {{ inq.name|e }}">
+                    </td>
 
                     {# Client #}
-                    <td class="py-4 px-5 max-w-[180px]">
-                        <div class="font-semibold text-white text-xs truncate">{{ inq.name }}</div>
-                        <a href="mailto:{{ inq.email }}"
-                           class="text-[10px] text-slate-400 font-mono hover:text-cyan-400 transition truncate block mt-0.5">
-                            {{ inq.email }}
-                        </a>
+                    <td class="py-4 px-4 max-w-[180px]">
+                        <div class="flex items-start gap-2">
+                            {% if st == 'new' %}
+                            <span class="shrink-0 w-1.5 h-1.5 rounded-full bg-electric animate-pulse mt-1.5"
+                                  aria-label="Unread"></span>
+                            {% endif %}
+                            <div class="min-w-0 flex-1">
+                                <p class="font-medium text-ink dark:text-surface text-sm truncate"
+                                   title="{{ inq.name }}">
+                                    {{ inq.name }}
+                                </p>
+                                <button type="button"
+                                        onclick="copyText('{{ inq.email }}', 'Email')"
+                                        class="text-[11px] font-mono text-muted
+                                               hover:text-electric transition
+                                               truncate max-w-full inline-flex items-center gap-1 group">
+                                    <span class="truncate">{{ inq.email }}</span>
+                                    <i class="fa-regular fa-copy text-[9px] opacity-0
+                                              group-hover:opacity-70 transition-opacity shrink-0"
+                                       aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
                     </td>
 
                     {# Services #}
-                    <td class="py-4 px-5 max-w-[200px]">
+                    <td class="py-4 px-4 max-w-[200px]">
                         <div class="flex flex-wrap gap-1">
-                            {% for svc in inq.services[:3] %}
-                            <span class="inline-block px-2 py-0.5 rounded
-                                         bg-cyan-950/60 border border-cyan-500/30
-                                         text-[10px] font-mono text-cyan-300 whitespace-nowrap">
+                            {% for svc in inq.services[:2] %}
+                            <span class="inline-block px-2 py-0.5 rounded-md
+                                         bg-electric/10 border border-electric/20
+                                         text-[10px] font-mono text-electric whitespace-nowrap">
                                 {{ svc }}
                             </span>
                             {% endfor %}
-                            {% if inq.services|length > 3 %}
-                            <span class="text-[10px] font-mono text-slate-500 px-1">
-                                +{{ inq.services|length - 3 }}
+                            {% if inq.services|length > 2 %}
+                            <span class="text-[10px] font-mono text-muted px-1">
+                                +{{ inq.services|length - 2 }}
                             </span>
+                            {% endif %}
+                            {% if not inq.services %}
+                            <span class="text-[10px] font-mono text-muted">—</span>
                             {% endif %}
                         </div>
                     </td>
 
                     {# Budget #}
-                    <td class="py-4 px-5 text-xs text-emeraldMint font-mono whitespace-nowrap max-w-[140px] truncate">
+                    <td class="py-4 px-4 text-xs text-teal font-mono whitespace-nowrap font-medium">
                         {{ inq.budget or '—' }}
                     </td>
 
-                    {# Message (with details expander) #}
-                    <td class="py-4 px-5 max-w-[280px]">
-                        <details class="group">
-                            <summary class="cursor-pointer list-none
-                                            text-xs text-slate-400 hover:text-slate-200 transition">
-                                <span class="line-clamp-2 leading-snug">
-                                    {{ inq.message[:120] }}{% if inq.message|length > 120 %}...{% endif %}
-                                </span>
-                            </summary>
-                            <div class="mt-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800
-                                        text-xs text-slate-300 leading-relaxed
-                                        whitespace-pre-wrap max-h-60 overflow-y-auto">
-                                {{ inq.message }}
-                            </div>
-                        </details>
+                    {# Message #}
+                    <td class="py-4 px-4 max-w-[260px]">
+                        <button type="button"
+                                onclick="openInquiry('{{ inq._id }}')"
+                                class="text-left w-full text-xs text-muted hover:text-ink dark:hover:text-surface
+                                       transition line-clamp-2 leading-snug">
+                            {{ inq.message[:100] }}{% if inq.message|length > 100 %}…{% endif %}
+                        </button>
                     </td>
 
                     {# Date #}
-                    <td class="py-4 px-5 text-[10px] font-mono text-slate-400 whitespace-nowrap">
+                    <td class="py-4 px-4 text-[10px] font-mono text-muted whitespace-nowrap">
                         {% if inq.created_at %}
                             <time datetime="{{ inq.created_at.isoformat() }}"
                                   title="{{ inq.created_at.strftime('%b %d, %Y at %H:%M') }}">
                                 {{ inq.created_at.strftime('%b %d') }}
                             </time>
                         {% else %}
-                            —
+                        —
                         {% endif %}
                     </td>
 
                     {# Status #}
-                    <td class="py-4 px-5">
-                        <form method="POST"
-                              action="{{ url_for('lab_inquiry_status', inquiry_id=inq._id) }}"
-                              class="inline-block">
-                            <select name="status"
-                                    onchange="this.form.submit()"
-                                    aria-label="Change status for {{ inq.name }}"
-                                    class="bg-slate-900 border border-slate-700
-                                           text-[10px] font-mono rounded-lg px-2.5 py-1.5
-                                           text-slate-200 cursor-pointer
-                                           hover:border-slate-600 focus:outline-none focus:border-cyan-400
-                                           transition">
-                                {% for st_opt in ['new','read','replied','closed'] %}
-                                <option value="{{ st_opt }}" {% if st==st_opt %}selected{% endif %}>
-                                    {{ st_opt|upper }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </form>
+                    <td class="py-4 px-4">
+                        {% if st == 'new' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-mono uppercase whitespace-nowrap
+                                     bg-electric/10 text-electric border border-electric/30">
+                            <span class="w-1.5 h-1.5 rounded-full bg-electric animate-pulse"
+                                  aria-hidden="true"></span>
+                            New
+                        </span>
+                        {% elif st == 'read' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-mono uppercase whitespace-nowrap
+                                     bg-orange-500/10 text-orange-500 border border-orange-500/30">
+                            <i class="fa-solid fa-eye text-[8px]" aria-hidden="true"></i>
+                            Read
+                        </span>
+                        {% elif st == 'replied' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-mono uppercase whitespace-nowrap
+                                     bg-teal/10 text-teal border border-teal/30">
+                            <i class="fa-solid fa-reply text-[8px]" aria-hidden="true"></i>
+                            Replied
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-[10px] font-mono uppercase whitespace-nowrap
+                                     bg-muted/10 text-muted border border-line dark:border-gray-700">
+                            <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+                            Closed
+                        </span>
+                        {% endif %}
                     </td>
 
                     {# Actions #}
-                    <td class="py-4 px-5">
-                        <div class="flex items-center justify-end gap-1.5">
-
-                            {# Reply via email #}
-                            <a href="mailto:{{ inq.email }}?subject=Re: Your inquiry with The Media Scientist"
-                               class="w-9 h-9 rounded-lg bg-cyan-950/50 border border-cyan-500/30
-                                      flex items-center justify-center text-cyan-400
-                                      hover:bg-cyan-500/20 hover:border-cyan-500/50 transition"
-                               title="Reply via email"
-                               aria-label="Reply to {{ inq.name }} via email">
+                    <td class="py-4 px-4 text-right">
+                        <div class="inline-flex items-center gap-1">
+                            <button type="button"
+                                    onclick="openReply('{{ inq._id }}')"
+                                    class="w-9 h-9 rounded-lg
+                                           bg-canvas dark:bg-gray-800
+                                           border border-line dark:border-gray-700
+                                           flex items-center justify-center text-electric
+                                           hover:border-electric/40 hover:bg-electric/5 transition"
+                                    title="Reply (R)"
+                                    aria-label="Reply to {{ inq.name|e }}">
                                 <i class="fa-solid fa-reply text-xs" aria-hidden="true"></i>
-                            </a>
+                            </button>
 
-                            {# Delete #}
-                            <form method="POST"
-                                  action="{{ url_for('lab_inquiry_delete', inquiry_id=inq._id) }}"
-                                  onsubmit="return confirm('⚠️ Delete this inquiry from {{ inq.name }}?\n\nThis cannot be undone.');">
-                                <button type="submit"
-                                        class="w-9 h-9 rounded-lg bg-red-950/50 border border-red-500/30
-                                               flex items-center justify-center text-red-400
-                                               hover:bg-red-500/20 hover:border-red-500/50 transition"
-                                        title="Delete"
-                                        aria-label="Delete inquiry from {{ inq.name }}">
-                                    <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                            <div class="relative" data-menu-root>
+                                <button type="button"
+                                        class="menu-trigger w-9 h-9 rounded-lg
+                                               inline-flex items-center justify-center
+                                               text-muted
+                                               bg-canvas dark:bg-gray-800
+                                               border border-line dark:border-gray-700
+                                               hover:text-ink dark:hover:text-surface
+                                               hover:border-ink dark:hover:border-surface
+                                               transition"
+                                        aria-haspopup="menu"
+                                        aria-expanded="false"
+                                        aria-label="More actions for {{ inq.name|e }}">
+                                    <i class="fa-solid fa-ellipsis text-sm" aria-hidden="true"></i>
                                 </button>
-                            </form>
+
+                                <div class="menu-panel hidden absolute right-0 top-full mt-1 z-30
+                                            w-52 card shadow-xl overflow-hidden
+                                            bg-white dark:bg-[#141414]"
+                                     role="menu">
+                                    <button type="button"
+                                            onclick="openInquiry('{{ inq._id }}')"
+                                            class="w-full flex items-center gap-2.5 px-3.5 py-2.5
+                                                   text-sm text-ink dark:text-surface text-left
+                                                   hover:bg-canvas dark:hover:bg-gray-800 transition"
+                                            role="menuitem">
+                                        <i class="fa-solid fa-eye w-4 text-center text-xs text-electric"
+                                           aria-hidden="true"></i>
+                                        View Full Inquiry
+                                    </button>
+                                    <button type="button"
+                                            onclick="updateStatus('{{ inq._id }}', 'replied')"
+                                            class="w-full flex items-center gap-2.5 px-3.5 py-2.5
+                                                   text-sm text-ink dark:text-surface text-left
+                                                   hover:bg-canvas dark:hover:bg-gray-800 transition"
+                                            role="menuitem">
+                                        <i class="fa-solid fa-check w-4 text-center text-xs text-teal"
+                                           aria-hidden="true"></i>
+                                        Mark as Replied
+                                    </button>
+                                    <button type="button"
+                                            onclick="updateStatus('{{ inq._id }}', 'closed')"
+                                            class="w-full flex items-center gap-2.5 px-3.5 py-2.5
+                                                   text-sm text-ink dark:text-surface text-left
+                                                   hover:bg-canvas dark:hover:bg-gray-800 transition"
+                                            role="menuitem">
+                                        <i class="fa-solid fa-circle-check w-4 text-center text-xs text-muted"
+                                           aria-hidden="true"></i>
+                                        Close Inquiry
+                                    </button>
+                                    <div class="border-t border-line dark:border-gray-700 my-1"></div>
+                                    <button type="button"
+                                            onclick="requestDeleteInquiry('{{ inq._id }}', '{{ inq.name|e }}')"
+                                            class="w-full flex items-center gap-2.5 px-3.5 py-2.5
+                                                   text-sm text-red-500 text-left
+                                                   hover:bg-red-500/5 transition"
+                                            role="menuitem">
+                                        <i class="fa-solid fa-trash w-4 text-center text-xs"
+                                           aria-hidden="true"></i>
+                                        Delete Inquiry
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="py-16 text-center">
-                        <i class="fa-solid fa-inbox text-4xl text-slate-700 mb-3"
-                           aria-hidden="true"></i>
-                        <p class="text-slate-400 text-xs font-mono">No inquiries yet.</p>
-                        <p class="text-slate-500 text-[10px] font-mono mt-1">
-                            New requests submitted from the public contact form will appear here.
+                    <td colspan="8" class="py-16 text-center">
+                        <div class="w-16 h-16 mx-auto rounded-full
+                                    bg-canvas dark:bg-gray-800
+                                    border border-line dark:border-gray-700
+                                    flex items-center justify-center mb-3">
+                            <i class="fa-solid fa-inbox text-2xl text-muted" aria-hidden="true"></i>
+                        </div>
+                        <p class="text-ink dark:text-surface text-sm font-medium">No inquiries yet</p>
+                        <p class="text-muted text-xs font-mono mt-1">
+                            New requests from the contact form will appear here.
                         </p>
                     </td>
                 </tr>
@@ -308,176 +660,573 @@
     </div>
 
     {# ============================================================
-       MOBILE CARD LIST (hidden lg and up)
+       MOBILE CARDS
     ============================================================ #}
-    <div class="lg:hidden divide-y divide-slate-800/60">
+    <div class="lg:hidden divide-y divide-line dark:divide-gray-800">
         {% for inq in inquiries %}
         {% set st = inq.status|default('new') %}
-        <div class="inquiry-row p-4 space-y-3"
+        <div class="inquiry-row p-4 space-y-3
+                    {% if st == 'new' %}bg-electric/[0.02]{% endif %}"
              data-status="{{ st }}"
-             data-search="{{ (inq.name ~ ' ' ~ inq.email ~ ' ' ~ (inq.message or '') ~ ' ' ~ (inq.services|join(' ')))|lower }}">
+             data-name="{{ inq.name|lower }}"
+             data-created="{{ inq.created_at.timestamp() if inq.created_at and inq.created_at.strftime is defined else 0 }}"
+             data-search="{{ (inq.name ~ ' ' ~ inq.email ~ ' ' ~ (inq.message or '') ~ ' ' ~ (inq.services|join(' ')))|lower }}"
+             data-inquiry-id="{{ inq._id }}">
 
-            {# Row 1: name + status #}
-            <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0 flex-1">
-                    <p class="font-semibold text-white text-sm truncate">{{ inq.name }}</p>
-                    <a href="mailto:{{ inq.email }}"
-                       class="text-[11px] font-mono text-slate-400 hover:text-cyan-400 transition truncate block mt-0.5">
-                        {{ inq.email }}
-                    </a>
+            {# Header #}
+            <div class="flex items-start gap-3">
+                <div class="shrink-0 w-10 h-10 rounded-full
+                            bg-gradient-to-br from-electric to-teal
+                            flex items-center justify-center
+                            text-white font-bold text-sm">
+                    {{ inq.name[0]|upper if inq.name else '?' }}
                 </div>
+                <div class="min-w-0 flex-1">
+                    <p class="font-medium text-ink dark:text-surface text-sm truncate">
+                        {{ inq.name }}
+                    </p>
+                    <button type="button"
+                            onclick="copyText('{{ inq.email }}', 'Email')"
+                            class="text-[11px] font-mono text-muted
+                                   hover:text-electric transition truncate
+                                   max-w-full inline-flex items-center gap-1 group">
+                        <span class="truncate">{{ inq.email }}</span>
+                        <i class="fa-regular fa-copy text-[9px] opacity-0 group-hover:opacity-70
+                                  transition-opacity shrink-0"
+                           aria-hidden="true"></i>
+                    </button>
+                </div>
+
                 {% if st == 'new' %}
                 <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full
                              text-[10px] font-mono uppercase
-                             bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                             bg-electric/10 text-electric border border-electric/30">
+                    <span class="w-1.5 h-1.5 rounded-full bg-electric animate-pulse"
                           aria-hidden="true"></span>
                     New
                 </span>
                 {% elif st == 'read' %}
                 <span class="shrink-0 px-2 py-1 rounded-full text-[10px] font-mono uppercase
-                             bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                             bg-orange-500/10 text-orange-500 border border-orange-500/30">
                     Read
                 </span>
                 {% elif st == 'replied' %}
                 <span class="shrink-0 px-2 py-1 rounded-full text-[10px] font-mono uppercase
-                             bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                             bg-teal/10 text-teal border border-teal/30">
                     Replied
                 </span>
                 {% else %}
                 <span class="shrink-0 px-2 py-1 rounded-full text-[10px] font-mono uppercase
-                             bg-slate-500/20 text-slate-400 border border-slate-500/30">
+                             bg-muted/10 text-muted border border-line dark:border-gray-700">
                     Closed
                 </span>
                 {% endif %}
             </div>
 
-            {# Row 2: services #}
+            {# Services #}
             {% if inq.services %}
             <div class="flex flex-wrap gap-1.5">
                 {% for svc in inq.services %}
-                <span class="px-2 py-0.5 rounded
-                             bg-cyan-950/60 border border-cyan-500/30
-                             text-[10px] font-mono text-cyan-300 whitespace-nowrap">
+                <span class="px-2 py-0.5 rounded-md
+                             bg-electric/10 border border-electric/20
+                             text-[10px] font-mono text-electric whitespace-nowrap">
                     {{ svc }}
                 </span>
                 {% endfor %}
             </div>
             {% endif %}
 
-            {# Row 3: budget #}
-            <div class="flex items-center justify-between gap-2 text-[10px] font-mono">
-                <span class="text-slate-500 uppercase tracking-wider">Budget</span>
-                <span class="text-emeraldMint font-bold">{{ inq.budget or '—' }}</span>
+            {# Budget + Date #}
+            <div class="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                <div class="p-2 rounded-lg bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700">
+                    <p class="text-muted uppercase tracking-wider text-[8px] mb-0.5">Budget</p>
+                    <p class="text-teal font-medium truncate">{{ inq.budget or '—' }}</p>
+                </div>
+                <div class="p-2 rounded-lg bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700">
+                    <p class="text-muted uppercase tracking-wider text-[8px] mb-0.5">Received</p>
+                    <p class="text-ink dark:text-surface truncate">
+                        {% if inq.created_at %}
+                        {{ inq.created_at.strftime('%b %d, %Y') }}
+                        {% else %}—{% endif %}
+                    </p>
+                </div>
             </div>
 
-            {# Row 4: message expander #}
-            <details class="group">
-                <summary class="cursor-pointer list-none flex items-center justify-between gap-2
-                                text-[10px] font-mono text-slate-400 hover:text-slate-200 transition
-                                p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
-                    <span class="inline-flex items-center gap-1.5">
-                        <i class="fa-solid fa-message text-cyan-400" aria-hidden="true"></i>
-                        Message
-                    </span>
-                    <i class="fa-solid fa-chevron-down text-[9px]
-                              group-open:rotate-180 transition-transform" aria-hidden="true"></i>
-                </summary>
-                <div class="mt-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800
-                            text-xs text-slate-300 leading-relaxed
-                            whitespace-pre-wrap max-h-60 overflow-y-auto">
-                    {{ inq.message }}
-                </div>
-            </details>
+            {# Message preview #}
+            <button type="button"
+                    onclick="openInquiry('{{ inq._id }}')"
+                    class="w-full text-left p-3 rounded-lg
+                           bg-canvas dark:bg-gray-800/50
+                           border border-line dark:border-gray-700
+                           hover:border-electric/30 transition
+                           text-xs text-muted leading-relaxed">
+                <p class="line-clamp-3">{{ inq.message }}</p>
+                <span class="inline-flex items-center gap-1 mt-2 text-[10px] font-mono text-electric">
+                    Read full message
+                    <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+                </span>
+            </button>
 
-            {# Row 5: status + actions #}
+            {# Actions #}
             <div class="grid grid-cols-2 gap-2">
+                <button type="button"
+                        onclick="openReply('{{ inq._id }}')"
+                        class="inline-flex items-center justify-center gap-1.5
+                               px-3 py-2.5 rounded-full
+                               text-xs font-medium text-white
+                               bg-ink dark:bg-white dark:text-ink
+                               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                               transition-colors">
+                    <i class="fa-solid fa-reply text-[10px]" aria-hidden="true"></i>
+                    Reply
+                </button>
 
-                {# Status select #}
-                <form method="POST"
-                      action="{{ url_for('lab_inquiry_status', inquiry_id=inq._id) }}"
-                      class="contents">
-                    <select name="status"
-                            onchange="this.form.submit()"
-                            aria-label="Change status"
-                            class="w-full px-3 py-2.5 rounded-lg
-                                   bg-slate-900 border border-slate-800
-                                   text-xs font-mono text-slate-200
-                                   focus:outline-none focus:border-cyan-400 transition">
-                        {% for st_opt in ['new','read','replied','closed'] %}
-                        <option value="{{ st_opt }}" {% if st==st_opt %}selected{% endif %}>
-                            {{ st_opt|title }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </form>
-
-                {# Reply + Delete #}
-                <div class="flex gap-2">
-                    <a href="mailto:{{ inq.email }}?subject=Re: Your inquiry with The Media Scientist"
-                       class="flex-1 inline-flex items-center justify-center gap-1.5
-                              px-3 py-2.5 rounded-lg
-                              bg-cyan-500/15 border border-cyan-500/30
-                              text-xs font-mono font-bold text-cyan-300
-                              hover:bg-cyan-500/25 transition active:scale-[0.98]"
-                       aria-label="Reply via email">
-                        <i class="fa-solid fa-reply text-xs" aria-hidden="true"></i>
-                        Reply
-                    </a>
-
-                    <form method="POST"
-                          action="{{ url_for('lab_inquiry_delete', inquiry_id=inq._id) }}"
-                          onsubmit="return confirm('⚠️ Delete this inquiry from {{ inq.name }}?');"
-                          class="flex-1">
-                        <button type="submit"
-                                class="w-full inline-flex items-center justify-center gap-1.5
-                                       px-3 py-2.5 rounded-lg
-                                       bg-red-500/15 border border-red-500/30
-                                       text-xs font-mono font-bold text-red-300
-                                       hover:bg-red-500/25 transition active:scale-[0.98]"
-                                aria-label="Delete inquiry">
-                            <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
-                            Delete
-                        </button>
-                    </form>
-                </div>
-
+                <button type="button"
+                        onclick="requestDeleteInquiry('{{ inq._id }}', '{{ inq.name|e }}')"
+                        class="inline-flex items-center justify-center gap-1.5
+                               px-3 py-2.5 rounded-full
+                               text-xs font-medium text-red-500
+                               bg-red-500/5 border border-red-500/20
+                               hover:bg-red-500/10 hover:border-red-500/40 transition">
+                    <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+                    Delete
+                </button>
             </div>
-
         </div>
         {% else %}
         <div class="p-12 text-center">
-            <i class="fa-solid fa-inbox text-4xl text-slate-700 mb-3" aria-hidden="true"></i>
-            <p class="text-slate-400 text-xs font-mono">No inquiries yet.</p>
-            <p class="text-slate-500 text-[10px] font-mono mt-1">
-                New requests from the public contact form will appear here.
+            <div class="w-16 h-16 mx-auto rounded-full
+                        bg-canvas dark:bg-gray-800
+                        border border-line dark:border-gray-700
+                        flex items-center justify-center mb-3">
+                <i class="fa-solid fa-inbox text-2xl text-muted" aria-hidden="true"></i>
+            </div>
+            <p class="text-ink dark:text-surface text-sm font-medium">No inquiries yet</p>
+            <p class="text-muted text-xs font-mono mt-1">
+                New requests will appear here.
             </p>
         </div>
         {% endfor %}
     </div>
 
-    {# ============================================================
-       NO RESULTS (filter/search returned nothing)
-    ============================================================ #}
-    <div id="no-results" class="hidden p-12 text-center border-t border-slate-800/60">
-        <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
-           aria-hidden="true"></i>
-        <p class="text-slate-400 text-xs font-mono">No inquiries match your search.</p>
+    {# No results #}
+    <div id="no-results" class="hidden p-12 text-center
+                                border-t border-line dark:border-gray-700">
+        <div class="w-14 h-14 mx-auto rounded-full
+                    bg-canvas dark:bg-gray-800
+                    border border-line dark:border-gray-700
+                    flex items-center justify-center mb-3">
+            <i class="fa-solid fa-magnifying-glass text-xl text-muted" aria-hidden="true"></i>
+        </div>
+        <p class="text-ink dark:text-surface text-sm font-medium">No matches</p>
+        <p class="text-muted text-xs font-mono mt-1">
+            Try a different search or filter.
+        </p>
         <button type="button"
                 onclick="resetFilters()"
-                class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+                class="mt-4 inline-flex items-center gap-1.5
+                       px-4 py-2 rounded-full text-xs font-medium
+                       bg-canvas dark:bg-gray-800
+                       text-ink dark:text-surface
+                       border border-line dark:border-gray-700
+                       hover:border-ink dark:hover:border-surface transition">
+            <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
             Clear filters
         </button>
     </div>
-
 </div>
 
+{# ============================================================
+   INQUIRY DETAIL MODAL
+============================================================ #}
+<div id="inquiry-modal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="inquiry-modal-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeInquiry()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-2xl card shadow-2xl
+                bg-white dark:bg-[#141414]
+                max-h-[85vh] flex flex-col overflow-hidden">
+        <header class="p-5 border-b border-line dark:border-gray-700
+                       flex items-start justify-between gap-4 shrink-0">
+            <div class="flex items-start gap-3 min-w-0">
+                <div id="inq-modal-avatar"
+                     class="shrink-0 w-11 h-11 rounded-full
+                            bg-gradient-to-br from-electric to-teal
+                            flex items-center justify-center
+                            text-white font-bold">
+                    ?
+                </div>
+                <div class="min-w-0">
+                    <h3 id="inquiry-modal-title"
+                        class="text-base font-semibold text-ink dark:text-surface truncate">
+                        Inquiry
+                    </h3>
+                    <p id="inq-modal-email"
+                       class="text-xs font-mono text-muted truncate mt-0.5">
+                        —
+                    </p>
+                </div>
+            </div>
+            <button type="button"
+                    onclick="closeInquiry()"
+                    class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-canvas dark:hover:bg-gray-800 transition"
+                    aria-label="Close">
+                <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <div class="p-5 overflow-y-auto flex-1 space-y-4">
+            {# Meta #}
+            <div id="inq-modal-meta" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+
+            {# Message #}
+            <div>
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                    Message
+                </p>
+                <div id="inq-modal-message"
+                     class="p-4 rounded-xl
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700
+                            text-sm text-ink dark:text-surface leading-relaxed
+                            whitespace-pre-wrap">
+                    —
+                </div>
+            </div>
+
+            {# Services #}
+            <div id="inq-modal-services-wrap" class="hidden">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                    Services Requested
+                </p>
+                <div id="inq-modal-services" class="flex flex-wrap gap-1.5"></div>
+            </div>
+        </div>
+
+        <footer class="p-4 border-t border-line dark:border-gray-700
+                       flex items-center justify-end gap-2 shrink-0
+                       bg-canvas dark:bg-gray-800/40">
+            <button type="button"
+                    onclick="closeInquiry()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-ink dark:text-surface
+                           bg-white dark:bg-gray-900
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                Close
+            </button>
+            <button type="button"
+                    id="inq-modal-reply-btn"
+                    class="px-4 py-2 rounded-full text-xs font-medium text-white
+                           bg-ink dark:bg-white dark:text-ink
+                           hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                           transition-colors inline-flex items-center gap-2">
+                <i class="fa-solid fa-reply text-[10px]" aria-hidden="true"></i>
+                Reply
+            </button>
+        </footer>
+    </div>
+</div>
+
+{# ============================================================
+   REPLY MODAL
+============================================================ #}
+<div id="reply-modal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="reply-modal-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeReply()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-2xl card shadow-2xl
+                bg-white dark:bg-[#141414]
+                max-h-[85vh] flex flex-col overflow-hidden">
+        <header class="p-5 border-b border-line dark:border-gray-700 shrink-0">
+            <h3 id="reply-modal-title"
+                class="text-base font-semibold text-ink dark:text-surface">
+                Reply to <span id="reply-to-name" class="text-electric">—</span>
+            </h3>
+            <p class="text-xs font-mono text-muted mt-0.5">
+                Compose your response below.
+            </p>
+        </header>
+
+        <div class="p-5 overflow-y-auto flex-1 space-y-4">
+            <div>
+                <label class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                    To
+                </label>
+                <div id="reply-to-email"
+                     class="px-4 py-2.5 rounded-xl
+                            bg-canvas dark:bg-gray-800/50
+                            border border-line dark:border-gray-700
+                            text-sm text-ink dark:text-surface font-mono">
+                    —
+                </div>
+            </div>
+
+            <div>
+                <label for="reply-subject"
+                       class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                    Subject
+                </label>
+                <input type="text"
+                       id="reply-subject"
+                       class="w-full px-4 py-3 rounded-xl
+                              bg-canvas dark:bg-gray-800/50
+                              border border-line dark:border-gray-700
+                              text-sm text-ink dark:text-surface
+                              focus:outline-none focus:border-electric
+                              focus:ring-2 focus:ring-electric/20 transition">
+            </div>
+
+            <div>
+                <label for="reply-body"
+                       class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                    Message
+                </label>
+                <textarea id="reply-body"
+                          rows="10"
+                          class="w-full px-4 py-3 rounded-xl
+                                 bg-canvas dark:bg-gray-800/50
+                                 border border-line dark:border-gray-700
+                                 text-sm text-ink dark:text-surface
+                                 resize-y min-h-[200px]
+                                 focus:outline-none focus:border-electric
+                                 focus:ring-2 focus:ring-electric/20 transition
+                                 font-mono leading-relaxed"></textarea>
+            </div>
+
+            <div class="flex items-start gap-2.5 p-3 rounded-xl
+                        bg-electric/[0.04] dark:bg-electric/[0.08]
+                        border border-electric/20">
+                <i class="fa-solid fa-circle-info text-electric text-xs mt-0.5 shrink-0"
+                   aria-hidden="true"></i>
+                <p class="text-[11px] text-electric/90 dark:text-electric/80 leading-relaxed">
+                    Your email client will open with this message pre-filled.
+                    Copy it to your clipboard if you prefer to send from elsewhere.
+                </p>
+            </div>
+        </div>
+
+        <footer class="p-4 border-t border-line dark:border-gray-700
+                       flex items-center justify-between gap-2 shrink-0
+                       bg-canvas dark:bg-gray-800/40">
+            <button type="button"
+                    onclick="copyReply()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-muted bg-white dark:bg-gray-900
+                           border border-line dark:border-gray-700
+                           hover:text-ink dark:hover:text-surface
+                           hover:border-ink dark:hover:border-surface transition
+                           inline-flex items-center gap-2">
+                <i class="fa-regular fa-copy text-[10px]" aria-hidden="true"></i>
+                Copy
+            </button>
+
+            <div class="flex items-center gap-2">
+                <button type="button"
+                        onclick="closeReply()"
+                        class="px-4 py-2 rounded-full text-xs font-medium
+                               text-ink dark:text-surface
+                               bg-white dark:bg-gray-900
+                               border border-line dark:border-gray-700
+                               hover:border-ink dark:hover:border-surface transition">
+                    Cancel
+                </button>
+                <button type="button"
+                        onclick="sendReply()"
+                        class="px-4 py-2 rounded-full text-xs font-medium text-white
+                               bg-ink dark:bg-white dark:text-ink
+                               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                               transition-colors inline-flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
+                    Open in Mail
+                </button>
+            </div>
+        </footer>
+    </div>
+</div>
+
+{# ============================================================
+   CONFIRM MODAL
+============================================================ #}
+<div id="confirm-modal"
+     class="fixed inset-0 z-[110] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="confirm-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeConfirmModal()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-sm card p-5 sm:p-6 shadow-2xl
+                bg-white dark:bg-[#141414]">
+        <div class="flex items-start gap-3 mb-4">
+            <div id="confirm-icon-wrap"
+                 class="w-10 h-10 shrink-0 rounded-full
+                        bg-red-500/10 border border-red-500/20
+                        flex items-center justify-center text-red-500">
+                <i id="confirm-icon" class="fa-solid fa-triangle-exclamation text-sm"
+                   aria-hidden="true"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 id="confirm-title"
+                    class="text-sm font-semibold text-ink dark:text-surface">
+                    Are you sure?
+                </h3>
+                <p id="confirm-message"
+                   class="text-xs text-muted mt-1 leading-relaxed">
+                    This action cannot be undone.
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+            <button type="button"
+                    onclick="closeConfirmModal()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-ink dark:text-surface
+                           bg-canvas dark:bg-gray-800
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                Cancel
+            </button>
+            <button type="button"
+                    id="confirm-submit"
+                    class="px-4 py-2 rounded-full text-xs font-medium text-white
+                           bg-red-500 hover:bg-red-600 transition">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[120] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// SEARCH + FILTER
-// ============================================================
+/* ============================================================
+   INQUIRY DATA (for modals + reply)
+============================================================ */
+const INQUIRIES = {
+    {% for inq in inquiries %}
+    "{{ inq._id }}": {
+        id: "{{ inq._id }}",
+        name: {{ inq.name|tojson }},
+        email: {{ inq.email|tojson }},
+        budget: {{ (inq.budget or '')|tojson }},
+        message: {{ (inq.message or '')|tojson }},
+        services: {{ (inq.services or [])|tojson }},
+        status: {{ (inq.status or 'new')|tojson }},
+        created_at: {% if inq.created_at %}"{{ inq.created_at.strftime('%b %d, %Y at %H:%M') }}"{% else %}""{% endif %},
+        url_status: "{{ url_for('lab_inquiry_status', inquiry_id=inq._id) }}",
+        url_delete: "{{ url_for('lab_inquiry_delete', inquiry_id=inq._id) }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+};
+
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2600) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    if (!text) return;
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => announce(true), () => announce(false));
+        return;
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) { announce(false); }
+}
+
+/* ============================================================
+   SEARCH + FILTER + SORT
+============================================================ */
 let currentFilter = 'all';
 let currentSearch = '';
+let selectedIds = new Set();
 
 function applyFilters() {
     const rows = document.querySelectorAll('.inquiry-row');
@@ -486,7 +1235,6 @@ function applyFilters() {
     rows.forEach(row => {
         const status = row.dataset.status || '';
         const haystack = row.dataset.search || '';
-
         const matchesFilter = (currentFilter === 'all' || status === currentFilter);
         const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
 
@@ -507,9 +1255,17 @@ function applyFilters() {
     }
 
     const noResults = document.getElementById('no-results');
-    if (noResults) {
-        noResults.classList.toggle('hidden', visible > 0);
-    }
+    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+
+    const hint = document.getElementById('search-hint');
+    if (hint) hint.classList.toggle('hidden', !currentSearch && currentFilter === 'all');
+
+    // Sync KPI highlight
+    document.querySelectorAll('[data-kpi]').forEach(kpi => {
+        const isActive = kpi.dataset.kpi === currentFilter;
+        kpi.classList.toggle('ring-2', isActive);
+        kpi.classList.toggle('ring-electric/30', isActive);
+    });
 }
 
 function filterInquiries(filter) {
@@ -517,12 +1273,17 @@ function filterInquiries(filter) {
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         const isActive = btn.dataset.filter === filter;
-        btn.classList.toggle('bg-cyan-500/20', isActive);
-        btn.classList.toggle('text-cyan-300', isActive);
-        btn.classList.toggle('border-cyan-500/40', isActive);
-        btn.classList.toggle('bg-slate-900', !isActive);
-        btn.classList.toggle('text-slate-400', !isActive);
-        btn.classList.toggle('border-slate-800', !isActive);
+        btn.classList.toggle('bg-ink', isActive);
+        btn.classList.toggle('dark:bg-white', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('dark:text-ink', isActive);
+        btn.classList.toggle('bg-canvas', !isActive);
+        btn.classList.toggle('dark:bg-gray-800', !isActive);
+        btn.classList.toggle('text-muted', !isActive);
+        btn.classList.toggle('border', !isActive);
+        btn.classList.toggle('border-line', !isActive);
+        btn.classList.toggle('dark:border-gray-700', !isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     applyFilters();
@@ -532,48 +1293,633 @@ function resetFilters() {
     currentSearch = '';
     const searchInput = document.getElementById('inquiry-search');
     if (searchInput) searchInput.value = '';
+    updateClearButton();
     filterInquiries('all');
+}
+
+function clearSearch() {
+    const searchInput = document.getElementById('inquiry-search');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    currentSearch = '';
+    updateClearButton();
+    applyFilters();
+}
+
+function updateClearButton() {
+    const searchInput = document.getElementById('inquiry-search');
+    const clearBtn = document.getElementById('search-clear');
+    if (!searchInput || !clearBtn) return;
+    clearBtn.classList.toggle('hidden', !searchInput.value);
 }
 
 const searchInput = document.getElementById('inquiry-search');
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
         currentSearch = (e.target.value || '').toLowerCase().trim();
+        updateClearButton();
         applyFilters();
     });
 }
+
+/* Sort */
+const sortSelect = document.getElementById('inquiry-sort');
+if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => sortInquiries(e.target.value));
+}
+
+function sortInquiries(order) {
+    const containers = [
+        document.querySelector('table tbody'),
+        document.querySelector('.lg\\:hidden.divide-y')
+    ].filter(Boolean);
+
+    containers.forEach(container => {
+        const rows = Array.from(container.querySelectorAll('.inquiry-row'));
+        if (rows.length === 0) return;
+
+        rows.sort((a, b) => {
+            const nameA = (a.dataset.name || '').toLowerCase();
+            const nameB = (b.dataset.name || '').toLowerCase();
+            const createdA = parseFloat(a.dataset.created) || 0;
+            const createdB = parseFloat(b.dataset.created) || 0;
+            const statusA = a.dataset.status || '';
+            const statusB = b.dataset.status || '';
+
+            switch (order) {
+                case 'oldest': return createdA - createdB;
+                case 'name':   return nameA.localeCompare(nameB);
+                case 'status': return statusA.localeCompare(statusB);
+                default:       return createdB - createdA; // newest
+            }
+        });
+        rows.forEach(r => container.appendChild(r));
+    });
+}
+
+/* ============================================================
+   ACTION MENUS (desktop)
+============================================================ */
+document.querySelectorAll('[data-menu-root]').forEach(root => {
+    const trigger = root.querySelector('.menu-trigger');
+    const panel = root.querySelector('.menu-panel');
+    if (!trigger || !panel) return;
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !panel.classList.contains('hidden');
+
+        document.querySelectorAll('.menu-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.menu-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+
+        if (!isOpen) {
+            panel.classList.remove('hidden');
+            panel.classList.add('dropdown-panel');
+            trigger.setAttribute('aria-expanded', 'true');
+        }
+    });
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-menu-root]')) {
+        document.querySelectorAll('.menu-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.menu-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.menu-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.menu-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+    }
+});
+
+/* ============================================================
+   INQUIRY DETAIL MODAL
+============================================================ */
+function openInquiry(id) {
+    const data = INQUIRIES[id];
+    if (!data) return;
+
+    const modal = document.getElementById('inquiry-modal');
+    document.getElementById('inquiry-modal-title').textContent = data.name;
+    document.getElementById('inq-modal-email').textContent = data.email;
+    document.getElementById('inq-modal-avatar').textContent = (data.name[0] || '?').toUpperCase();
+    document.getElementById('inq-modal-message').textContent = data.message || '(no message)';
+
+    // Meta grid
+    const meta = document.getElementById('inq-modal-meta');
+    const statusPill = {
+        new:     'bg-electric/10 text-electric border border-electric/30',
+        read:    'bg-orange-500/10 text-orange-500 border border-orange-500/30',
+        replied: 'bg-teal/10 text-teal border border-teal/30',
+        closed:  'bg-muted/10 text-muted border border-line dark:border-gray-700'
+    }[data.status] || 'bg-muted/10 text-muted border border-line dark:border-gray-700';
+
+    meta.innerHTML = `
+        <div class="p-3 rounded-lg bg-canvas dark:bg-gray-800/50 border border-line dark:border-gray-700">
+            <p class="text-[9px] font-mono text-muted uppercase tracking-wider mb-1">Status</p>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full
+                         text-[10px] font-mono uppercase ${statusPill}">
+                ${data.status}
+            </span>
+        </div>
+        <div class="p-3 rounded-lg bg-canvas dark:bg-gray-800/50 border border-line dark:border-gray-700">
+            <p class="text-[9px] font-mono text-muted uppercase tracking-wider mb-1">Budget</p>
+            <p class="text-sm font-medium text-teal truncate">${data.budget || '—'}</p>
+        </div>
+        <div class="p-3 rounded-lg bg-canvas dark:bg-gray-800/50 border border-line dark:border-gray-700">
+            <p class="text-[9px] font-mono text-muted uppercase tracking-wider mb-1">Received</p>
+            <p class="text-xs text-ink dark:text-surface truncate">${data.created_at || '—'}</p>
+        </div>
+    `;
+
+    // Services
+    const svcWrap = document.getElementById('inq-modal-services-wrap');
+    const svcEl = document.getElementById('inq-modal-services');
+    if (data.services && data.services.length > 0) {
+        svcWrap.classList.remove('hidden');
+        svcEl.innerHTML = data.services.map(s => `
+            <span class="px-2 py-0.5 rounded-md
+                         bg-electric/10 border border-electric/20
+                         text-[10px] font-mono text-electric">
+                ${escapeHtml(s)}
+            </span>
+        `).join('');
+    } else {
+        svcWrap.classList.add('hidden');
+    }
+
+    // Wire reply button
+    const replyBtn = document.getElementById('inq-modal-reply-btn');
+    replyBtn.onclick = () => { closeInquiry(); openReply(id); };
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.querySelector('button[aria-label="Close"]')?.focus(), 50);
+}
+
+function closeInquiry() {
+    const modal = document.getElementById('inquiry-modal');
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+/* ============================================================
+   REPLY MODAL
+============================================================ */
+let replyContext = null;
+
+function openReply(id) {
+    const data = INQUIRIES[id];
+    if (!data) return;
+
+    replyContext = data;
+
+    document.getElementById('reply-to-name').textContent = data.name;
+    document.getElementById('reply-to-email').textContent = data.email;
+    document.getElementById('reply-subject').value =
+        `Re: Your project inquiry with The Media Scientist`;
+
+    const servicesLine = data.services && data.services.length
+        ? `about ${data.services.join(', ')}`
+        : 'about your project';
+
+    document.getElementById('reply-body').value =
+`Hi ${data.name.split(' ')[0] || data.name},
+
+Thank you for reaching out ${servicesLine} — I'm glad you got in touch.
+
+I've reviewed your inquiry and would love to hear more:
+
+• What's your vision for the project?
+• Do you have a timeline in mind?
+• Any reference material or brand guidelines to share?
+
+I typically respond within 24 hours. Looking forward to working together.
+
+Warm regards,
+Opoku Kwadwo Incredible
+The Media Scientist`;
+
+    const modal = document.getElementById('reply-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('reply-subject')?.focus(), 50);
+}
+
+function closeReply() {
+    const modal = document.getElementById('reply-modal');
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    document.body.style.overflow = '';
+    replyContext = null;
+}
+
+function copyReply() {
+    const subject = document.getElementById('reply-subject')?.value || '';
+    const body = document.getElementById('reply-body')?.value || '';
+    copyText(`${subject}\n\n${body}`, 'Reply');
+}
+
+function sendReply() {
+    if (!replyContext) return;
+    const subject = document.getElementById('reply-subject')?.value || '';
+    const body = document.getElementById('reply-body')?.value || '';
+
+    const mailto = `mailto:${replyContext.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Mark as replied
+    updateStatus(replyContext.id, 'replied', true);
+
+    showToast('Opening mail client…', 'info', 1500);
+    window.location.href = mailto;
+
+    setTimeout(closeReply, 500);
+}
+
+/* ============================================================
+   STATUS UPDATE (ajax-ish via form submit)
+============================================================ */
+function updateStatus(id, status, silent) {
+    const data = INQUIRIES[id];
+    if (!data) return;
+
+    // Build a form and submit it (keeps server-side flow)
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = data.url_status;
+    form.style.display = 'none';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'status';
+    input.value = status;
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
+/* ============================================================
+   BULK SELECTION
+============================================================ */
+document.querySelectorAll('.row-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+        if (cb.checked) selectedIds.add(cb.dataset.id);
+        else selectedIds.delete(cb.dataset.id);
+        updateBulkBar();
+    });
+});
+
+function toggleSelectAll(checked) {
+    const master = document.getElementById('select-all-checkbox');
+    const shouldCheck = typeof checked === 'boolean' ? checked : !(master?.checked);
+
+    if (master) master.checked = shouldCheck;
+
+    document.querySelectorAll('.row-checkbox').forEach(cb => {
+        const row = cb.closest('.inquiry-row');
+        if (row && row.style.display !== 'none') {
+            cb.checked = shouldCheck;
+            if (shouldCheck) selectedIds.add(cb.dataset.id);
+            else selectedIds.delete(cb.dataset.id);
+        }
+    });
+
+    updateBulkBar();
+}
+
+function clearSelection() {
+    selectedIds.clear();
+    document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+    const master = document.getElementById('select-all-checkbox');
+    if (master) master.checked = false;
+    updateBulkBar();
+}
+
+function updateBulkBar() {
+    const bar = document.getElementById('bulk-bar');
+    const countEl = document.getElementById('bulk-count');
+    if (!bar || !countEl) return;
+
+    if (selectedIds.size > 0) {
+        bar.classList.remove('hidden');
+        countEl.textContent = `${selectedIds.size} selected`;
+    } else {
+        bar.classList.add('hidden');
+    }
+}
+
+function requestBulkStatus(status) {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    const label = status === 'read' ? 'read' : 'closed';
+
+    openConfirmModal({
+        title: `Mark ${ids.length} as ${label}?`,
+        message: `All selected inquiries will be updated to "${status}".`,
+        confirmLabel: 'Confirm',
+        type: 'warning',
+        onConfirm: () => {
+            // Submit sequentially — no bulk endpoint, so submit one by one
+            ids.forEach((id, i) => {
+                const data = INQUIRIES[id];
+                if (!data) return;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = data.url_status;
+                form.style.display = 'none';
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'status';
+                input.value = status;
+                form.appendChild(input);
+                document.body.appendChild(form);
+                // Small stagger; last one navigates so the page reloads
+                if (i === ids.length - 1) {
+                    form.submit();
+                } else {
+                    fetch(form.action, { method: 'POST', body: new FormData(form) }).catch(() => {});
+                    form.remove();
+                }
+            });
+        }
+    });
+}
+
+function requestBulkDelete() {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+
+    openConfirmModal({
+        title: `Delete ${ids.length} inquiries?`,
+        message: 'This action cannot be undone.',
+        confirmLabel: 'Delete',
+        type: 'danger',
+        onConfirm: () => {
+            ids.forEach((id, i) => {
+                const data = INQUIRIES[id];
+                if (!data) return;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = data.url_delete;
+                form.style.display = 'none';
+                document.body.appendChild(form);
+                if (i === ids.length - 1) {
+                    form.submit();
+                } else {
+                    fetch(form.action, { method: 'POST' }).catch(() => {});
+                    form.remove();
+                }
+            });
+        }
+    });
+}
+
+/* ============================================================
+   CONFIRM MODAL
+============================================================ */
+let confirmCallback = null;
+
+function openConfirmModal({ title, message, confirmLabel = 'Confirm', type = 'danger', onConfirm }) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-message');
+    const btn = document.getElementById('confirm-submit');
+    const iconWrap = document.getElementById('confirm-icon-wrap');
+    const icon = document.getElementById('confirm-icon');
+
+    if (!modal) return;
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    btn.textContent = confirmLabel;
+    confirmCallback = onConfirm;
+
+    if (type === 'danger') {
+        iconWrap.className = 'w-10 h-10 shrink-0 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500';
+        icon.className = 'fa-solid fa-triangle-exclamation text-sm';
+        btn.className = 'px-4 py-2 rounded-full text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition';
+    } else {
+        iconWrap.className = 'w-10 h-10 shrink-0 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500';
+        icon.className = 'fa-solid fa-triangle-exclamation text-sm';
+        btn.className = 'px-4 py-2 rounded-full text-xs font-medium text-white bg-orange-500 hover:bg-orange-600 transition';
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.querySelector('button[type="button"]')?.focus(), 50);
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    confirmCallback = null;
+}
+
+document.getElementById('confirm-submit')?.addEventListener('click', () => {
+    const cb = confirmCallback;
+    closeConfirmModal();
+    cb && cb();
+});
+
+function requestDeleteInquiry(id, name) {
+    openConfirmModal({
+        title: `Delete inquiry from ${name}?`,
+        message: 'This action cannot be undone. The inquiry will be permanently removed.',
+        confirmLabel: 'Delete',
+        type: 'danger',
+        onConfirm: () => {
+            const data = INQUIRIES[id];
+            if (!data) return;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = data.url_delete;
+            form.style.display = 'none';
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+let activeRowIndex = -1;
+
+function getVisibleRows() {
+    return Array.from(document.querySelectorAll('.inquiry-row'))
+        .filter(r => r.style.display !== 'none');
+}
+
+function highlightRow(index) {
+    const rows = getVisibleRows();
+    if (rows.length === 0) return;
+    activeRowIndex = Math.max(0, Math.min(index, rows.length - 1));
+
+    rows.forEach((row, i) => {
+        row.classList.toggle('ring-2', i === activeRowIndex);
+        row.classList.toggle('ring-electric/30', i === activeRowIndex);
+        row.classList.toggle('bg-electric/[0.03]', i === activeRowIndex);
+    });
+
+    rows[activeRowIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    // Esc closes modals in order
+    if (e.key === 'Escape') {
+        const confirmM = document.getElementById('confirm-modal');
+        const replyM = document.getElementById('reply-modal');
+        const inquiryM = document.getElementById('inquiry-modal');
+
+        if (confirmM && !confirmM.classList.contains('hidden')) { closeConfirmModal(); return; }
+        if (replyM && !replyM.classList.contains('hidden')) { closeReply(); return; }
+        if (inquiryM && !inquiryM.classList.contains('hidden')) { closeInquiry(); return; }
+
+        if (document.activeElement === searchInput) {
+            searchInput.blur();
+        } else if (currentSearch || currentFilter !== 'all') {
+            resetFilters();
+        } else {
+            document.querySelectorAll('.inquiry-row').forEach(r => {
+                r.classList.remove('ring-2', 'ring-electric/30', 'bg-electric/[0.03]');
+            });
+            activeRowIndex = -1;
+        }
+        return;
+    }
+
+    if (isTyping || cmd || e.altKey) return;
+
+    // "/" → focus search
+    if (e.key === '/') {
+        e.preventDefault();
+        searchInput?.focus();
+        return;
+    }
+
+    // "a" → toggle select-all
+    if (e.key.toLowerCase() === 'a' && window.innerWidth >= 1024) {
+        e.preventDefault();
+        toggleSelectAll();
+        return;
+    }
+
+    // "x" → toggle current row selection
+    if (e.key.toLowerCase() === 'x' && activeRowIndex >= 0) {
+        e.preventDefault();
+        const rows = getVisibleRows();
+        const cb = rows[activeRowIndex]?.querySelector('.row-checkbox');
+        if (cb) {
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change'));
+        }
+        return;
+    }
+
+    // J/K navigation + Enter to reply + R to reply
+    if (window.innerWidth >= 1024) {
+        if (e.key.toLowerCase() === 'j') {
+            e.preventDefault();
+            highlightRow(activeRowIndex + 1);
+        } else if (e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            highlightRow(activeRowIndex - 1);
+        } else if (e.key.toLowerCase() === 'r' && activeRowIndex >= 0) {
+            e.preventDefault();
+            const rows = getVisibleRows();
+            const id = rows[activeRowIndex]?.dataset.inquiryId;
+            if (id) openReply(id);
+        } else if (e.key === 'Enter' && activeRowIndex >= 0) {
+            e.preventDefault();
+            const rows = getVisibleRows();
+            const id = rows[activeRowIndex]?.dataset.inquiryId;
+            if (id) openInquiry(id);
+        }
+    }
+});
+
+/* ============================================================
+   ROW CLICK
+============================================================ */
+document.querySelectorAll('.inquiry-row').forEach(row => {
+    row.addEventListener('dblclick', (e) => {
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a')) return;
+        const id = row.dataset.inquiryId;
+        if (id) openInquiry(id);
+    });
+});
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+updateClearButton();
+updateBulkBar();
 </script>
 
 <style>
-    /* Remove default <details> marker */
+    /* Hide details marker */
     details summary::-webkit-details-marker { display: none; }
     details summary::marker { content: ''; }
 
-    /* Line clamp utility */
+    /* Line clamp */
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-
-    /* Smooth fade-in for details content */
-    details[open] > div:not(summary) {
-        animation: fadeIn 0.2s ease-out;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-4px); }
-        to   { opacity: 1; transform: translateY(0); }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
-    /* Hide default browser arrow on selects (custom dark theme) */
+    /* Custom select arrow */
     select {
         appearance: none;
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
         background-repeat: no-repeat;
-        background-position: right 0.5rem center;
+        background-position: right 0.75rem center;
         background-size: 12px;
-        padding-right: 2rem;
+    }
+
+    /* Row focus ring */
+    .inquiry-row:focus-visible {
+        outline: 2px solid #0066FF;
+        outline-offset: -2px;
+    }
+
+    /* Hide scrollbars on chip strip */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .animate-pulse { animation: none !important; }
     }
 </style>
 

@@ -1,231 +1,398 @@
 {% extends 'base.html' %}
 
-{# ---------- SEO: Page-specific overrides ---------- #}
 {% block seo_title %}The Media Scientist | Photographer, Videographer & Developer in Kumasi, Ghana{% endblock %}
-{% block seo_description %}Opoku Kwadwo Incredible — The Media Scientist. Professional photographer, videographer, photo editor, retoucher, colorist, motion graphics animator, graphic designer, software developer & digital marketer based in Kumasi, Ghana. Book a project today.{% endblock %}
-{% block seo_keywords %}photographer Kumasi, videographer Ghana, video editor Ghana, photo retoucher, colorist Ghana, motion graphics Ghana, graphic designer Kumasi, web developer Ghana, digital marketer Ghana, The Media Scientist, Opoku Kwadwo Incredible, media production Ghana{% endblock %}
-
-{% block og_type %}website{% endblock %}
-{% block og_title %}The Media Scientist | Opoku Kwadwo Incredible — Creative Media & Software Studio{% endblock %}
+{% block seo_description %}Opoku Kwadwo Incredible — The Media Scientist. Professional photographer, videographer, editor, retoucher, colorist, motion graphics animator, graphic designer, software developer & digital marketer based in Kumasi, Ghana.{% endblock %}
+{% block seo_keywords %}photographer Kumasi, videographer Ghana, video editor Ghana, photo retoucher, colorist Ghana, motion graphics Ghana, graphic designer Kumasi, web developer Ghana{% endblock %}
+{% block og_title %}The Media Scientist — Creative Media & Software Studio{% endblock %}
 {% block og_description %}Photo, video, design, motion, code — one creative studio in Kumasi, Ghana. Available worldwide.{% endblock %}
-{% block og_image %}https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&h=630&q=80{% endblock %}
 
-{% block twitter_title %}The Media Scientist — Creative Media & Software Studio{% endblock %}
-{% block twitter_description %}Photography, video, editing, design, motion, code. Based in Ghana, serving worldwide.{% endblock %}
-
-{# ---------- SEO: Page-specific structured data (Service schema) ---------- #}
 {% block structured_data_extra %}
 ,{
   "@type": "ItemList",
   "@id": "{{ config.SITE_URL }}#services-list",
   "name": "The Media Scientist Services",
   "itemListElement": [
+    {% for svc in services[:4] %}
     {
       "@type": "ListItem",
-      "position": 1,
+      "position": {{ loop.index }},
       "item": {
         "@type": "Service",
-        "name": "Video & Photography",
-        "description": "High-end photography, studio lighting, skin retouching, cinematic video editing with color grading.",
-        "provider": { "@id": "{{ config.SITE_URL }}#organization" },
-        "areaServed": "Worldwide",
-        "offers": { "@type": "Offer", "priceCurrency": "GHS", "priceRange": "800-6000+" }
-      }
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "item": {
-        "@type": "Service",
-        "name": "Motion Graphics & Design",
-        "description": "2D/3D animated logos, graphic flyers, social media brand kits, video intro graphics.",
+        "name": "{{ svc.title }}",
+        "description": "{{ svc.description|replace('"', '\\"') }}",
         "provider": { "@id": "{{ config.SITE_URL }}#organization" }
       }
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "item": {
-        "@type": "Service",
-        "name": "Web & Software Development",
-        "description": "Custom landing pages, web portals, e-commerce stores, desktop applications, responsive layouts.",
-        "provider": { "@id": "{{ config.SITE_URL }}#organization" }
-      }
-    },
-    {
-      "@type": "ListItem",
-      "position": 4,
-      "item": {
-        "@type": "Service",
-        "name": "Digital Marketing & Growth",
-        "description": "Targeted social media ad campaigns, content creation plans, brand visibility, lead generation.",
-        "provider": { "@id": "{{ config.SITE_URL }}#organization" }
-      }
-    }
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
   ]
 }
 {% endblock %}
 
 {% block content %}
-<section class="relative pt-12 pb-20 md:pt-24 md:pb-32 px-4 max-w-7xl mx-auto z-10" aria-labelledby="hero-heading">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-        <div class="lg:col-span-7 space-y-6">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card border border-slate-700/60 text-xs font-mono text-cyan-400">
-                <i class="fa-solid fa-user text-purple-400" aria-hidden="true"></i>
-                <span>{{ site_settings.owner_name|upper if site_settings else 'OPOKU KWADWO INCREDIBLE' }}</span>
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+<section class="mesh-hero relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-16 sm:pt-24 lg:pt-32 pb-20 sm:pb-28 lg:pb-36">
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+
+            <!-- Left: Copy -->
+            <div class="lg:col-span-7 space-y-8">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-gray-800 border border-line dark:border-gray-700 text-[12px] font-mono text-ink/70 dark:text-surface/70 shadow-sm">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    {{ site_settings.status if site_settings else 'AVAILABLE FOR HIRE' }}
+                </div>
+
+                <h1 class="text-[40px] sm:text-[56px] lg:text-[72px] leading-[1.05] tracking-[-0.03em] font-semibold text-ink dark:text-surface">
+                    Creative media,
+                    <br>
+                    <span class="font-serif-display italic font-normal text-electric">engineered</span>
+                    with precision.
+                </h1>
+
+                <!-- Typewriter line -->
+                <p class="text-base sm:text-lg font-mono text-muted h-6">
+                    <span class="text-ink dark:text-surface">&gt;</span>
+                    <span id="typewriter" class="text-electric">Video &amp; Photo Editor</span><span class="inline-block w-[2px] h-[1em] bg-electric align-middle ml-0.5 animate-pulse"></span>
+                </p>
+
+                <p class="text-lg sm:text-xl text-muted max-w-xl leading-relaxed">
+                    I'm <span class="text-ink dark:text-surface font-medium">{{ site_settings.owner_name if site_settings else 'Opoku Kwadwo Incredible' }}</span> — a multidisciplinary creative and developer helping brands tell stories through photography, video, motion, design, and code.
+                </p>
+
+                <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <a href="{{ url_for('contact') }}"
+                       class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-ink dark:bg-white text-white dark:text-ink text-sm font-medium hover:bg-electric dark:hover:bg-electric dark:hover:text-white transition-colors group">
+                        Start a project
+                        <i class="fa-solid fa-arrow-right text-[11px] transition-transform group-hover:translate-x-0.5"></i>
+                    </a>
+                    <a href="{{ url_for('portfolio') }}"
+                       class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white dark:bg-gray-800 text-ink dark:text-surface border border-line dark:border-gray-700 text-sm font-medium hover:border-ink dark:hover:border-surface transition-colors">
+                        <i class="fa-regular fa-folder-open"></i>
+                        View selected work
+                    </a>
+                </div>
+
+                <!-- Micro stats -->
+                <div class="grid grid-cols-3 gap-6 pt-8 max-w-lg">
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface tracking-tight">50+</div>
+                        <div class="text-[12px] text-muted mt-1">Projects shipped</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface tracking-tight">7 yrs</div>
+                        <div class="text-[12px] text-muted mt-1">Of practice</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface tracking-tight">10</div>
+                        <div class="text-[12px] text-muted mt-1">Creative disciplines</div>
+                    </div>
+                </div>
             </div>
-            <h1 id="hero-heading" class="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-mono-heading tracking-tight leading-tight">
-                Combining <span class="text-gradient-cyan">Media Production</span>, Visual Art & <span class="text-gradient-purple">Software Development</span>
-            </h1>
-            <div class="text-lg sm:text-xl text-slate-300 h-14 sm:h-10 flex items-center font-mono" aria-live="polite">
-                <span class="text-slate-500 mr-2" aria-hidden="true">&gt;</span>
-                <span class="text-slate-400">My Expertise: </span>
-                <span id="typewriter" class="ml-2 text-cyan-300 font-semibold border-r-2 border-cyan-400 pr-1 animate-pulse"></span>
+
+            <!-- Right: Visual -->
+            <div class="lg:col-span-5">
+                <div class="relative">
+                    <div class="aspect-[4/5] rounded-3xl overflow-hidden bg-surface dark:bg-gray-800 border border-line dark:border-gray-700 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.15)]">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80"
+                             alt="Opoku Kwadwo Incredible — The Media Scientist"
+                             loading="eager"
+                             fetchpriority="high"
+                             class="w-full h-full object-cover">
+                    </div>
+
+                    <!-- Floating tag -->
+                    <div class="absolute -bottom-5 -left-5 sm:-left-8 bg-white dark:bg-gray-800 rounded-2xl border border-line dark:border-gray-700 shadow-lg p-4 flex items-center gap-3 max-w-[240px]">
+                        <div class="w-10 h-10 rounded-full bg-electric flex items-center justify-center text-white shrink-0">
+                            <i class="fa-solid fa-video"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-[11px] font-mono text-muted uppercase tracking-wider">Available</div>
+                            <div class="text-[13px] font-medium text-ink dark:text-surface truncate">Worldwide remote</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p class="text-slate-400 text-base sm:text-lg max-w-2xl leading-relaxed">
-                {{ site_settings.hero_description if site_settings else 'Bringing together creativity and technical precision.' }}
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     LOGO / TRUST STRIP
+============================================================ -->
+<section class="border-y border-line dark:border-gray-800 bg-canvas dark:bg-[#0F0F0F]">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-8">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            <p class="text-xs font-mono text-muted uppercase tracking-widest text-center md:text-left">
+                Trusted by brands &amp; teams
             </p>
-            <div class="flex flex-wrap items-center gap-4 pt-2">
-                <a href="{{ url_for('services') }}" class="px-6 py-3.5 rounded-xl font-mono text-sm font-semibold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02] transition flex items-center gap-2">
-                    <i class="fa-solid fa-layer-group text-slate-900" aria-hidden="true"></i> Explore Service Plans
-                </a>
-                <a href="{{ url_for('portfolio') }}" class="px-6 py-3.5 rounded-xl font-mono text-sm font-semibold glass-card text-slate-200 hover:text-white hover:border-slate-600 hover:bg-slate-800/60 transition flex items-center gap-2">
-                    <i class="fa-regular fa-folder-open text-cyan-400" aria-hidden="true"></i> View Portfolio
-                </a>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8">
-                <div class="glass-card p-4 rounded-xl border border-slate-800"><div class="text-2xl font-bold font-mono text-cyan-400">50+</div><div class="text-xs text-slate-400 mt-1">Projects Completed</div></div>
-                <div class="glass-card p-4 rounded-xl border border-slate-800"><div class="text-2xl font-bold font-mono text-purple-400">100%</div><div class="text-xs text-slate-400 mt-1">Quality Color Grading</div></div>
-                <div class="glass-card p-4 rounded-xl border border-slate-800"><div class="text-2xl font-bold font-mono text-emeraldMint">Clean</div><div class="text-xs text-slate-400 mt-1">Code & Web Design</div></div>
-                <div class="glass-card p-4 rounded-xl border border-slate-800"><div class="text-2xl font-bold font-mono text-cyan-400">10-in-1</div><div class="text-xs text-slate-400 mt-1">Creative Skills</div></div>
-            </div>
-        </div>
-        <div class="lg:col-span-5 relative">
-            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-3xl blur-2xl opacity-20 animate-pulse"></div>
-            <div class="relative glass-card rounded-2xl p-6 border border-slate-800 space-y-6">
-                <div class="relative group rounded-xl overflow-hidden aspect-square bg-slate-900 border border-slate-800">
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
-                         alt="Opoku Kwadwo Incredible — The Media Scientist, creative media professional and software developer based in Kumasi, Ghana"
-                         loading="eager" fetchpriority="high"
-                         class="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 group-hover:scale-105 transition duration-700">
-                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 p-3 glass-card rounded-lg border border-slate-700/80">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="font-mono text-xs font-bold text-white uppercase">{{ site_settings.owner_name if site_settings }}</h4>
-                                <p class="text-[11px] text-cyan-400 font-mono">Creative Media Professional & Developer</p>
-                            </div>
-                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">VERIFIED</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-wrap gap-2 text-xs font-mono">
-                    <span class="px-2.5 py-1 rounded-md bg-slate-800/80 text-cyan-300 border border-slate-700"><i class="fa-solid fa-camera mr-1" aria-hidden="true"></i> Photo & Video</span>
-                    <span class="px-2.5 py-1 rounded-md bg-slate-800/80 text-purple-300 border border-slate-700"><i class="fa-solid fa-wand-magic-sparkles mr-1" aria-hidden="true"></i> Editing & Retouch</span>
-                    <span class="px-2.5 py-1 rounded-md bg-slate-800/80 text-emerald-300 border border-slate-700"><i class="fa-solid fa-code mr-1" aria-hidden="true"></i> Web & Software</span>
-                    <span class="px-2.5 py-1 rounded-md bg-slate-800/80 text-cyan-300 border border-slate-700"><i class="fa-solid fa-bullhorn mr-1" aria-hidden="true"></i> Digital Marketing</span>
-                </div>
+            <div class="flex flex-wrap justify-center items-center gap-x-10 gap-y-4">
+                {% set brands = ['STBM', 'IncAcademy', 'Kaya Studio', "Deboat's", 'Incredible'] %}
+                {% for brand in brands %}
+                <span class="text-base font-semibold tracking-tight text-ink/40 dark:text-surface/40 hover:text-ink dark:hover:text-surface transition-colors cursor-default">
+                    {{ brand }}
+                </span>
+                {% endfor %}
             </div>
         </div>
     </div>
 </section>
 
-<!-- Featured Services -->
-<section class="py-20 px-4 max-w-7xl mx-auto relative z-10" aria-labelledby="services-heading">
-    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-xs font-mono text-cyan-300">
-            <i class="fa-solid fa-tags" aria-hidden="true"></i> SERVICES & PRICING PLANS
+<!-- ============================================================
+     SERVICES OVERVIEW
+============================================================ -->
+<section class="py-20 sm:py-28 lg:py-32">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+
+        <!-- Section header -->
+        <div class="max-w-3xl mb-16 reveal">
+            <div class="text-xs font-mono text-muted uppercase tracking-widest mb-4">/ 01 — What I do</div>
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink dark:text-surface leading-tight mb-5">
+                Everything you need,
+                <br>
+                <span class="text-muted">under one roof.</span>
+            </h2>
+            <p class="text-lg text-muted leading-relaxed">
+                From the first frame to the final line of code — I handle the entire creative pipeline. No handoffs, no miscommunication.
+            </p>
         </div>
-        <h2 id="services-heading" class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Service Packages & <span class="text-gradient-cyan">Pricing Plans</span></h2>
-        <p class="text-slate-400 text-sm sm:text-base">Transparent packages in Ghana Cedis tailored to elevate your business, personal brand, or project.</p>
-    </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {% for svc in services[:4] %}
-        <article class="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800 flex flex-col justify-between space-y-6">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 rounded-xl bg-{{ svc.color }}-500/10 border border-{{ svc.color }}-500/30 flex items-center justify-center text-{{ svc.color }}-400 text-xl">
-                        <i class="fa-solid {{ svc.icon }}" aria-hidden="true"></i>
-                    </div>
-                    <span class="text-xs font-mono text-{{ svc.color }}-400 uppercase tracking-widest bg-{{ svc.color }}-950/60 px-3 py-1 rounded-full border border-{{ svc.color }}-500/30">SERVICE {{ '%02d' % loop.index }}</span>
-                </div>
-                <h3 class="font-mono-heading font-bold text-2xl text-white">{{ svc.title }}</h3>
-                <p class="text-xs text-slate-400 mt-2">{{ svc.description }}</p>
-                <div class="mt-6 space-y-4">
-                    {% for plan in svc.plans %}
-                    <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-mono font-bold text-sm text-{{ svc.color }}-300">{{ plan.name }}</span>
-                            <span class="font-mono text-xs font-bold text-emeraldMint">{{ plan.price }}</span>
+
+        <!-- Service cards grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {% set icons = ['fa-camera', 'fa-wand-magic-sparkles', 'fa-code', 'fa-bullhorn'] %}
+            {% set accents = ['electric', 'teal', 'electric', 'teal'] %}
+
+            {% for svc in services[:4] %}
+            <article class="card p-7 sm:p-9 reveal group relative overflow-hidden">
+                <!-- Hover glow -->
+                <div class="absolute inset-0 bg-gradient-to-br from-{{ accents[loop.index0] }}/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" aria-hidden="true"></div>
+
+                <div class="relative">
+                    <div class="flex items-start justify-between mb-8">
+                        <div class="w-12 h-12 rounded-2xl bg-{{ accents[loop.index0] }}/10 border border-{{ accents[loop.index0] }}/20 flex items-center justify-center text-{{ accents[loop.index0] }} transition-transform group-hover:scale-105">
+                            <i class="fa-solid {{ svc.icon or icons[loop.index0] }} text-lg"></i>
                         </div>
-                        <p class="text-xs text-slate-400">{{ plan.desc }}</p>
+                        <span class="font-mono text-[10px] text-muted uppercase tracking-widest">0{{ loop.index }}</span>
                     </div>
-                    {% endfor %}
+
+                    <h3 class="text-2xl font-semibold text-ink dark:text-surface tracking-tight mb-3">
+                        {{ svc.title }}
+                    </h3>
+                    <p class="text-muted text-[14px] leading-relaxed mb-6">
+                        {{ svc.description }}
+                    </p>
+
+                    <div class="pt-5 border-t border-line dark:border-gray-700 flex items-center justify-between gap-3">
+                        <div class="text-sm">
+                            <span class="text-muted text-[12px] font-mono">Starting at </span>
+                            <span class="font-mono font-semibold text-ink dark:text-surface">
+                                {{ svc.plans[0].price if svc.plans else 'Contact us' }}
+                            </span>
+                        </div>
+                        <a href="{{ url_for('services') }}" class="text-electric opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Learn more about {{ svc.title }}">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
+            </article>
+            {% else %}
+            <!-- Fallback if no services in DB -->
+            <div class="col-span-full text-center py-16 text-muted">
+                <i class="fa-solid fa-spinner fa-spin text-2xl mb-3"></i>
+                <p class="text-sm font-mono">Loading services…</p>
             </div>
-            <a href="{{ url_for('contact') }}" class="w-full py-3 rounded-xl font-mono text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition flex items-center justify-center gap-2">
-                Book {{ svc.title }} Plan <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            {% endfor %}
+
+        </div>
+
+        <div class="mt-12 text-center reveal">
+            <a href="{{ url_for('services') }}" class="inline-flex items-center gap-2 text-sm font-medium text-ink dark:text-surface hover:text-electric transition group">
+                See all services &amp; pricing
+                <i class="fa-solid fa-arrow-right text-[10px] transition-transform group-hover:translate-x-0.5"></i>
             </a>
-        </article>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- Portfolio Preview -->
-<section class="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-slate-800/60" aria-labelledby="portfolio-heading">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-        <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/50 border border-purple-500/30 text-xs font-mono text-purple-300 mb-2">
-                <i class="fa-solid fa-folder-open" aria-hidden="true"></i> PORTFOLIO & RECENT WORK
-            </div>
-            <h2 id="portfolio-heading" class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Featured <span class="text-gradient-purple">Projects</span></h2>
         </div>
-        <a href="{{ url_for('portfolio') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">View All Projects &gt;</a>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for item in portfolio[:6] %}
-        <article class="glass-card rounded-2xl overflow-hidden border border-slate-800 glass-card-hover group">
-            <div class="relative aspect-video overflow-hidden bg-slate-900">
-                <img src="{{ item.image }}" alt="{{ item.title }} — {{ item.category }} project by The Media Scientist"
-                     loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                <div class="absolute top-3 left-3 px-2.5 py-1 rounded bg-slate-950/80 text-[10px] font-mono text-cyan-300 border border-slate-700">{{ item.category }}</div>
+</section>
+
+<!-- ============================================================
+     SELECTED WORK
+============================================================ -->
+<section class="py-20 sm:py-28 lg:py-32 bg-canvas dark:bg-[#0F0F0F] border-y border-line dark:border-gray-800">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 reveal">
+            <div class="max-w-2xl">
+                <div class="text-xs font-mono text-muted uppercase tracking-widest mb-4">/ 02 — Selected work</div>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink dark:text-surface leading-tight">
+                    Recent projects
+                    <span class="font-serif-display italic font-normal text-muted">worth showing.</span>
+                </h2>
             </div>
-            <div class="p-5 space-y-2">
-                <h3 class="font-mono-heading font-bold text-lg text-white group-hover:text-cyan-300 transition">{{ item.title }}</h3>
-                <p class="text-xs text-slate-400 line-clamp-2">{{ item.description }}</p>
-                <div class="pt-2 flex justify-between items-center text-[11px] font-mono text-slate-500">
-                    <span>Tools: {{ item.tools }}</span>
+            <a href="{{ url_for('portfolio') }}" class="inline-flex items-center gap-2 text-sm font-medium text-ink dark:text-surface hover:text-electric transition shrink-0 group">
+                View all <i class="fa-solid fa-arrow-right text-[10px] transition-transform group-hover:translate-x-0.5"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for item in portfolio[:6] %}
+            <a href="{{ url_for('portfolio') }}" class="group block card overflow-hidden reveal">
+                <div class="relative aspect-[4/3] overflow-hidden bg-surface dark:bg-gray-800">
+                    <img src="{{ item.image }}"
+                         alt="{{ item.title }}"
+                         loading="lazy"
+                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]">
+                    <!-- Gradient overlay on hover -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true"></div>
+                    <!-- Category badge -->
+                    <div class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/95 dark:bg-ink/90 backdrop-blur-sm text-[10px] font-mono text-ink dark:text-surface border border-line dark:border-gray-700">
+                        {{ item.category }}
+                    </div>
+                    <!-- View indicator -->
+                    <div class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white/95 dark:bg-ink/90 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-ink dark:text-surface"></i>
+                    </div>
                 </div>
+                <div class="p-5">
+                    <h3 class="text-base font-semibold text-ink dark:text-surface tracking-tight group-hover:text-electric transition line-clamp-1">
+                        {{ item.title }}
+                    </h3>
+                    <p class="text-[13px] text-muted mt-1.5 line-clamp-2 leading-relaxed">
+                        {{ item.description }}
+                    </p>
+                </div>
+            </a>
+            {% else %}
+            <div class="col-span-full text-center py-16 text-muted">
+                <i class="fa-regular fa-images text-2xl mb-3"></i>
+                <p class="text-sm font-mono">Portfolio coming soon.</p>
             </div>
-        </article>
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
 </section>
 
-<!-- Contact CTA -->
-<section class="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-slate-800/60" aria-labelledby="cta-heading">
-    <div class="glass-card rounded-2xl p-10 border border-slate-800 text-center">
-        <h2 id="cta-heading" class="text-3xl sm:text-4xl font-extrabold font-mono-heading">Let's Build Something <span class="text-gradient-mint">Incredible Together</span></h2>
-        <p class="text-slate-400 text-sm mt-4 max-w-2xl mx-auto">Have a project in mind? Fill out the form to get started with a project inquiry.</p>
-        <a href="{{ url_for('contact') }}" class="inline-block mt-8 px-8 py-4 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:brightness-110 transition">
-            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send Project Inquiry
-        </a>
+<!-- ============================================================
+     ABOUT / APPROACH
+============================================================ -->
+<section class="py-20 sm:py-28 lg:py-32">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+
+            <div class="lg:col-span-5 space-y-6 reveal">
+                <div class="text-xs font-mono text-muted uppercase tracking-widest">/ 03 — Approach</div>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink dark:text-surface leading-tight">
+                    Where craft meets
+                    <span class="font-serif-display italic font-normal text-electric">curiosity.</span>
+                </h2>
+                <p class="text-muted leading-relaxed">
+                    I treat every project like an experiment — hypothesize, iterate, refine. Whether it's the subtle curve of a skin tone in a photo, the rhythm of a video edit, or the architecture of a web application, the same rigor applies.
+                </p>
+                <a href="{{ url_for('about') }}" class="inline-flex items-center gap-2 text-sm font-medium text-ink dark:text-surface hover:text-electric transition group">
+                    More about me <i class="fa-solid fa-arrow-right text-[10px] transition-transform group-hover:translate-x-0.5"></i>
+                </a>
+            </div>
+
+            <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {% set values = [
+                    ('fa-bullseye', 'Precise', 'Every frame, pixel, and line of code is intentional.'),
+                    ('fa-bolt', 'Fast', 'Tight timelines, no compromise on quality.'),
+                    ('fa-comments', 'Direct', 'You talk to me — not an account manager.'),
+                    ('fa-infinity', 'Complete', 'Full-stack: from concept to launch.')
+                ] %}
+                {% for icon, title, desc in values %}
+                <div class="card p-6 reveal group">
+                    <div class="w-10 h-10 rounded-xl bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700 flex items-center justify-center text-ink dark:text-surface mb-5 transition-colors group-hover:bg-electric group-hover:text-white group-hover:border-electric">
+                        <i class="fa-solid {{ icon }}"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-ink dark:text-surface mb-2">{{ title }}</h3>
+                    <p class="text-sm text-muted leading-relaxed">{{ desc }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </section>
 
+<!-- ============================================================
+     CTA
+============================================================ -->
+<section class="py-20 sm:py-28 lg:py-32 bg-ink text-white relative overflow-hidden">
+    <div class="absolute inset-0 mesh-hero opacity-30" aria-hidden="true"></div>
+    <!-- Decorative grid -->
+    <div class="absolute inset-0 opacity-[0.03]" aria-hidden="true" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 60px 60px;"></div>
+
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 relative">
+
+        <div class="max-w-3xl mx-auto text-center space-y-8 reveal">
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]">
+                Let's build something
+                <br>
+                <span class="font-serif-display italic font-normal text-electric">incredible.</span>
+            </h2>
+            <p class="text-lg text-white/60 leading-relaxed max-w-xl mx-auto">
+                Have a project in mind? Tell me about it. I'll reply within 24 hours with a plan.
+            </p>
+            <div class="flex flex-wrap justify-center gap-3 pt-2">
+                <a href="{{ url_for('contact') }}"
+                   class="inline-flex items-center gap-2 px-7 py-4 rounded-full bg-white text-ink text-sm font-medium hover:bg-electric hover:text-white transition-colors group">
+                    Start a project <i class="fa-solid fa-arrow-right text-[11px] transition-transform group-hover:translate-x-0.5"></i>
+                </a>
+                <a href="{{ url_for('services') }}"
+                   class="inline-flex items-center gap-2 px-7 py-4 rounded-full bg-white/10 text-white border border-white/20 text-sm font-medium hover:bg-white/20 transition-colors">
+                    See pricing
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     TYPEWRITER (page-scoped script)
+============================================================ -->
 <script>
-const roles = ["Video & Photo Editor","Software & Web Developer","Photo Retoucher & Colorist","Motion Graphics Animator","Digital Marketer & Designer"];
-let roleIndex=0,charIndex=0,isDeleting=false;
-const tw = document.getElementById('typewriter');
-function typeEffect(){
-    const cur = roles[roleIndex];
-    if(isDeleting){ tw.textContent = cur.substring(0,charIndex-1); charIndex--; }
-    else { tw.textContent = cur.substring(0,charIndex+1); charIndex++; }
-    let speed = isDeleting?40:80;
-    if(!isDeleting && charIndex===cur.length){ speed=2000; isDeleting=true; }
-    else if(isDeleting && charIndex===0){ isDeleting=false; roleIndex=(roleIndex+1)%roles.length; speed=500; }
-    setTimeout(typeEffect,speed);
-}
-typeEffect();
+(function() {
+    const roles = [
+        "Video & Photo Editor",
+        "Software & Web Developer",
+        "Photo Retoucher & Colorist",
+        "Motion Graphics Animator",
+        "Digital Marketer & Designer"
+    ];
+    let roleIndex = 0, charIndex = 0, isDeleting = false;
+    const tw = document.getElementById('typewriter');
+    if (!tw) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+        tw.textContent = roles[0];
+        return;
+    }
+
+    function typeEffect() {
+        const cur = roles[roleIndex];
+        if (isDeleting) {
+            tw.textContent = cur.substring(0, charIndex - 1);
+            charIndex--;
+        } else {
+            tw.textContent = cur.substring(0, charIndex + 1);
+            charIndex++;
+        }
+        let speed = isDeleting ? 40 : 80;
+        if (!isDeleting && charIndex === cur.length) {
+            speed = 2000;
+            isDeleting = true;
+        } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            roleIndex = (roleIndex + 1) % roles.length;
+            speed = 500;
+        }
+        setTimeout(typeEffect, speed);
+    }
+    typeEffect();
+})();
 </script>
+
 {% endblock %}

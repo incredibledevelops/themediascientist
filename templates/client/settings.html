@@ -1,12 +1,9 @@
 {% extends 'client/base.html' %}
 {% block title %}Settings{% endblock %}
-{% block page_title %}Account Settings{% endblock %}
-{% block page_subtitle %}Manage your account preferences and security.{% endblock %}
-
-{% block content %}
+{% block breadcrumb %}Settings{% endblock %}
 
 {# ============================================================
-   SAFE CLIENT DATA — defensive access
+   SAFE CLIENT DATA — before page_title/page_subtitle
 ============================================================ #}
 {% set client_name = (client.name if client and client.name else 'Client')|string %}
 {% set client_email = (client.email if client and client.email else '')|string %}
@@ -16,82 +13,102 @@
 {% set client_active = (client.is_active if client and client.is_active is defined else True) %}
 {% set initial = client_name[0]|upper if client_name else 'C' %}
 
-{# Get optional preferences (with defaults if not set) #}
 {% set prefs = client.preferences if client and client.preferences is defined and client.preferences else {} %}
 {% set pref_email_files    = prefs.get('email_on_files', True) if prefs is mapping else True %}
 {% set pref_email_invoices = prefs.get('email_on_invoices', True) if prefs is mapping else True %}
 {% set pref_email_messages = prefs.get('email_on_messages', True) if prefs is mapping else True %}
 
+{% block page_title %}Account Settings{% endblock %}
+{% block page_subtitle %}Manage your account preferences and security.{% endblock %}
+
+{% block content %}
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
 
     {# ============================================================
-       LEFT: PROFILE CARD
+       LEFT: Profile Card
     ============================================================ #}
     <aside class="lg:col-span-1 space-y-4 sm:space-y-5">
 
-        <section class="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 text-center">
+        <section class="card p-5 sm:p-6 text-center">
 
             {# Avatar #}
             <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full mx-auto mb-4
-                        bg-gradient-to-br from-cyan-400 to-purple-600
+                        bg-gradient-to-br from-electric to-teal
                         flex items-center justify-center
                         text-white font-bold text-3xl sm:text-4xl
-                        shadow-lg shadow-cyan-500/20">
+                        shadow-lg shadow-electric/20">
                 {{ initial }}
             </div>
 
             {# Name #}
-            <h2 class="font-mono-heading font-bold text-white
-                       text-base sm:text-lg truncate">
+            <h2 class="text-base sm:text-lg font-semibold text-ink dark:text-surface
+                       tracking-tight truncate">
                 {{ client_name }}
             </h2>
 
-            {# Email #}
-            <p class="text-xs font-mono text-slate-400 mt-1 truncate">
-                {{ client_email }}
-            </p>
+            {# Email + copy #}
+            <button type="button"
+                    onclick="copyText('{{ client_email }}', 'Email')"
+                    class="mt-1.5 inline-flex items-center gap-1.5
+                           text-xs font-mono text-muted
+                           hover:text-electric transition group
+                           truncate max-w-full">
+                <span class="truncate">{{ client_email }}</span>
+                <i class="fa-regular fa-copy text-[10px] opacity-0
+                          group-hover:opacity-70 transition-opacity shrink-0"
+                   aria-hidden="true"></i>
+            </button>
 
-            {# Client Code #}
+            {# Client code #}
             {% if client_code %}
-            <div class="mt-4 inline-flex items-center gap-1.5
-                        px-3 py-1 rounded-full
-                        bg-purple-500/10 text-purple-300
-                        border border-purple-500/30
-                        text-[10px] font-mono uppercase tracking-wider">
-                <i class="fa-solid fa-hashtag text-[9px]" aria-hidden="true"></i>
-                {{ client_code }}
+            <div class="mt-4 flex justify-center">
+                <button type="button"
+                        onclick="copyText('{{ client_code }}', 'Client code')"
+                        class="inline-flex items-center gap-1.5
+                               px-3 py-1.5 rounded-full
+                               bg-electric/10 text-electric
+                               border border-electric/20
+                               text-[10px] font-mono uppercase tracking-widest
+                               hover:bg-electric/15 hover:border-electric/40
+                               transition group">
+                    <i class="fa-solid fa-hashtag text-[9px]" aria-hidden="true"></i>
+                    {{ client_code }}
+                    <i class="fa-regular fa-copy text-[9px] opacity-0
+                              group-hover:opacity-70 transition-opacity"
+                       aria-hidden="true"></i>
+                </button>
             </div>
             {% endif %}
 
-            {# Meta info #}
-            <div class="mt-5 pt-4 border-t border-slate-800 space-y-2.5 text-left">
+            {# Meta #}
+            <div class="mt-5 pt-4 border-t border-line dark:border-gray-700 space-y-2.5 text-left">
 
                 {% if client_created and client_created.strftime is defined %}
                 <div class="flex items-center justify-between gap-3 text-[11px] font-mono">
-                    <span class="text-slate-500 inline-flex items-center gap-1.5">
+                    <span class="text-muted inline-flex items-center gap-1.5">
                         <i class="fa-regular fa-calendar" aria-hidden="true"></i>
                         Member since
                     </span>
-                    <span class="text-slate-300">
+                    <span class="text-ink dark:text-surface">
                         {{ client_created.strftime('%b %Y') }}
                     </span>
                 </div>
                 {% endif %}
 
                 <div class="flex items-center justify-between gap-3 text-[11px] font-mono">
-                    <span class="text-slate-500 inline-flex items-center gap-1.5">
+                    <span class="text-muted inline-flex items-center gap-1.5">
                         <i class="fa-solid fa-circle-dot" aria-hidden="true"></i>
                         Status
                     </span>
                     {% if client_active %}
-                    <span class="inline-flex items-center gap-1
-                                 text-emerald-400">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                    <span class="inline-flex items-center gap-1 text-teal">
+                        <span class="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"
                               aria-hidden="true"></span>
                         Active
                     </span>
                     {% else %}
-                    <span class="text-red-400 inline-flex items-center gap-1">
+                    <span class="text-red-500 inline-flex items-center gap-1">
                         <i class="fa-solid fa-pause text-[9px]" aria-hidden="true"></i>
                         Inactive
                     </span>
@@ -99,40 +116,58 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-3 text-[11px] font-mono">
-                    <span class="text-slate-500 inline-flex items-center gap-1.5">
+                    <span class="text-muted inline-flex items-center gap-1.5">
                         <i class="fa-solid fa-user-tag" aria-hidden="true"></i>
                         Role
                     </span>
-                    <span class="text-purple-300 capitalize">{{ client_role }}</span>
+                    <span class="text-electric capitalize">{{ client_role }}</span>
                 </div>
-
             </div>
         </section>
 
+        {# Quick links #}
+        <nav class="card p-3 space-y-1">
+            {% set nav_links = [
+                ('client_messages', 'Messages', 'fa-comments'),
+                ('client_files', 'Files', 'fa-cloud-arrow-down'),
+                ('client_invoices', 'Invoices', 'fa-file-invoice')
+            ] %}
+            {% for endpoint, label, icon in nav_links %}
+            <a href="{{ url_for(endpoint) }}"
+               class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl
+                      text-xs font-medium text-muted
+                      hover:bg-canvas dark:hover:bg-gray-800/50
+                      hover:text-electric transition group">
+                <span class="flex items-center gap-2.5">
+                    <i class="fa-solid {{ icon }} text-muted w-4 text-center
+                              group-hover:text-electric transition"
+                       aria-hidden="true"></i>
+                    {{ label }}
+                </span>
+                <i class="fa-solid fa-arrow-right text-[9px] text-muted/50
+                          group-hover:text-electric transition"
+                   aria-hidden="true"></i>
+            </a>
+            {% endfor %}
+        </nav>
     </aside>
 
     {# ============================================================
-       RIGHT: SETTINGS PANELS
+       RIGHT: Settings Panels
     ============================================================ #}
     <div class="lg:col-span-2 space-y-5 sm:space-y-6">
 
-        {# ---------- SECTION 01: CHANGE PASSWORD ---------- #}
-        <section class="glass-card rounded-2xl border border-slate-800
-                        p-5 sm:p-6 space-y-5">
+        {# ---------- CHANGE PASSWORD ---------- #}
+        <section class="card p-5 sm:p-6 space-y-5">
 
             <header class="flex items-center justify-between gap-3
-                           pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg
-                                bg-cyan-500/10 border border-cyan-500/30
-                                flex items-center justify-center text-cyan-400">
-                        <i class="fa-solid fa-key text-xs" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
-                        Change Password
-                    </h3>
-                </div>
-                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                           pb-3 border-b border-line dark:border-gray-700">
+                <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-key text-electric text-xs" aria-hidden="true"></i>
+                    Change Password
+                </h3>
+                <span class="text-[10px] font-mono text-muted uppercase tracking-widest hidden sm:block">
                     Section 01
                 </span>
             </header>
@@ -146,32 +181,33 @@
                 {# Current password #}
                 <div>
                     <label for="current-password"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Current Password <span class="text-cyan-400">*</span>
+                           class="block text-[10px] font-mono text-muted
+                                  uppercase tracking-widest mb-2">
+                        Current Password <span class="text-electric">*</span>
                     </label>
                     <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-slate-500 text-xs pointer-events-none"
-                           aria-hidden="true"></i>
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2
+                                  text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                         <input type="password"
                                id="current-password"
                                name="current_password"
                                required
                                autocomplete="current-password"
                                placeholder="Enter current password"
-                               class="w-full pl-10 pr-12 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                      transition">
+                               class="w-full pl-11 pr-12 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface placeholder-muted
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition">
                         <button type="button"
                                 onclick="toggleField('current-password', this)"
                                 class="absolute right-2 top-1/2 -translate-y-1/2
                                        w-9 h-9 rounded-lg flex items-center justify-center
-                                       text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10
+                                       text-muted hover:text-electric hover:bg-electric/10
                                        transition"
-                                aria-label="Show current password">
+                                aria-label="Show current password"
+                                aria-pressed="false">
                             <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
                         </button>
                     </div>
@@ -179,15 +215,24 @@
 
                 {# New password #}
                 <div>
-                    <label for="new-password"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        New Password <span class="text-cyan-400">*</span>
-                    </label>
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="new-password"
+                               class="block text-[10px] font-mono text-muted
+                                      uppercase tracking-widest">
+                            New Password <span class="text-electric">*</span>
+                        </label>
+                        <button type="button"
+                                onclick="generatePassword()"
+                                class="text-[10px] font-mono text-electric
+                                       hover:text-electric/80 transition
+                                       inline-flex items-center gap-1">
+                            <i class="fa-solid fa-wand-magic-sparkles text-[9px]" aria-hidden="true"></i>
+                            Generate
+                        </button>
+                    </div>
                     <div class="relative">
-                        <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-slate-500 text-xs pointer-events-none"
-                           aria-hidden="true"></i>
+                        <i class="fa-solid fa-key absolute left-4 top-1/2 -translate-y-1/2
+                                  text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                         <input type="password"
                                id="new-password"
                                name="new_password"
@@ -196,33 +241,45 @@
                                autocomplete="new-password"
                                placeholder="At least 6 characters"
                                oninput="updateStrength(this.value); updateMatch();"
-                               class="w-full pl-10 pr-12 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                      transition">
-                        <button type="button"
-                                onclick="toggleField('new-password', this)"
-                                class="absolute right-2 top-1/2 -translate-y-1/2
-                                       w-9 h-9 rounded-lg flex items-center justify-center
-                                       text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10
-                                       transition"
-                                aria-label="Show new password">
-                            <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
-                        </button>
+                               class="w-full pl-11 pr-20 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface placeholder-muted font-mono
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition">
+                        <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                            <button type="button"
+                                    onclick="copyPassword()"
+                                    class="w-8 h-8 rounded-lg flex items-center justify-center
+                                           text-muted hover:text-electric
+                                           hover:bg-electric/10 transition"
+                                    aria-label="Copy password"
+                                    title="Copy password">
+                                <i class="fa-regular fa-copy text-xs" aria-hidden="true"></i>
+                            </button>
+                            <button type="button"
+                                    onclick="toggleField('new-password', this)"
+                                    class="w-8 h-8 rounded-lg flex items-center justify-center
+                                           text-muted hover:text-electric
+                                           hover:bg-electric/10 transition"
+                                    aria-label="Show new password"
+                                    aria-pressed="false">
+                                <i class="fa-solid fa-eye text-xs" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
 
                     {# Strength meter #}
-                    <div class="mt-2">
+                    <div class="mt-3">
                         <div class="flex gap-1 h-1">
                             {% for i in range(1, 5) %}
-                            <div class="strength-bar flex-1 rounded-full bg-slate-800
+                            <div class="strength-bar flex-1 rounded-full bg-surface dark:bg-gray-800
                                         transition-colors duration-200"
                                  data-strength="{{ i }}"></div>
                             {% endfor %}
                         </div>
                         <p id="strength-label"
-                           class="text-[10px] font-mono text-slate-500 mt-1.5">
+                           class="text-[11px] font-mono text-muted mt-2">
                             Minimum 6 characters
                         </p>
                     </div>
@@ -231,14 +288,13 @@
                 {# Confirm #}
                 <div>
                     <label for="confirm-password"
-                           class="block text-[10px] font-mono text-slate-400
-                                  uppercase tracking-wider mb-1.5">
-                        Confirm New Password <span class="text-cyan-400">*</span>
+                           class="block text-[10px] font-mono text-muted
+                                  uppercase tracking-widest mb-2">
+                        Confirm New Password <span class="text-electric">*</span>
                     </label>
                     <div class="relative">
-                        <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2
-                                  text-slate-500 text-xs pointer-events-none"
-                           aria-hidden="true"></i>
+                        <i class="fa-solid fa-key absolute left-4 top-1/2 -translate-y-1/2
+                                  text-muted text-xs pointer-events-none" aria-hidden="true"></i>
                         <input type="password"
                                id="confirm-password"
                                name="confirm_password"
@@ -246,82 +302,74 @@
                                autocomplete="new-password"
                                placeholder="Re-enter new password"
                                oninput="updateMatch()"
-                               class="w-full pl-10 pr-12 py-3 rounded-xl
-                                      bg-slate-900 border border-slate-800
-                                      text-sm text-white placeholder-slate-500
-                                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                      transition">
+                               class="w-full pl-11 pr-12 py-3 rounded-xl
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-line dark:border-gray-700
+                                      text-sm text-ink dark:text-surface placeholder-muted font-mono
+                                      focus:outline-none focus:border-electric
+                                      focus:ring-2 focus:ring-electric/20 transition">
                         <span id="match-icon"
                               class="absolute right-4 top-1/2 -translate-y-1/2
-                                     text-slate-600 text-sm hidden"
+                                     text-muted text-sm hidden"
                               aria-hidden="true"></span>
                     </div>
                     <p id="match-msg"
-                       class="hidden text-[10px] font-mono text-red-400 mt-1.5
-                              flex items-center gap-1">
-                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                       class="hidden text-[11px] font-mono text-red-500 mt-2
+                              flex items-center gap-1.5"
+                       role="alert">
+                        <i class="fa-solid fa-circle-exclamation text-[10px]" aria-hidden="true"></i>
                         <span>Passwords do not match.</span>
                     </p>
                 </div>
 
-                {# Submit #}
                 <div class="pt-1">
                     <button type="submit"
                             id="password-submit-btn"
-                            class="w-full sm:w-auto px-5 py-3 rounded-xl
-                                   text-xs font-mono font-bold
-                                   text-slate-950
-                                   bg-gradient-to-r from-cyan-400 to-emerald-400
-                                   hover:brightness-110
-                                   transition active:scale-[0.98]
+                            class="w-full sm:w-auto px-5 py-3 rounded-full
+                                   text-xs font-medium text-white
+                                   bg-ink dark:bg-white dark:text-ink
+                                   hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                                   transition-colors
                                    inline-flex items-center justify-center gap-2
                                    disabled:opacity-70 disabled:cursor-not-allowed">
-                        <i class="fa-solid fa-save" aria-hidden="true"></i>
-                        <span>Update Password</span>
+                        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+                        Update Password
                     </button>
                 </div>
             </form>
 
             {# Help text #}
-            <div class="pt-4 border-t border-slate-800">
-                <p class="text-[11px] text-slate-400 leading-relaxed">
-                    <i class="fa-solid fa-circle-info text-cyan-400 mr-1.5"
-                       aria-hidden="true"></i>
+            <div class="pt-4 border-t border-line dark:border-gray-700">
+                <p class="text-[11px] text-muted leading-relaxed">
+                    <i class="fa-solid fa-circle-info text-electric mr-1.5" aria-hidden="true"></i>
                     Forgot your current password?
                     <a href="{{ url_for('contact') }}"
-                       class="text-cyan-400 hover:text-cyan-300 underline-offset-2 hover:underline transition">
+                       class="text-electric hover:underline underline-offset-2 transition">
                         Contact support
                     </a>
                     to reset it manually.
                 </p>
             </div>
-
         </section>
 
-        {# ---------- SECTION 02: NOTIFICATIONS ---------- #}
-        <section class="glass-card rounded-2xl border border-slate-800
-                        p-5 sm:p-6 space-y-5">
+        {# ---------- EMAIL NOTIFICATIONS ---------- #}
+        <section class="card p-5 sm:p-6 space-y-5">
 
             <header class="flex items-center justify-between gap-3
-                           pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg
-                                bg-purple-500/10 border border-purple-500/30
-                                flex items-center justify-center text-purple-400">
-                        <i class="fa-solid fa-bell text-xs" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
-                        Email Notifications
-                    </h3>
-                </div>
-                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                           pb-3 border-b border-line dark:border-gray-700">
+                <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-bell text-electric text-xs" aria-hidden="true"></i>
+                    Email Notifications
+                </h3>
+                <span class="text-[10px] font-mono text-muted uppercase tracking-widest hidden sm:block">
                     Section 02
                 </span>
             </header>
 
-            <p class="text-[11px] text-slate-400 leading-relaxed">
+            <p class="text-[11px] text-muted leading-relaxed">
                 Choose which events trigger an email to
-                <span class="font-mono text-cyan-300">{{ client_email }}</span>.
+                <span class="font-mono text-electric">{{ client_email }}</span>.
             </p>
 
             <form method="POST"
@@ -329,42 +377,43 @@
                   class="space-y-2.5">
 
                 {% set pref_items = [
-                    ('email_on_files',    'New files uploaded',       'Get notified when a deliverable is ready for review.', 'fa-cloud-arrow-down', 'cyan'),
-                    ('email_on_invoices', 'New invoices issued',      'Be alerted when a new invoice is available to pay.',   'fa-file-invoice',      'emerald'),
-                    ('email_on_messages', 'New support messages',     'Receive a copy of new replies from the support team.', 'fa-comments',          'purple')
+                    ('email_on_files',    'New files uploaded',    'Get notified when a deliverable is ready for review.', 'fa-cloud-arrow-down'),
+                    ('email_on_invoices', 'New invoices issued',   'Be alerted when a new invoice is available to pay.',   'fa-file-invoice'),
+                    ('email_on_messages', 'New support messages',  'Receive a copy of new replies from the support team.', 'fa-comments')
                 ] %}
 
-                {% for key, title, desc, icon, color in pref_items %}
+                {% for key, title, desc, icon in pref_items %}
                 {% set checked = prefs.get(key, True) if prefs is mapping else True %}
-                <label class="flex items-start gap-3 p-3 rounded-xl
-                              bg-slate-900/70 border border-slate-800
-                              hover:border-{{ color }}-500/40
+                <label class="flex items-start gap-3 p-3.5 rounded-xl
+                              bg-canvas dark:bg-gray-800/50
+                              border border-line dark:border-gray-700
+                              hover:border-electric/40
                               transition cursor-pointer">
 
                     <div class="shrink-0 w-9 h-9 rounded-lg
-                                bg-{{ color }}-500/10 border border-{{ color }}-500/30
+                                bg-electric/10 border border-electric/20
                                 flex items-center justify-center
-                                text-{{ color }}-400">
+                                text-electric">
                         <i class="fa-solid {{ icon }} text-xs" aria-hidden="true"></i>
                     </div>
 
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-white">{{ title }}</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                        <p class="text-xs font-semibold text-ink dark:text-surface">{{ title }}</p>
+                        <p class="text-[11px] text-muted mt-0.5 leading-snug">
                             {{ desc }}
                         </p>
                     </div>
 
-                    {# Custom toggle #}
                     <div class="shrink-0 mt-1">
                         <input type="checkbox"
                                name="{{ key }}"
                                {% if checked %}checked{% endif %}
                                class="sr-only peer">
                         <div class="w-11 h-6 rounded-full
-                                    bg-slate-800 border border-slate-700
-                                    peer-checked:bg-{{ color }}-500
-                                    peer-checked:border-{{ color }}-500
+                                    bg-surface dark:bg-gray-700
+                                    border border-line dark:border-gray-600
+                                    peer-checked:bg-electric
+                                    peer-checked:border-electric
                                     relative transition-colors duration-200
                                     cursor-pointer">
                             <div class="absolute top-0.5 left-0.5
@@ -379,93 +428,75 @@
 
                 <div class="pt-2">
                     <button type="submit"
-                            class="w-full sm:w-auto px-5 py-3 rounded-xl
-                                   text-xs font-mono font-bold
-                                   text-slate-950
-                                   bg-gradient-to-r from-purple-400 to-cyan-400
-                                   hover:brightness-110
-                                   transition active:scale-[0.98]
+                            class="w-full sm:w-auto px-5 py-3 rounded-full
+                                   text-xs font-medium text-white
+                                   bg-ink dark:bg-white dark:text-ink
+                                   hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                                   transition-colors
                                    inline-flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-save" aria-hidden="true"></i>
+                        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
                         Save Preferences
                     </button>
                 </div>
             </form>
-
         </section>
 
-        {# ---------- SECTION 03: SESSIONS ---------- #}
-        <section class="glass-card rounded-2xl border border-slate-800
-                        p-5 sm:p-6 space-y-4">
+        {# ---------- SECURITY & SESSIONS ---------- #}
+        <section class="card p-5 sm:p-6 space-y-4">
 
             <header class="flex items-center justify-between gap-3
-                           pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg
-                                bg-emerald-500/10 border border-emerald-500/30
-                                flex items-center justify-center text-emerald-400">
-                        <i class="fa-solid fa-shield-halved text-xs" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-mono-heading font-bold text-white text-sm sm:text-base">
-                        Security & Sessions
-                    </h3>
-                </div>
-                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider hidden sm:block">
+                           pb-3 border-b border-line dark:border-gray-700">
+                <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-shield-halved text-teal text-xs" aria-hidden="true"></i>
+                    Security &amp; Sessions
+                </h3>
+                <span class="text-[10px] font-mono text-muted uppercase tracking-widest hidden sm:block">
                     Section 03
                 </span>
             </header>
 
             <div class="flex items-start gap-3">
                 <div class="shrink-0 w-9 h-9 rounded-lg
-                            bg-emerald-500/10 border border-emerald-500/30
-                            flex items-center justify-center text-emerald-400">
+                            bg-teal/10 border border-teal/20
+                            flex items-center justify-center text-teal">
                     <i class="fa-solid fa-laptop text-xs" aria-hidden="true"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold text-white">Sign out of all devices</p>
-                    <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">
-                        This will end every active session, including on any other devices where you're logged in.
+                    <p class="text-xs font-semibold text-ink dark:text-surface">
+                        Sign out of all devices
+                    </p>
+                    <p class="text-[11px] text-muted mt-0.5 leading-snug">
+                        This will end every active session, including on any other
+                        devices where you're logged in.
                     </p>
                 </div>
             </div>
 
-            <form method="POST"
-                  action="{{ url_for('client_logout_all') }}"
-                  onsubmit="return confirm('Sign out of all devices? You will need to log in again everywhere.');">
-                <button type="submit"
-                        class="w-full sm:w-auto px-5 py-3 rounded-xl
-                               text-xs font-mono font-bold
-                               text-red-300
-                               bg-red-950/40 border border-red-500/30
-                               hover:bg-red-500/20 hover:border-red-500/50
-                               transition active:scale-[0.98]
-                               inline-flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
-                    Sign Out Everywhere
-                </button>
-            </form>
-
+            <button type="button"
+                    onclick="requestLogoutAll()"
+                    class="w-full sm:w-auto px-5 py-3 rounded-full
+                           text-xs font-medium
+                           text-red-500
+                           bg-red-500/5 border border-red-500/20
+                           hover:bg-red-500/10 hover:border-red-500/40
+                           transition inline-flex items-center justify-center gap-2">
+                <i class="fa-solid fa-right-from-bracket text-[10px]" aria-hidden="true"></i>
+                Sign Out Everywhere
+            </button>
         </section>
 
-        {# ---------- SECTION 04: DANGER ZONE ---------- #}
-        <details class="glass-card rounded-2xl border border-red-500/30
-                        overflow-hidden group">
+        {# ---------- DANGER ZONE ---------- #}
+        <details class="card border-red-500/20 overflow-hidden group">
             <summary class="p-5 sm:p-6 cursor-pointer
                             flex items-center justify-between gap-3
-                            list-none">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg
-                                bg-red-500/10 border border-red-500/30
-                                flex items-center justify-center text-red-400">
-                        <i class="fa-solid fa-triangle-exclamation text-xs"
-                           aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-mono-heading font-bold text-red-300
-                               text-sm sm:text-base">
-                        Danger Zone
-                    </h3>
-                </div>
-                <i class="fa-solid fa-chevron-down text-red-400 text-xs
+                            list-none hover:bg-red-500/[0.02] transition">
+                <h3 class="text-sm sm:text-base font-semibold text-red-500
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-triangle-exclamation text-xs" aria-hidden="true"></i>
+                    Danger Zone
+                </h3>
+                <i class="fa-solid fa-chevron-down text-red-500 text-xs
                           group-open:rotate-180 transition-transform"
                    aria-hidden="true"></i>
             </summary>
@@ -474,17 +505,18 @@
 
                 <div class="flex items-start gap-3">
                     <div class="shrink-0 w-9 h-9 rounded-lg
-                                bg-red-500/10 border border-red-500/30
-                                flex items-center justify-center text-red-400">
+                                bg-red-500/10 border border-red-500/20
+                                flex items-center justify-center text-red-500">
                         <i class="fa-solid fa-user-slash text-xs" aria-hidden="true"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-white">
+                        <p class="text-xs font-semibold text-ink dark:text-surface">
                             Delete my account
                         </p>
-                        <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">
-                            Permanently remove your portal access. Projects and invoices will remain
-                            with The Media Scientist for record-keeping, but you will no longer be able to log in.
+                        <p class="text-[11px] text-muted mt-0.5 leading-snug">
+                            Permanently remove your portal access. Projects and invoices
+                            will remain with The Media Scientist for record-keeping, but
+                            you will no longer be able to log in.
                         </p>
                     </div>
                 </div>
@@ -495,10 +527,12 @@
                       class="space-y-3">
                     <div>
                         <label for="confirm-delete"
-                               class="block text-[10px] font-mono text-red-300
-                                      uppercase tracking-wider mb-1.5">
-                            Type <code class="px-1.5 py-0.5 rounded bg-red-950/60 border border-red-500/30
-                                             font-bold text-red-200">DELETE</code> to confirm
+                               class="block text-[10px] font-mono text-red-500
+                                      uppercase tracking-widest mb-2">
+                            Type
+                            <code class="px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/30
+                                         font-bold text-red-500">DELETE</code>
+                            to confirm
                         </label>
                         <input type="text"
                                id="confirm-delete"
@@ -508,35 +542,177 @@
                                required
                                oninput="validateDelete(this)"
                                class="w-full px-4 py-3 rounded-xl
-                                      bg-slate-900 border border-red-500/30
-                                      text-sm text-white placeholder-slate-600 font-mono tracking-widest
-                                      focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400/30
-                                      transition">
+                                      bg-canvas dark:bg-gray-800/50
+                                      border border-red-500/30
+                                      text-sm text-ink dark:text-surface placeholder-muted
+                                      font-mono tracking-widest
+                                      focus:outline-none focus:border-red-500
+                                      focus:ring-2 focus:ring-red-500/20 transition">
                     </div>
                     <button type="submit"
                             id="delete-submit-btn"
                             disabled
-                            class="w-full sm:w-auto px-5 py-3 rounded-xl
-                                   text-xs font-mono font-bold
-                                   text-white bg-red-500/80
-                                   hover:bg-red-500
-                                   transition active:scale-[0.98]
+                            class="w-full sm:w-auto px-5 py-3 rounded-full
+                                   text-xs font-medium text-white
+                                   bg-red-500
+                                   hover:bg-red-600
+                                   transition-colors
                                    disabled:opacity-40 disabled:cursor-not-allowed
                                    inline-flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                        <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
                         Delete Account Permanently
                     </button>
                 </form>
             </div>
         </details>
-
     </div>
 </div>
 
+{# ============================================================
+   CONFIRM MODAL
+============================================================ #}
+<div id="confirm-modal"
+     class="fixed inset-0 z-[110] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="confirm-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeConfirmModal()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-sm card p-5 sm:p-6 shadow-2xl
+                bg-white dark:bg-[#141414]">
+        <div class="flex items-start gap-3 mb-4">
+            <div class="w-10 h-10 shrink-0 rounded-full
+                        bg-orange-500/10 border border-orange-500/20
+                        flex items-center justify-center text-orange-500">
+                <i class="fa-solid fa-triangle-exclamation text-sm" aria-hidden="true"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 id="confirm-title"
+                    class="text-sm font-semibold text-ink dark:text-surface">
+                    Are you sure?
+                </h3>
+                <p id="confirm-message"
+                   class="text-xs text-muted mt-1 leading-relaxed">
+                    This action cannot be undone.
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+            <button type="button"
+                    onclick="closeConfirmModal()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-ink dark:text-surface
+                           bg-canvas dark:bg-gray-800
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                Cancel
+            </button>
+            <form id="confirm-form" method="POST" action="">
+                <button type="submit"
+                        id="confirm-submit"
+                        class="px-4 py-2 rounded-full text-xs font-medium text-white
+                               bg-red-500 hover:bg-red-600 transition">
+                    Confirm
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[120] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// PASSWORD VISIBILITY TOGGLE
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2400) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    if (!text) return;
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => announce(true), () => announce(false));
+        return;
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) { announce(false); }
+}
+
+/* ============================================================
+   PASSWORD VISIBILITY TOGGLE
+============================================================ */
 function toggleField(inputId, btn) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -549,11 +725,12 @@ function toggleField(inputId, btn) {
             : 'fa-solid fa-eye text-sm';
     }
     btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    btn.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
 }
 
-// ============================================================
-// PASSWORD STRENGTH METER
-// ============================================================
+/* ============================================================
+   PASSWORD STRENGTH
+============================================================ */
 function updateStrength(value) {
     const bars = document.querySelectorAll('.strength-bar');
     const label = document.getElementById('strength-label');
@@ -561,7 +738,6 @@ function updateStrength(value) {
 
     const len = (value || '').length;
 
-    // Score 0–4
     let score = 0;
     if (len >= 6) score++;
     if (len >= 10) score++;
@@ -569,11 +745,11 @@ function updateStrength(value) {
     if (/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) score++;
 
     const colorMap = {
-        0: 'bg-slate-800',
+        0: 'bg-surface dark:bg-gray-800',
         1: 'bg-red-500',
         2: 'bg-orange-500',
         3: 'bg-amber-400',
-        4: 'bg-emerald-400'
+        4: 'bg-teal'
     };
     const labelMap = {
         0: 'Minimum 6 characters',
@@ -583,28 +759,26 @@ function updateStrength(value) {
         4: 'Strong password'
     };
     const labelColorMap = {
-        0: 'text-slate-500',
-        1: 'text-red-400',
-        2: 'text-orange-400',
-        3: 'text-amber-400',
-        4: 'text-emerald-400'
+        0: 'text-muted',
+        1: 'text-red-500',
+        2: 'text-orange-500',
+        3: 'text-amber-500',
+        4: 'text-teal'
     };
 
     bars.forEach(bar => {
         const barScore = parseInt(bar.dataset.strength, 10);
-        // Reset classes
-        Object.values(colorMap).forEach(c => bar.classList.remove(c));
-        // Apply color if within active score range
-        bar.classList.add(barScore <= score ? colorMap[score] : colorMap[0]);
+        Object.values(colorMap).forEach(c => c.split(' ').forEach(cls => bar.classList.remove(cls)));
+        bar.classList.add(...(barScore <= score ? colorMap[score] : colorMap[0]).split(' '));
     });
 
     label.textContent = labelMap[score];
-    label.className = 'text-[10px] font-mono mt-1.5 ' + labelColorMap[score];
+    label.className = 'text-[11px] font-mono mt-2 ' + labelColorMap[score];
 }
 
-// ============================================================
-// CONFIRM MATCH
-// ============================================================
+/* ============================================================
+   CONFIRM MATCH
+============================================================ */
 function updateMatch() {
     const pwd = document.getElementById('new-password');
     const confirm = document.getElementById('confirm-password');
@@ -624,19 +798,53 @@ function updateMatch() {
     if (v1 === v2) {
         msg.classList.add('hidden');
         icon.classList.remove('hidden');
-        icon.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 text-sm';
+        icon.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-teal text-sm';
         icon.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
     } else {
         msg.classList.remove('hidden');
         icon.classList.remove('hidden');
-        icon.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-red-400 text-sm';
+        icon.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-red-500 text-sm';
         icon.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
     }
 }
 
-// ============================================================
-// SUBMIT FEEDBACK: Password Form
-// ============================================================
+/* ============================================================
+   PASSWORD GENERATOR
+============================================================ */
+function generatePassword() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+    let pwd = '';
+    const array = new Uint32Array(14);
+    crypto.getRandomValues(array);
+    for (let i = 0; i < 14; i++) {
+        pwd += chars[array[i] % chars.length];
+    }
+
+    const newPwd = document.getElementById('new-password');
+    const confirm = document.getElementById('confirm-password');
+    if (newPwd) {
+        newPwd.value = pwd;
+        newPwd.type = 'text';
+        newPwd.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (confirm) {
+        confirm.value = pwd;
+        confirm.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    updateStrength(pwd);
+    updateMatch();
+    if (typeof showToast === 'function') showToast('Password generated', 'info', 1600);
+}
+
+function copyPassword() {
+    const input = document.getElementById('new-password');
+    if (input?.value) copyText(input.value, 'Password');
+    else if (typeof showToast === 'function') showToast('No password yet', 'info', 1400);
+}
+
+/* ============================================================
+   SUBMIT FEEDBACK: Password Form
+============================================================ */
 const passwordForm = document.getElementById('password-form');
 const submitBtn = document.getElementById('password-submit-btn');
 
@@ -644,52 +852,121 @@ if (passwordForm && submitBtn) {
     passwordForm.addEventListener('submit', (e) => {
         const pwd = document.getElementById('new-password');
         const confirm = document.getElementById('confirm-password');
+
         if (pwd && confirm && pwd.value !== confirm.value) {
             e.preventDefault();
             confirm.focus();
+            if (typeof showToast === 'function') {
+                showToast('Passwords do not match', 'error', 2400);
+            }
             return;
         }
+
         if (!passwordForm.checkValidity()) return;
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = `
-            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
-            <span>Updating...</span>
+            <i class="fa-solid fa-circle-notch fa-spin text-[10px]" aria-hidden="true"></i>
+            <span>Updating…</span>
         `;
     });
 }
 
-// ============================================================
-// DANGER ZONE: Confirm-by-typing
-// ============================================================
+/* ============================================================
+   DANGER ZONE: Confirm-by-typing
+============================================================ */
 function validateDelete(input) {
     const btn = document.getElementById('delete-submit-btn');
     if (!btn) return;
     btn.disabled = (input.value.trim().toUpperCase() !== 'DELETE');
 }
+
+/* ============================================================
+   CONFIRM MODAL
+============================================================ */
+let confirmCallback = null;
+
+function openConfirmModal({ title, message, confirmLabel, type, onConfirm }) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-message');
+    const form = document.getElementById('confirm-form');
+    const btn = document.getElementById('confirm-submit');
+    if (!modal || !form || !btn) return;
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    btn.textContent = confirmLabel || 'Confirm';
+
+    // Reset action & listeners
+    form.action = '';
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+
+    newForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const cb = confirmCallback;
+        closeConfirmModal();
+        cb && cb();
+    });
+
+    confirmCallback = onConfirm;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.querySelector('button[type="button"]')?.focus(), 50);
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    confirmCallback = null;
+}
+
+function requestLogoutAll() {
+    openConfirmModal({
+        title: 'Sign out of all devices?',
+        message: 'You will need to sign in again on every device where you\'re currently logged in.',
+        confirmLabel: 'Sign Out All',
+        type: 'danger',
+        onConfirm: () => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("client_logout_all") }}';
+            form.style.display = 'none';
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('confirm-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeConfirmModal();
+            return;
+        }
+
+        const tag = document.activeElement?.tagName;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) {
+            document.activeElement.blur();
+        }
+    }
+});
 </script>
 
 <style>
-    /* Sticky bottom on mobile handled by base */
-
-    /* Focus-visible ring */
-    *:focus-visible {
-        outline: 2px solid rgba(0, 242, 254, 0.6);
-        outline-offset: 2px;
-    }
-
-    /* Smooth transitions */
-    input, textarea, button, summary {
-        transition: border-color 0.15s ease, background-color 0.15s ease,
-                    color 0.15s ease, transform 0.15s ease;
-    }
-
-    /* Hide default <details> marker */
+    /* Hide details marker */
     details summary::-webkit-details-marker { display: none; }
     details summary::marker { content: ''; }
 
-    /* Fade-in animation for details open */
-    details[open] > div {
+    /* Details open animation */
+    details[open] > *:not(summary) {
         animation: fadeIn 0.2s ease-out;
     }
     @keyframes fadeIn {
@@ -697,9 +974,25 @@ function validateDelete(input) {
         to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Ensure checkbox toggle appearance with peer */
-    .peer:checked ~ div > div:last-child {
-        transform: translateX(20px);
+    /* Focus ring */
+    *:focus-visible {
+        outline: 2px solid #0066FF;
+        outline-offset: 3px;
+        border-radius: 8px;
+    }
+    .dark *:focus-visible {
+        outline-color: #4D94FF;
+    }
+
+    /* Smooth transitions */
+    input, textarea, button, summary {
+        transition: border-color 0.15s ease, background-color 0.15s ease,
+                    color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .animate-pulse { animation: none !important; }
     }
 </style>
 

@@ -1,7 +1,22 @@
 {% extends 'lab/base.html' %}
 {% block title %}Portfolio{% endblock %}
+{% block breadcrumb %}Portfolio{% endblock %}
 {% block page_title %}Portfolio Manager{% endblock %}
 {% block page_subtitle %}Add, edit, or remove portfolio items.{% endblock %}
+
+{% block page_actions %}
+<button type="button"
+        onclick="focusNewItem()"
+        class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+               text-[12px] font-medium
+               text-white bg-ink dark:bg-white dark:text-ink
+               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+               transition-colors"
+        title="New item (N)">
+    <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
+    <span>New Item</span>
+</button>
+{% endblock %}
 
 {% block content %}
 
@@ -20,70 +35,143 @@
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-folder-open text-cyan-400" aria-hidden="true"></i>
-            Total
+    {# Total #}
+    <button type="button"
+            onclick="filterPortfolio('all')"
+            data-kpi="all"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Total</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ portfolio|length }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-folder-open text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ portfolio|length }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">All items</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-camera text-cyan-400" aria-hidden="true"></i>
-            Photo
+    {# Photo #}
+    <button type="button"
+            onclick="filterPortfolio('visual')"
+            data-kpi="visual"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Photo</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.visual }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-electric/10 border border-electric/20 text-electric
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-camera text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.visual }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">Photo & retouch</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-film text-purple-400" aria-hidden="true"></i>
-            Video
+    {# Video #}
+    <button type="button"
+            onclick="filterPortfolio('video')"
+            data-kpi="video"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Video</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.video }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-orange-500/10 border border-orange-500/20 text-orange-500
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-film text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.video }}
-        </div>
-    </div>
+        <p class="text-[10px] font-mono text-muted">Video & motion</p>
+    </button>
 
-    <div class="glass-card p-4 rounded-xl border border-slate-800">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
-            <i class="fa-solid fa-code text-emeraldMint" aria-hidden="true"></i>
-            Code + Brand
+    {# Code + Brand #}
+    <button type="button"
+            onclick="filterPortfolio('code')"
+            data-kpi="code"
+            class="text-left card card-hover p-4 sm:p-5 group
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-electric">
+        <div class="flex justify-between items-start mb-3">
+            <div class="min-w-0">
+                <p class="text-[10px] font-mono text-muted uppercase tracking-widest">Code + Brand</p>
+                <div class="text-2xl sm:text-3xl font-semibold text-ink dark:text-surface
+                            mt-1.5 tabular-nums tracking-tight">
+                    {{ ns.code + ns.brand }}
+                </div>
+            </div>
+            <div class="shrink-0 w-10 h-10 rounded-xl
+                        bg-teal/10 border border-teal/20 text-teal
+                        flex items-center justify-center
+                        group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-code text-sm" aria-hidden="true"></i>
+            </div>
         </div>
-        <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">
-            {{ ns.code + ns.brand }}
-        </div>
-    </div>
-
+        <p class="text-[10px] font-mono text-muted">Software & design</p>
+    </button>
 </div>
 
 {# ============================================================
-   SEARCH + CATEGORY FILTER
+   SEARCH + FILTER BAR
 ============================================================ #}
-<div class="glass-card rounded-2xl border border-slate-800 p-4 mb-6">
-    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+<div class="card p-4 mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
 
-        <div class="relative flex-1">
+        {# Search #}
+        <div class="relative flex-1 lg:max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2
-                      text-slate-500 text-xs pointer-events-none" aria-hidden="true"></i>
+                      text-muted text-xs pointer-events-none" aria-hidden="true"></i>
             <input type="text"
                    id="portfolio-search"
-                   placeholder="Search by title, description, or tools..."
+                   placeholder="Search by title, description, or tools…"
                    autocomplete="off"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-xl
-                          bg-slate-900 border border-slate-800
-                          text-sm text-white placeholder-slate-500
-                          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                          transition">
+                   spellcheck="false"
+                   aria-label="Search portfolio items"
+                   class="w-full pl-10 pr-10 py-2.5 rounded-xl
+                          bg-canvas dark:bg-gray-800/50
+                          border border-line dark:border-gray-700
+                          text-sm text-ink dark:text-surface placeholder-muted
+                          focus:outline-none focus:border-electric
+                          focus:ring-2 focus:ring-electric/20 transition">
+            <button type="button"
+                    id="search-clear"
+                    onclick="clearSearch()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2
+                           w-7 h-7 rounded-md flex items-center justify-center
+                           text-muted hover:text-ink dark:hover:text-surface
+                           hover:bg-surface dark:hover:bg-gray-700 transition"
+                    aria-label="Clear search">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
         </div>
 
-        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono overflow-x-auto
-                    pb-1 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+        {# Filter chips #}
+        <div class="flex gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono
+                    overflow-x-auto scrollbar-none
+                    -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-1"
+             role="tablist"
+             aria-label="Filter portfolio by category">
             {% set filters = [
                 ('all', 'All', portfolio|length),
                 ('visual', 'Photo', ns.visual),
@@ -95,19 +183,58 @@
             <button type="button"
                     onclick="filterPortfolio('{{ key }}')"
                     data-filter="{{ key }}"
-                    class="filter-btn shrink-0 px-3 py-2 rounded-lg transition whitespace-nowrap
+                    role="tab"
+                    aria-selected="{% if key == 'all' %}true{% else %}false{% endif %}"
+                    class="filter-btn shrink-0 px-3.5 py-2 rounded-full whitespace-nowrap
+                           transition font-medium
                            {% if key == 'all' %}
-                               bg-cyan-500/20 text-cyan-300 border border-cyan-500/40
+                               bg-ink dark:bg-white text-white dark:text-ink
                            {% else %}
-                               bg-slate-900 text-slate-400 border border-slate-800
-                               hover:text-white
+                               bg-canvas dark:bg-gray-800 text-muted
+                               border border-line dark:border-gray-700
+                               hover:text-ink dark:hover:text-surface
                            {% endif %}">
                 {{ label }}
-                <span class="opacity-60 ml-0.5">({{ count }})</span>
+                <span class="opacity-70 tabular-nums ml-1">{{ count }}</span>
             </button>
             {% endfor %}
         </div>
 
+        {# Sort #}
+        <div class="shrink-0">
+            <label for="portfolio-sort" class="sr-only">Sort portfolio</label>
+            <div class="relative">
+                <i class="fa-solid fa-sort absolute left-3.5 top-1/2 -translate-y-1/2
+                          text-muted text-xs pointer-events-none" aria-hidden="true"></i>
+                <select id="portfolio-sort"
+                        class="appearance-none w-full lg:w-44 pl-10 pr-8 py-2.5 rounded-xl
+                               bg-canvas dark:bg-gray-800/50
+                               border border-line dark:border-gray-700
+                               text-xs font-mono text-ink dark:text-surface cursor-pointer
+                               focus:outline-none focus:border-electric transition">
+                    <option value="newest">Newest first</option>
+                    <option value="title">Title (A–Z)</option>
+                    <option value="category">Category</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2
+                          text-muted text-[10px] pointer-events-none" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+
+    {# Hint row #}
+    <div id="search-hint"
+         class="hidden mt-3 pt-3 border-t border-line dark:border-gray-700
+                text-[10px] font-mono text-muted flex items-center gap-2 flex-wrap">
+        <i class="fa-solid fa-circle-info text-electric shrink-0" aria-hidden="true"></i>
+        <span>
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">Esc</kbd>
+            clear ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">/</kbd>
+            search ·
+            <kbd class="px-1.5 py-0.5 rounded bg-canvas dark:bg-gray-800 border border-line dark:border-gray-700">N</kbd>
+            new item
+        </span>
     </div>
 </div>
 
@@ -117,91 +244,105 @@
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
     {# ==========================================================
-       LEFT: ADD ITEM FORM (sticky on desktop, collapsible on mobile)
+       LEFT: Add Item Form
     ========================================================== #}
     <aside class="lg:col-span-1">
 
-        <details class="lg:!block group glass-card rounded-2xl border border-slate-800
-                        lg:sticky lg:top-24"
+        <details class="group card overflow-hidden lg:sticky lg:top-24"
+                 id="add-item-details"
                  {% if not portfolio %}open{% endif %}>
 
-            {# Mobile toggle header #}
-            <summary class="lg:!hidden p-4 cursor-pointer flex items-center justify-between gap-3
-                            border-b border-slate-800 list-none">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-plus text-cyan-400" aria-hidden="true"></i>
+            <summary class="lg:hidden p-4 cursor-pointer flex items-center justify-between gap-3
+                            border-b border-line dark:border-gray-700 list-none">
+                <h3 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-plus text-electric text-xs" aria-hidden="true"></i>
                     Add Portfolio Item
                 </h3>
-                <i class="fa-solid fa-chevron-down text-slate-400 text-xs
+                <i class="fa-solid fa-chevron-down text-muted text-xs
                           group-open:rotate-180 transition-transform" aria-hidden="true"></i>
             </summary>
 
-            {# Desktop header #}
-            <header class="hidden lg:block p-5 border-b border-slate-800">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-plus text-cyan-400" aria-hidden="true"></i>
+            <header class="hidden lg:block p-5 border-b border-line dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-plus text-electric text-xs" aria-hidden="true"></i>
                     Add Portfolio Item
                 </h3>
-                <p class="text-[10px] font-mono text-slate-500 mt-1">
-                    Fill in the details to publish a new project.
+                <p class="text-[11px] text-muted mt-1">
+                    Publish a new project to your public portfolio.
                 </p>
             </header>
 
             <form method="POST"
                   action="{{ url_for('lab_portfolio_create') }}"
                   id="create-portfolio-form"
-                  class="p-4 sm:p-5 space-y-3.5">
+                  class="p-4 sm:p-5 space-y-4"
+                  autocomplete="off"
+                  novalidate>
 
                 {# Title #}
                 <div>
-                    <label for="new-title" class="block text-[10px] font-mono text-slate-400
-                                                   uppercase tracking-wider mb-1.5">
-                        Project Title <span class="text-cyan-400">*</span>
-                    </label>
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="new-title"
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                            Project Title <span class="text-electric">*</span>
+                        </label>
+                        <span class="text-[10px] font-mono text-muted tabular-nums"
+                              data-counter-for="new-title">0 / 120</span>
+                    </div>
                     <input type="text"
                            id="new-title"
                            name="title"
                            required
                            maxlength="120"
                            placeholder="e.g. Commercial Beauty Photo Edit"
-                           class="w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
+                           class="w-full px-4 py-3 rounded-xl
+                                  bg-canvas dark:bg-gray-800/50
+                                  border border-line dark:border-gray-700
+                                  text-sm text-ink dark:text-surface placeholder-muted
+                                  focus:outline-none focus:border-electric
+                                  focus:ring-2 focus:ring-electric/20 transition">
                 </div>
 
                 {# Category label #}
                 <div>
-                    <label for="new-category" class="block text-[10px] font-mono text-slate-400
-                                                      uppercase tracking-wider mb-1.5">
-                        Category Label <span class="text-cyan-400">*</span>
-                    </label>
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="new-category"
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                            Category Label <span class="text-electric">*</span>
+                        </label>
+                        <span class="text-[10px] font-mono text-muted tabular-nums"
+                              data-counter-for="new-category">0 / 60</span>
+                    </div>
                     <input type="text"
                            id="new-category"
                            name="category"
                            required
                            maxlength="60"
                            placeholder="e.g. Video & Motion"
-                           class="w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
+                           class="w-full px-4 py-3 rounded-xl
+                                  bg-canvas dark:bg-gray-800/50
+                                  border border-line dark:border-gray-700
+                                  text-sm text-ink dark:text-surface placeholder-muted
+                                  focus:outline-none focus:border-electric
+                                  focus:ring-2 focus:ring-electric/20 transition">
                 </div>
 
-                {# Category key #}
+                {# Category group #}
                 <div>
-                    <label for="new-category-key" class="block text-[10px] font-mono text-slate-400
-                                                          uppercase tracking-wider mb-1.5">
+                    <label for="new-category-key"
+                           class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
                         Category Group
                     </label>
                     <select id="new-category-key"
                             name="category_key"
-                            class="w-full px-3.5 py-2.5 rounded-xl
-                                   bg-slate-900 border border-slate-800
-                                   text-sm text-slate-200
-                                   focus:outline-none focus:border-cyan-400 transition">
+                            class="w-full px-4 py-3 rounded-xl
+                                   bg-canvas dark:bg-gray-800/50
+                                   border border-line dark:border-gray-700
+                                   text-sm text-ink dark:text-surface
+                                   focus:outline-none focus:border-electric
+                                   focus:ring-2 focus:ring-electric/20 transition">
                         <option value="visual">Photo &amp; Retouch</option>
                         <option value="video">Video &amp; Motion</option>
                         <option value="code">Websites &amp; Software</option>
@@ -211,8 +352,8 @@
 
                 {# Tools #}
                 <div>
-                    <label for="new-tools" class="block text-[10px] font-mono text-slate-400
-                                                   uppercase tracking-wider mb-1.5">
+                    <label for="new-tools"
+                           class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
                         Tools Used
                     </label>
                     <input type="text"
@@ -220,121 +361,212 @@
                            name="tools"
                            maxlength="200"
                            placeholder="DaVinci, Photoshop, Figma"
-                           class="w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
+                           class="w-full px-4 py-3 rounded-xl
+                                  bg-canvas dark:bg-gray-800/50
+                                  border border-line dark:border-gray-700
+                                  text-sm text-ink dark:text-surface placeholder-muted
+                                  focus:outline-none focus:border-electric
+                                  focus:ring-2 focus:ring-electric/20 transition">
                 </div>
 
-                {# Image URL with preview #}
+                {# Image URL #}
                 <div>
-                    <label for="new-image" class="block text-[10px] font-mono text-slate-400
-                                                   uppercase tracking-wider mb-1.5">
-                        Image URL <span class="text-cyan-400">*</span>
+                    <label for="new-image"
+                           class="block text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                        Image URL <span class="text-electric">*</span>
                     </label>
                     <input type="text"
                            id="new-image"
                            name="image"
                            required
                            maxlength="500"
-                           data-url-field="true"
+                           spellcheck="false"
                            placeholder="https://... or /uploads/..."
-                           class="url-input w-full px-3.5 py-2.5 rounded-xl
-                                  bg-slate-900 border border-slate-800
-                                  text-sm text-white placeholder-slate-500
-                                  focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                  transition">
+                           class="w-full px-4 py-3 rounded-xl
+                                  bg-canvas dark:bg-gray-800/50
+                                  border border-line dark:border-gray-700
+                                  text-sm text-ink dark:text-surface placeholder-muted
+                                  focus:outline-none focus:border-electric
+                                  focus:ring-2 focus:ring-electric/20 transition">
 
                     {# Live preview #}
                     <div id="image-preview-wrapper"
-                         class="hidden mt-2 rounded-xl overflow-hidden
-                                border border-slate-800 bg-slate-900">
+                         class="hidden mt-3 rounded-xl overflow-hidden
+                                border border-line dark:border-gray-700
+                                bg-canvas dark:bg-gray-800/50 relative">
                         <img id="image-preview"
                              src=""
                              alt="Preview"
                              class="w-full aspect-video object-cover">
+                        <div id="image-loading"
+                             class="absolute inset-0 flex items-center justify-center
+                                    bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+                            <i class="fa-solid fa-circle-notch fa-spin text-electric" aria-hidden="true"></i>
+                        </div>
                     </div>
 
-                    {# Error message #}
                     <p id="image-error"
-                       class="hidden text-[10px] font-mono text-red-400 mt-1.5
-                              flex items-center gap-1">
-                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                       class="hidden text-[11px] font-mono text-red-500 mt-2
+                              flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation text-[10px]" aria-hidden="true"></i>
                         <span>Could not load image. Check the URL.</span>
                     </p>
 
-                    <p class="text-[10px] font-mono text-slate-500 mt-1.5">
-                        Full URL or relative path (e.g. <code class="text-cyan-300">/uploads/photo.jpg</code>).
+                    <p class="text-[11px] text-muted mt-1.5">
+                        Full URL or relative path (e.g. <code class="font-mono text-electric">/uploads/photo.jpg</code>).
                     </p>
                 </div>
 
                 {# Description #}
                 <div>
-                    <label for="new-description" class="block text-[10px] font-mono text-slate-400
-                                                         uppercase tracking-wider mb-1.5">
-                        Short Description
-                    </label>
+                    <div class="flex items-baseline justify-between mb-2">
+                        <label for="new-description"
+                               class="block text-[10px] font-mono text-muted uppercase tracking-widest">
+                            Short Description
+                        </label>
+                        <span class="text-[10px] font-mono text-muted tabular-nums"
+                              data-counter-for="new-description">0 / 300</span>
+                    </div>
                     <textarea id="new-description"
                               name="description"
                               rows="3"
                               maxlength="300"
                               placeholder="Brief summary of the project..."
-                              class="w-full px-3.5 py-2.5 rounded-xl
-                                     bg-slate-900 border border-slate-800
-                                     text-sm text-white placeholder-slate-500
-                                     resize-y min-h-[80px]
-                                     focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30
-                                     transition"></textarea>
+                              class="w-full px-4 py-3 rounded-xl
+                                     bg-canvas dark:bg-gray-800/50
+                                     border border-line dark:border-gray-700
+                                     text-sm text-ink dark:text-surface placeholder-muted
+                                     resize-y min-h-[88px]
+                                     focus:outline-none focus:border-electric
+                                     focus:ring-2 focus:ring-electric/20 transition"></textarea>
                 </div>
 
                 <button type="submit"
                         id="create-portfolio-btn"
-                        class="w-full py-3 rounded-xl text-xs font-mono font-bold
-                               text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400
-                               hover:brightness-110 transition active:scale-[0.98]
-                               inline-flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                    <span id="create-portfolio-label">Add Item</span>
+                        class="w-full py-3 rounded-full
+                               text-xs font-medium text-white
+                               bg-ink dark:bg-white dark:text-ink
+                               hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                               transition-colors
+                               inline-flex items-center justify-center gap-2
+                               disabled:opacity-70 disabled:cursor-wait">
+                    <i class="fa-solid fa-plus text-[10px]" data-create-icon aria-hidden="true"></i>
+                    <span data-create-label>Add Item</span>
                 </button>
             </form>
         </details>
     </aside>
 
     {# ==========================================================
-       RIGHT: PORTFOLIO GRID
+       RIGHT: Portfolio Grid
     ========================================================== #}
     <section class="lg:col-span-3">
 
-        {# Header #}
-        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+        <div class="card overflow-hidden">
 
-            <header class="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/50
-                           flex items-center justify-between gap-3">
-                <h3 class="font-mono-heading font-bold text-white flex items-center gap-2 text-sm sm:text-base">
-                    <i class="fa-solid fa-folder-open text-cyan-400" aria-hidden="true"></i>
+            <header class="p-4 sm:p-5 border-b border-line dark:border-gray-700
+                           flex items-center justify-between gap-3 flex-wrap">
+                <h3 class="text-sm sm:text-base font-semibold text-ink dark:text-surface
+                           flex items-center gap-2 tracking-tight">
+                    <i class="fa-solid fa-folder-open text-electric text-xs" aria-hidden="true"></i>
                     All Items
-                    <span class="text-[10px] font-mono font-normal text-slate-500"
-                          id="portfolio-count">
+                    <span class="text-[10px] font-mono text-muted font-normal tabular-nums"
+                          id="portfolio-count"
+                          aria-live="polite">
                         ({{ portfolio|length }})
                     </span>
                 </h3>
+
+                {% if portfolio %}
+                <button type="button"
+                        onclick="toggleBulkMode()"
+                        id="bulk-toggle"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                               text-[11px] font-medium text-muted
+                               bg-canvas dark:bg-gray-800
+                               border border-line dark:border-gray-700
+                               hover:text-ink dark:hover:text-surface
+                               hover:border-ink dark:hover:border-surface transition">
+                    <i class="fa-regular fa-square-check text-[10px]" aria-hidden="true"></i>
+                    <span>Select</span>
+                </button>
+                {% endif %}
             </header>
 
-            {# Grid #}
+            {# ============================================================
+               BULK ACTION BAR
+            ============================================================ #}
+            <div id="bulk-bar"
+                 class="hidden p-3 border-b border-line dark:border-gray-700
+                        bg-electric/[0.03] dark:bg-electric/[0.06]
+                        flex items-center gap-3 flex-wrap">
+                <span class="inline-flex items-center gap-2 text-xs font-mono text-electric">
+                    <i class="fa-solid fa-check-square" aria-hidden="true"></i>
+                    <span id="bulk-count">0 selected</span>
+                </span>
+                <div class="flex-1"></div>
+                <button type="button"
+                        onclick="requestBulkDelete()"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                               text-[11px] font-medium text-red-500
+                               bg-red-500/5 border border-red-500/20
+                               hover:bg-red-500/10 hover:border-red-500/40 transition">
+                    <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+                    Delete Selected
+                </button>
+                <button type="button"
+                        onclick="toggleBulkMode()"
+                        class="w-7 h-7 rounded-full flex items-center justify-center
+                               text-muted hover:text-ink dark:hover:text-surface
+                               hover:bg-surface dark:hover:bg-gray-800 transition"
+                        aria-label="Exit bulk mode">
+                    <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+                </button>
+            </div>
+
             <div class="p-4 sm:p-5">
                 <div id="portfolio-grid"
                      class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
 
                     {% for item in portfolio %}
-                    <article class="portfolio-item glass-card rounded-xl overflow-hidden
-                                    border border-slate-800 hover:border-cyan-500/40
-                                    transition-colors group"
-                             data-category="{{ item.get('category_key', 'visual') }}"
-                             data-search="{{ (item.title ~ ' ' ~ (item.category or '') ~ ' ' ~ (item.description or '') ~ ' ' ~ (item.tools or ''))|lower }}">
+                    {% set cat_key = item.get('category_key', 'visual') %}
+
+                    {% if cat_key == 'visual' %}
+                        {% set cat_classes = 'text-electric border-electric/30' %}
+                        {% set cat_bg = 'bg-electric/10' %}
+                    {% elif cat_key == 'video' %}
+                        {% set cat_classes = 'text-orange-500 border-orange-500/30' %}
+                        {% set cat_bg = 'bg-orange-500/10' %}
+                    {% elif cat_key == 'code' %}
+                        {% set cat_classes = 'text-teal border-teal/30' %}
+                        {% set cat_bg = 'bg-teal/10' %}
+                    {% else %}
+                        {% set cat_classes = 'text-violet-500 border-violet-500/30' %}
+                        {% set cat_bg = 'bg-violet-500/10' %}
+                    {% endif %}
+
+                    <article class="portfolio-item card overflow-hidden
+                                    border-line dark:border-gray-700
+                                    hover:border-electric/40
+                                    transition-colors group relative"
+                             data-category="{{ cat_key }}"
+                             data-title="{{ item.title|lower }}"
+                             data-search="{{ (item.title ~ ' ' ~ (item.category or '') ~ ' ' ~ (item.description or '') ~ ' ' ~ (item.tools or ''))|lower }}"
+                             data-item-id="{{ item._id }}">
+
+                        {# Bulk checkbox #}
+                        <div class="bulk-checkbox-wrapper hidden absolute top-3 right-3 z-10">
+                            <input type="checkbox"
+                                   class="item-checkbox w-5 h-5 rounded
+                                          border-2 border-white dark:border-gray-900
+                                          accent-electric cursor-pointer
+                                          shadow-lg"
+                                   data-id="{{ item._id }}"
+                                   aria-label="Select {{ item.title|e }}">
+                        </div>
 
                         {# Image #}
-                        <div class="relative aspect-video overflow-hidden bg-slate-900">
+                        <div class="relative aspect-video overflow-hidden bg-canvas dark:bg-gray-800">
                             <img src="{{ item.image }}"
                                  alt="{{ item.title }}"
                                  loading="lazy"
@@ -342,25 +574,43 @@
                                         group-hover:scale-105 transition-transform duration-500">
 
                             {# Category badge #}
-                            <div class="absolute top-2 left-2 px-2 py-0.5 rounded
-                                        bg-slate-950/85 backdrop-blur-sm
-                                        text-[9px] font-mono text-cyan-300
-                                        border border-slate-700">
+                            <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md
+                                        bg-white/90 dark:bg-gray-950/85 backdrop-blur-sm
+                                        text-[10px] font-mono border
+                                        {{ cat_classes }}">
                                 {{ item.category or '—' }}
                             </div>
 
                             {# Hover overlay #}
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent
+                            <div class="absolute inset-0 bg-gradient-to-t
+                                        from-black/70 via-black/10 to-transparent
                                         opacity-0 group-hover:opacity-100 transition-opacity
-                                        flex items-end justify-end p-2">
+                                        flex items-end justify-end gap-1.5 p-3">
+                                <button type="button"
+                                        onclick="copyText('{{ item.image }}', 'Image URL')"
+                                        class="w-8 h-8 rounded-lg
+                                               bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm
+                                               border border-line dark:border-gray-700
+                                               flex items-center justify-center
+                                               text-ink dark:text-surface
+                                               hover:text-electric hover:border-electric/40
+                                               transition"
+                                        title="Copy image URL"
+                                        aria-label="Copy image URL">
+                                    <i class="fa-regular fa-copy text-[10px]" aria-hidden="true"></i>
+                                </button>
                                 <a href="{{ item.image }}"
                                    target="_blank"
                                    rel="noopener noreferrer"
-                                   class="w-8 h-8 rounded-lg bg-slate-900/90 border border-slate-700
-                                          flex items-center justify-center text-cyan-400
-                                          hover:bg-cyan-500 hover:text-slate-950 transition"
+                                   class="w-8 h-8 rounded-lg
+                                          bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm
+                                          border border-line dark:border-gray-700
+                                          flex items-center justify-center
+                                          text-ink dark:text-surface
+                                          hover:text-electric hover:border-electric/40
+                                          transition"
                                    title="Open full image"
-                                   aria-label="Open {{ item.title }} in new tab">
+                                   aria-label="Open {{ item.title|e }} in new tab">
                                     <i class="fa-solid fa-up-right-from-square text-[10px]"
                                        aria-hidden="true"></i>
                                 </a>
@@ -368,186 +618,394 @@
                         </div>
 
                         {# Content #}
-                        <div class="p-3 sm:p-4">
-                            <h4 class="font-bold text-white text-sm leading-tight truncate"
+                        <div class="p-4">
+                            <h4 class="font-medium text-ink dark:text-surface text-sm
+                                       leading-tight truncate"
                                 title="{{ item.title }}">
                                 {{ item.title }}
                             </h4>
                             {% if item.tools %}
-                            <p class="text-[10px] font-mono text-slate-500 mt-1 truncate">
+                            <p class="text-[11px] font-mono text-muted mt-1 truncate"
+                               title="{{ item.tools }}">
                                 {{ item.tools }}
                             </p>
                             {% endif %}
                         </div>
 
                         {# Actions #}
-                        <div class="px-3 sm:px-4 pb-3 sm:pb-4 flex items-center gap-2">
-
-                            {# Edit toggle #}
+                        <div class="px-4 pb-4 flex items-center gap-2">
                             <button type="button"
                                     onclick="toggleEdit('{{ item._id }}')"
                                     class="flex-1 inline-flex items-center justify-center gap-1.5
-                                           px-2.5 py-2 rounded-lg
-                                           bg-slate-800 border border-slate-700
-                                           text-[10px] font-mono font-bold text-slate-300
-                                           hover:bg-slate-700 hover:border-slate-600
-                                           transition active:scale-[0.98]"
-                                    aria-label="Edit {{ item.title }}">
+                                           px-3 py-2 rounded-full
+                                           text-[11px] font-medium
+                                           bg-canvas dark:bg-gray-800
+                                           text-ink dark:text-surface
+                                           border border-line dark:border-gray-700
+                                           hover:border-ink dark:hover:border-surface
+                                           transition active:scale-[0.98]
+                                           edit-toggle-btn"
+                                    data-item-id="{{ item._id }}"
+                                    aria-label="Edit {{ item.title|e }}"
+                                    aria-expanded="false">
                                 <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
-                                Edit
+                                <span>Edit</span>
                             </button>
 
-                            {# Delete #}
-                            <form method="POST"
-                                  action="{{ url_for('lab_portfolio_delete', item_id=item._id) }}"
-                                  onsubmit="return confirm('Delete &quot;{{ item.title }}&quot;? This cannot be undone.');"
-                                  class="flex-1">
-                                <button type="submit"
-                                        class="w-full inline-flex items-center justify-center gap-1.5
-                                               px-2.5 py-2 rounded-lg
-                                               bg-red-950/40 border border-red-500/30
-                                               text-[10px] font-mono font-bold text-red-300
-                                               hover:bg-red-500/20 hover:border-red-500/50
-                                               transition active:scale-[0.98]"
-                                        aria-label="Delete {{ item.title }}">
-                                    <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
-                                    Delete
-                                </button>
-                            </form>
+                            <button type="button"
+                                    onclick="requestDeleteItem('{{ item._id }}', '{{ item.title|e }}')"
+                                    class="shrink-0 w-9 h-9 rounded-full
+                                           flex items-center justify-center
+                                           text-red-500
+                                           bg-red-500/5 border border-red-500/20
+                                           hover:bg-red-500/10 hover:border-red-500/40
+                                           transition active:scale-[0.98]"
+                                    aria-label="Delete {{ item.title|e }}">
+                                <i class="fa-solid fa-trash text-[11px]" aria-hidden="true"></i>
+                            </button>
                         </div>
 
-                        {# Hidden edit form (revealed by toggleEdit) #}
+                        {# Hidden edit form #}
                         <div id="edit-{{ item._id }}"
-                             class="hidden border-t border-slate-800 bg-slate-950/40
-                                    p-3 sm:p-4 space-y-2.5">
+                             class="hidden border-t border-line dark:border-gray-700
+                                    bg-canvas dark:bg-gray-800/50 p-4 space-y-3">
 
-                            <p class="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">
+                            <p class="text-[10px] font-mono text-electric uppercase tracking-widest">
                                 <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
                                 Edit Item
                             </p>
 
                             <form method="POST"
                                   action="{{ url_for('lab_portfolio_update', item_id=item._id) }}"
-                                  class="space-y-2.5">
+                                  class="space-y-3">
 
-                                <input type="text" name="title"
-                                       value="{{ item.title }}"
-                                       required maxlength="120"
-                                       placeholder="Title"
-                                       class="w-full px-3 py-2.5 rounded-lg
-                                              bg-slate-900 border border-slate-800
-                                              text-xs text-white
-                                              focus:outline-none focus:border-cyan-400 transition">
+                                <div>
+                                    <label class="block text-[10px] font-mono text-muted
+                                                  uppercase tracking-widest mb-1.5">
+                                        Title
+                                    </label>
+                                    <input type="text" name="title"
+                                           value="{{ item.title }}"
+                                           required maxlength="120"
+                                           class="w-full px-3 py-2.5 rounded-lg
+                                                  bg-white dark:bg-gray-900
+                                                  border border-line dark:border-gray-700
+                                                  text-sm text-ink dark:text-surface
+                                                  focus:outline-none focus:border-electric transition">
+                                </div>
 
-                                <input type="text" name="category"
-                                       value="{{ item.category or '' }}"
-                                       required maxlength="60"
-                                       placeholder="Category label"
-                                       class="w-full px-3 py-2.5 rounded-lg
-                                              bg-slate-900 border border-slate-800
-                                              text-xs text-white
-                                              focus:outline-none focus:border-cyan-400 transition">
+                                <div>
+                                    <label class="block text-[10px] font-mono text-muted
+                                                  uppercase tracking-widest mb-1.5">
+                                        Category Label
+                                    </label>
+                                    <input type="text" name="category"
+                                           value="{{ item.category or '' }}"
+                                           required maxlength="60"
+                                           class="w-full px-3 py-2.5 rounded-lg
+                                                  bg-white dark:bg-gray-900
+                                                  border border-line dark:border-gray-700
+                                                  text-sm text-ink dark:text-surface
+                                                  focus:outline-none focus:border-electric transition">
+                                </div>
 
-                                <select name="category_key"
-                                        class="w-full px-3 py-2.5 rounded-lg
-                                               bg-slate-900 border border-slate-800
-                                               text-xs text-slate-200
-                                               focus:outline-none focus:border-cyan-400 transition">
-                                    {% for key, label in [
-                                        ('visual', 'Photo & Retouch'),
-                                        ('video', 'Video & Motion'),
-                                        ('code', 'Websites & Software'),
-                                        ('brand', 'Graphic Design')
-                                    ] %}
-                                    <option value="{{ key }}"
-                                            {% if item.get('category_key')==key %}selected{% endif %}>
-                                        {{ label }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                                <div>
+                                    <label class="block text-[10px] font-mono text-muted
+                                                  uppercase tracking-widest mb-1.5">
+                                        Category Group
+                                    </label>
+                                    <select name="category_key"
+                                            class="w-full px-3 py-2.5 rounded-lg
+                                                   bg-white dark:bg-gray-900
+                                                   border border-line dark:border-gray-700
+                                                   text-sm text-ink dark:text-surface
+                                                   focus:outline-none focus:border-electric transition">
+                                        {% for key, label in [
+                                            ('visual', 'Photo & Retouch'),
+                                            ('video', 'Video & Motion'),
+                                            ('code', 'Websites & Software'),
+                                            ('brand', 'Graphic Design')
+                                        ] %}
+                                        <option value="{{ key }}"
+                                                {% if cat_key == key %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
 
-                                <input type="text" name="tools"
-                                       value="{{ item.tools or '' }}"
-                                       maxlength="200"
-                                       placeholder="Tools used"
-                                       class="w-full px-3 py-2.5 rounded-lg
-                                              bg-slate-900 border border-slate-800
-                                              text-xs text-white
-                                              focus:outline-none focus:border-cyan-400 transition">
+                                <div>
+                                    <label class="block text-[10px] font-mono text-muted
+                                                  uppercase tracking-widest mb-1.5">
+                                        Tools
+                                    </label>
+                                    <input type="text" name="tools"
+                                           value="{{ item.tools or '' }}"
+                                           maxlength="200"
+                                           class="w-full px-3 py-2.5 rounded-lg
+                                                  bg-white dark:bg-gray-900
+                                                  border border-line dark:border-gray-700
+                                                  text-sm text-ink dark:text-surface
+                                                  focus:outline-none focus:border-electric transition">
+                                </div>
 
-                                <input type="text" name="image"
-                                       value="{{ item.image }}"
-                                       required maxlength="500"
-                                       placeholder="Image URL"
-                                       class="w-full px-3 py-2.5 rounded-lg
-                                              bg-slate-900 border border-slate-800
-                                              text-xs text-white
-                                              focus:outline-none focus:border-cyan-400 transition">
+                                <div>
+                                    <label class="block text-[10px] font-mono text-muted
+                                                  uppercase tracking-widest mb-1.5">
+                                        Image URL
+                                    </label>
+                                    <input type="text" name="image"
+                                           value="{{ item.image }}"
+                                           required maxlength="500"
+                                           spellcheck="false"
+                                           class="w-full px-3 py-2.5 rounded-lg
+                                                  bg-white dark:bg-gray-900
+                                                  border border-line dark:border-gray-700
+                                                  text-sm text-ink dark:text-surface font-mono
+                                                  focus:outline-none focus:border-electric transition">
+                                </div>
 
-                                <textarea name="description"
-                                          rows="2"
-                                          maxlength="300"
-                                          placeholder="Short description"
-                                          class="w-full px-3 py-2.5 rounded-lg
-                                                 bg-slate-900 border border-slate-800
-                                                 text-xs text-white resize-y
-                                                 focus:outline-none focus:border-cyan-400 transition">{{ item.description or '' }}</textarea>
+                                <div>
+                                    <label class="block text-[10px] font-mono text-muted
+                                                  uppercase tracking-widest mb-1.5">
+                                        Description
+                                    </label>
+                                    <textarea name="description"
+                                              rows="2"
+                                              maxlength="300"
+                                              class="w-full px-3 py-2.5 rounded-lg
+                                                     bg-white dark:bg-gray-900
+                                                     border border-line dark:border-gray-700
+                                                     text-sm text-ink dark:text-surface resize-y
+                                                     focus:outline-none focus:border-electric transition">{{ item.description or '' }}</textarea>
+                                </div>
 
                                 <div class="flex gap-2">
                                     <button type="button"
                                             onclick="toggleEdit('{{ item._id }}')"
-                                            class="flex-1 py-2 rounded-lg text-[10px] font-mono font-bold
-                                                   bg-slate-800 text-slate-300 border border-slate-700
-                                                   hover:bg-slate-700 transition">
+                                            class="flex-1 py-2.5 rounded-full text-[11px] font-medium
+                                                   bg-canvas dark:bg-gray-800
+                                                   text-ink dark:text-surface
+                                                   border border-line dark:border-gray-700
+                                                   hover:border-ink dark:hover:border-surface transition">
                                         Cancel
                                     </button>
                                     <button type="submit"
-                                            class="flex-1 py-2 rounded-lg text-[10px] font-mono font-bold
-                                                   text-slate-950 bg-emeraldMint
-                                                   hover:brightness-110 transition active:scale-[0.98]">
-                                        <i class="fa-solid fa-save" aria-hidden="true"></i>
-                                        Save
+                                            class="flex-1 py-2.5 rounded-full text-[11px] font-medium
+                                                   text-white bg-ink dark:bg-white dark:text-ink
+                                                   hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                                                   transition-colors inline-flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+                                        Save Changes
                                     </button>
                                 </div>
                             </form>
                         </div>
-
                     </article>
                     {% else %}
                     <div class="col-span-full py-16 text-center">
-                        <i class="fa-solid fa-folder-open text-4xl text-slate-700 mb-3"
-                           aria-hidden="true"></i>
-                        <p class="text-slate-400 text-xs font-mono">No portfolio items yet.</p>
-                        <p class="text-slate-500 text-[10px] font-mono mt-1">
+                        <div class="w-16 h-16 mx-auto rounded-full
+                                    bg-canvas dark:bg-gray-800
+                                    border border-line dark:border-gray-700
+                                    flex items-center justify-center mb-3">
+                            <i class="fa-solid fa-folder-open text-2xl text-muted" aria-hidden="true"></i>
+                        </div>
+                        <p class="text-ink dark:text-surface text-sm font-medium">No portfolio items yet</p>
+                        <p class="text-muted text-xs font-mono mt-1">
                             Add your first project using the form.
                         </p>
+                        <button type="button"
+                                onclick="focusNewItem()"
+                                class="mt-4 inline-flex items-center gap-1.5
+                                       px-4 py-2 rounded-full text-xs font-medium
+                                       text-white bg-ink dark:bg-white dark:text-ink
+                                       hover:bg-electric dark:hover:bg-electric dark:hover:text-white
+                                       transition-colors">
+                            <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
+                            Add Item
+                        </button>
                     </div>
                     {% endfor %}
                 </div>
 
                 {# No results #}
                 <div id="no-results" class="hidden py-16 text-center">
-                    <i class="fa-solid fa-magnifying-glass text-3xl text-slate-700 mb-3"
-                       aria-hidden="true"></i>
-                    <p class="text-slate-400 text-xs font-mono">No items match your search.</p>
+                    <div class="w-14 h-14 mx-auto rounded-full
+                                bg-canvas dark:bg-gray-800
+                                border border-line dark:border-gray-700
+                                flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-magnifying-glass text-xl text-muted"
+                           aria-hidden="true"></i>
+                    </div>
+                    <p class="text-ink dark:text-surface text-sm font-medium">No matches</p>
+                    <p class="text-muted text-xs font-mono mt-1">
+                        Try a different search or filter.
+                    </p>
                     <button type="button"
                             onclick="resetFilters()"
-                            class="mt-3 text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition">
+                            class="mt-4 inline-flex items-center gap-1.5
+                                   px-4 py-2 rounded-full text-xs font-medium
+                                   bg-canvas dark:bg-gray-800
+                                   text-ink dark:text-surface
+                                   border border-line dark:border-gray-700
+                                   hover:border-ink dark:hover:border-surface transition">
+                        <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
                         Clear filters
                     </button>
                 </div>
-
             </div>
         </div>
     </section>
 </div>
 
+{# ============================================================
+   CONFIRM MODAL
+============================================================ #}
+<div id="confirm-modal"
+     class="fixed inset-0 z-[110] hidden items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="confirm-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onclick="closeConfirmModal()"
+         aria-hidden="true"></div>
+
+    <div class="relative w-full max-w-sm card p-5 sm:p-6 shadow-2xl
+                bg-white dark:bg-[#141414]">
+        <div class="flex items-start gap-3 mb-4">
+            <div class="w-10 h-10 shrink-0 rounded-full
+                        bg-red-500/10 border border-red-500/20
+                        flex items-center justify-center text-red-500">
+                <i class="fa-solid fa-triangle-exclamation text-sm" aria-hidden="true"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 id="confirm-title"
+                    class="text-sm font-semibold text-ink dark:text-surface">
+                    Are you sure?
+                </h3>
+                <p id="confirm-message"
+                   class="text-xs text-muted mt-1 leading-relaxed">
+                    This action cannot be undone.
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+            <button type="button"
+                    onclick="closeConfirmModal()"
+                    class="px-4 py-2 rounded-full text-xs font-medium
+                           text-ink dark:text-surface
+                           bg-canvas dark:bg-gray-800
+                           border border-line dark:border-gray-700
+                           hover:border-ink dark:hover:border-surface transition">
+                Cancel
+            </button>
+            <form id="confirm-form" method="POST" action="">
+                <button type="submit"
+                        class="px-4 py-2 rounded-full text-xs font-medium text-white
+                               bg-red-500 hover:bg-red-600 transition">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ============================================================
+   TOAST HOST
+============================================================ #}
+<div id="toast-host"
+     class="fixed bottom-6 right-6 z-[120] space-y-2 pointer-events-none
+            max-w-[calc(100vw-3rem)] sm:max-w-sm"
+     aria-live="polite"
+     aria-atomic="true"></div>
+
 <script>
-// ============================================================
-// SEARCH + FILTER
-// ============================================================
+/* ============================================================
+   TOAST SYSTEM
+============================================================ */
+(function() {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+
+    window.showToast = function(message, type = 'success', duration = 2600) {
+        const config = {
+            success: { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' },
+            error:   { border: 'border-red-500/30', text: 'text-red-500', icon: 'fa-circle-exclamation' },
+            info:    { border: 'border-electric/30', text: 'text-electric', icon: 'fa-circle-info' }
+        }[type] || { border: 'border-teal/30', text: 'text-teal', icon: 'fa-circle-check' };
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto toast
+                        flex items-center gap-3 px-4 py-3 rounded-xl
+                        bg-white dark:bg-[#141414]
+                        border ${config.border}
+                        shadow-lg text-sm font-medium ${config.text}`;
+        el.innerHTML = `
+            <i class="fa-solid ${config.icon} text-sm shrink-0" aria-hidden="true"></i>
+            <span class="flex-1 min-w-0">${escapeHtml(message)}</span>
+            <button type="button"
+                    class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center
+                           opacity-50 hover:opacity-100 transition"
+                    aria-label="Dismiss">
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+        `;
+        el.querySelector('button')?.addEventListener('click', remove);
+        host.appendChild(el);
+
+        function remove() {
+            el.classList.add('toast-exit');
+            setTimeout(() => el.remove(), 250);
+        }
+        if (duration > 0) setTimeout(remove, duration);
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+})();
+
+/* ============================================================
+   COPY TO CLIPBOARD
+============================================================ */
+function copyText(text, label) {
+    if (!text) return;
+    const announce = (ok) => {
+        if (typeof showToast === 'function') {
+            showToast(
+                ok ? `${label || 'Text'} copied` : 'Copy failed',
+                ok ? 'success' : 'error',
+                1600
+            );
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => announce(true), () => announce(false));
+        return;
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        announce(true);
+    } catch (e) { announce(false); }
+}
+
+/* ============================================================
+   SEARCH + FILTER + SORT
+============================================================ */
 let currentFilter = 'all';
 let currentSearch = '';
+let bulkMode = false;
+let selectedIds = new Set();
 
 function applyFilters() {
     const items = document.querySelectorAll('.portfolio-item');
@@ -556,7 +1014,6 @@ function applyFilters() {
     items.forEach(item => {
         const cat = item.dataset.category || '';
         const haystack = item.dataset.search || '';
-
         const matchesFilter = (currentFilter === 'all' || cat === currentFilter);
         const matchesSearch = (!currentSearch || haystack.includes(currentSearch));
 
@@ -565,6 +1022,11 @@ function applyFilters() {
             visible++;
         } else {
             item.style.display = 'none';
+            // Close any open edit panel in hidden items
+            const panel = item.querySelector('[id^="edit-"]');
+            if (panel && !panel.classList.contains('hidden')) {
+                panel.classList.add('hidden');
+            }
         }
     });
 
@@ -578,6 +1040,16 @@ function applyFilters() {
 
     const noResults = document.getElementById('no-results');
     if (noResults) noResults.classList.toggle('hidden', visible > 0);
+
+    const hint = document.getElementById('search-hint');
+    if (hint) hint.classList.toggle('hidden', !currentSearch && currentFilter === 'all');
+
+    // Sync KPI highlight
+    document.querySelectorAll('[data-kpi]').forEach(kpi => {
+        const isActive = kpi.dataset.kpi === currentFilter;
+        kpi.classList.toggle('ring-2', isActive);
+        kpi.classList.toggle('ring-electric/30', isActive);
+    });
 }
 
 function filterPortfolio(filter) {
@@ -585,12 +1057,17 @@ function filterPortfolio(filter) {
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         const isActive = btn.dataset.filter === filter;
-        btn.classList.toggle('bg-cyan-500/20', isActive);
-        btn.classList.toggle('text-cyan-300', isActive);
-        btn.classList.toggle('border-cyan-500/40', isActive);
-        btn.classList.toggle('bg-slate-900', !isActive);
-        btn.classList.toggle('text-slate-400', !isActive);
-        btn.classList.toggle('border-slate-800', !isActive);
+        btn.classList.toggle('bg-ink', isActive);
+        btn.classList.toggle('dark:bg-white', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('dark:text-ink', isActive);
+        btn.classList.toggle('bg-canvas', !isActive);
+        btn.classList.toggle('dark:bg-gray-800', !isActive);
+        btn.classList.toggle('text-muted', !isActive);
+        btn.classList.toggle('border', !isActive);
+        btn.classList.toggle('border-line', !isActive);
+        btn.classList.toggle('dark:border-gray-700', !isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     applyFilters();
@@ -600,131 +1077,424 @@ function resetFilters() {
     currentSearch = '';
     const searchInput = document.getElementById('portfolio-search');
     if (searchInput) searchInput.value = '';
+    updateClearButton();
     filterPortfolio('all');
+}
+
+function clearSearch() {
+    const searchInput = document.getElementById('portfolio-search');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    currentSearch = '';
+    updateClearButton();
+    applyFilters();
+}
+
+function updateClearButton() {
+    const searchInput = document.getElementById('portfolio-search');
+    const clearBtn = document.getElementById('search-clear');
+    if (!searchInput || !clearBtn) return;
+    clearBtn.classList.toggle('hidden', !searchInput.value);
 }
 
 const searchInput = document.getElementById('portfolio-search');
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
         currentSearch = (e.target.value || '').toLowerCase().trim();
+        updateClearButton();
         applyFilters();
     });
 }
 
-// ============================================================
-// EDIT TOGGLE
-// ============================================================
-function toggleEdit(itemId) {
-    const form = document.getElementById('edit-' + itemId);
-    if (!form) return;
-    form.classList.toggle('hidden');
+/* Sort */
+const sortSelect = document.getElementById('portfolio-sort');
+if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => sortPortfolio(e.target.value));
+}
 
-    // Smooth scroll into view when opening
-    if (!form.classList.contains('hidden')) {
-        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+function sortPortfolio(order) {
+    const grid = document.getElementById('portfolio-grid');
+    if (!grid) return;
+
+    const items = Array.from(grid.querySelectorAll('.portfolio-item'));
+
+    items.sort((a, b) => {
+        const titleA = (a.dataset.title || '').toLowerCase();
+        const titleB = (b.dataset.title || '').toLowerCase();
+        const catA = a.dataset.category || '';
+        const catB = b.dataset.category || '';
+
+        switch (order) {
+            case 'title':    return titleA.localeCompare(titleB);
+            case 'category': return catA.localeCompare(catB) || titleA.localeCompare(titleB);
+            default:         return 0; // newest = server order
+        }
+    });
+    items.forEach(r => grid.appendChild(r));
+    applyFilters();
+}
+
+/* ============================================================
+   EDIT TOGGLE (single-open accordion)
+============================================================ */
+function toggleEdit(itemId) {
+    const target = document.getElementById('edit-' + itemId);
+    if (!target) return;
+
+    const isOpening = target.classList.contains('hidden');
+
+    document.querySelectorAll('[id^="edit-"]').forEach(panel => {
+        if (panel !== target) panel.classList.add('hidden');
+    });
+    document.querySelectorAll('.edit-toggle-btn').forEach(btn => {
+        btn.setAttribute('aria-expanded', 'false');
+    });
+
+    target.classList.toggle('hidden');
+
+    const btn = document.querySelector(`.edit-toggle-btn[data-item-id="${itemId}"]`);
+    if (btn) btn.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
+
+    if (isOpening) {
+        setTimeout(() => {
+            target.querySelector('input[type="text"]')?.focus();
+        }, 100);
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
-// ============================================================
-// IMAGE URL AUTO-NORMALIZE
-// ============================================================
+/* ============================================================
+   IMAGE URL NORMALIZATION
+============================================================ */
 function normalizeUrl(value) {
     const v = (value || '').trim();
     if (!v) return '';
-    if (v.startsWith('/')) return v;                          // relative path
-    if (/^https?:\/\//i.test(v)) return v;                    // already has protocol
-    if (/^[\w.-]+\.[a-z]{2,}/i.test(v)) return 'https://' + v; // looks like domain
+    if (v.startsWith('/')) return v;
+    if (/^https?:\/\//i.test(v)) return v;
+    if (/^[\w.-]+\.[a-z]{2,}/i.test(v)) return 'https://' + v;
     return v;
 }
 
-document.querySelectorAll('.url-input').forEach(input => {
+/* ============================================================
+   IMAGE PREVIEW
+============================================================ */
+(function() {
+    const input = document.getElementById('new-image');
+    const wrapper = document.getElementById('image-preview-wrapper');
+    const img = document.getElementById('image-preview');
+    const err = document.getElementById('image-error');
+    const loading = document.getElementById('image-loading');
+
+    if (!input || !wrapper || !img) return;
+
+    let timer = null;
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            const url = normalizeUrl(input.value);
+            if (!url) {
+                wrapper.classList.add('hidden');
+                err?.classList.add('hidden');
+                return;
+            }
+            wrapper.classList.remove('hidden');
+            loading?.classList.remove('hidden');
+            err?.classList.add('hidden');
+
+            img.onload = () => {
+                loading?.classList.add('hidden');
+                err?.classList.add('hidden');
+            };
+            img.onerror = () => {
+                loading?.classList.add('hidden');
+                wrapper.classList.add('hidden');
+                err?.classList.remove('hidden');
+            };
+            img.src = url;
+        }, 500);
+    });
+
     input.addEventListener('blur', () => {
         const normalized = normalizeUrl(input.value);
         if (normalized !== input.value) input.value = normalized;
     });
+})();
+
+/* ============================================================
+   CHARACTER COUNTERS
+============================================================ */
+document.querySelectorAll('[data-counter-for]').forEach(el => {
+    const targetId = el.dataset.counterFor;
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    const max = parseInt(input.getAttribute('maxlength') || '0', 10);
+    const update = () => {
+        const len = input.value.length;
+        el.textContent = `${len} / ${max}`;
+        el.classList.remove('text-muted', 'text-orange-500', 'text-red-500');
+        const ratio = max > 0 ? len / max : 0;
+        if (ratio >= 1) el.classList.add('text-red-500');
+        else if (ratio >= 0.7) el.classList.add('text-orange-500');
+        else el.classList.add('text-muted');
+    };
+    input.addEventListener('input', update);
+    update();
 });
 
-// ============================================================
-// IMAGE PREVIEW
-// ============================================================
-const imageInput = document.getElementById('new-image');
-const imagePreviewWrapper = document.getElementById('image-preview-wrapper');
-const imagePreview = document.getElementById('image-preview');
-const imageError = document.getElementById('image-error');
+/* ============================================================
+   BULK MODE
+============================================================ */
+function toggleBulkMode() {
+    bulkMode = !bulkMode;
+    const bar = document.getElementById('bulk-bar');
+    const toggle = document.getElementById('bulk-toggle');
 
-if (imageInput && imagePreview && imagePreviewWrapper && imageError) {
-    let previewTimer = null;
+    document.querySelectorAll('.bulk-checkbox-wrapper').forEach(el => {
+        el.classList.toggle('hidden', !bulkMode);
+    });
 
-    imageInput.addEventListener('input', () => {
-        clearTimeout(previewTimer);
-        previewTimer = setTimeout(() => {
-            const url = normalizeUrl(imageInput.value);
-            if (!url) {
-                imagePreviewWrapper.classList.add('hidden');
-                imageError.classList.add('hidden');
-                return;
-            }
+    if (bulkMode) {
+        bar?.classList.remove('hidden');
+        bar?.classList.add('flex');
+        if (toggle) toggle.innerHTML = '<i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i><span>Done</span>';
+    } else {
+        bar?.classList.add('hidden');
+        bar?.classList.remove('flex');
+        if (toggle) toggle.innerHTML = '<i class="fa-regular fa-square-check text-[10px]" aria-hidden="true"></i><span>Select</span>';
+        selectedIds.clear();
+        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+        updateBulkBar();
+    }
+}
 
-            imagePreview.onload = () => {
-                imagePreviewWrapper.classList.remove('hidden');
-                imageError.classList.add('hidden');
-                imagePreviewWrapper.classList.remove('border-red-500/40');
-                imagePreviewWrapper.classList.add('border-slate-800');
-            };
+document.querySelectorAll('.item-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+        if (cb.checked) selectedIds.add(cb.dataset.id);
+        else selectedIds.delete(cb.dataset.id);
+        updateBulkBar();
+    });
+});
 
-            imagePreview.onerror = () => {
-                imagePreviewWrapper.classList.add('hidden');
-                imageError.classList.remove('hidden');
-            };
+function updateBulkBar() {
+    const countEl = document.getElementById('bulk-count');
+    if (!countEl) return;
+    countEl.textContent = `${selectedIds.size} selected`;
+}
 
-            imagePreview.src = url;
-        }, 400);
+/* ============================================================
+   CONFIRM MODAL
+============================================================ */
+let confirmCallback = null;
+
+function openConfirmModal({ title, message, confirmLabel = 'Delete', onConfirm }) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-message');
+    const form = document.getElementById('confirm-form');
+    const btn = form?.querySelector('button[type="submit"]');
+    if (!modal || !form || !btn) return;
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    btn.textContent = confirmLabel;
+
+    // Clear previous listeners by cloning the form
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+
+    confirmCallback = onConfirm;
+
+    newForm.addEventListener('submit', (e) => {
+        if (confirmCallback) {
+            e.preventDefault();
+            const cb = confirmCallback;
+            closeConfirmModal();
+            cb();
+        }
+    });
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.querySelector('button[type="button"]')?.focus(), 50);
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    confirmCallback = null;
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeConfirmModal();
+});
+
+/* ============================================================
+   DELETE HELPERS
+============================================================ */
+function requestDeleteItem(itemId, title) {
+    openConfirmModal({
+        title: 'Delete this item?',
+        message: `"${title}" will be permanently removed from your portfolio.`,
+        confirmLabel: 'Delete',
+        onConfirm: () => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            // URL pattern: /lab/portfolio/<id>/delete
+            const base = '{{ url_for("lab_portfolio") }}'.replace(/\/$/, '');
+            form.action = `${base}/${itemId}/delete`;
+            form.style.display = 'none';
+            document.body.appendChild(form);
+            form.submit();
+        }
     });
 }
 
-// ============================================================
-// CREATE FORM SUBMIT FEEDBACK
-// ============================================================
+function requestBulkDelete() {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+
+    openConfirmModal({
+        title: `Delete ${ids.length} item${ids.length === 1 ? '' : 's'}?`,
+        message: 'This action cannot be undone.',
+        confirmLabel: 'Delete All',
+        onConfirm: () => {
+            const base = '{{ url_for("lab_portfolio") }}'.replace(/\/$/, '');
+            ids.forEach((id, i) => {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `${base}/${id}/delete`;
+                form.style.display = 'none';
+                document.body.appendChild(form);
+                if (i === ids.length - 1) {
+                    form.submit();
+                } else {
+                    fetch(form.action, { method: 'POST' }).catch(() => {});
+                    form.remove();
+                }
+            });
+        }
+    });
+}
+
+/* ============================================================
+   FORM SUBMIT FEEDBACK
+============================================================ */
 const createForm = document.getElementById('create-portfolio-form');
-const createBtn = document.getElementById('create-portfolio-btn');
-const createLabel = document.getElementById('create-portfolio-label');
-
-if (createForm && createBtn && createLabel) {
-    createForm.addEventListener('submit', () => {
+if (createForm) {
+    createForm.addEventListener('submit', (e) => {
         if (!createForm.checkValidity()) return;
-        createBtn.disabled = true;
-        createBtn.classList.add('opacity-70', 'cursor-not-allowed');
-        createBtn.innerHTML = `
-            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
-            <span>Adding...</span>
-        `;
+        const btn = document.getElementById('create-portfolio-btn');
+        const icon = btn?.querySelector('[data-create-icon]');
+        const label = btn?.querySelector('[data-create-label]');
+        if (btn) {
+            btn.disabled = true;
+            if (icon) icon.className = 'fa-solid fa-circle-notch fa-spin text-[10px]';
+            if (label) label.textContent = 'Adding…';
+        }
     });
 }
+
+/* ============================================================
+   FOCUS NEW ITEM
+============================================================ */
+function focusNewItem() {
+    const details = document.getElementById('add-item-details');
+    if (details) details.setAttribute('open', '');
+    const input = document.getElementById('new-title');
+    if (input) {
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const cmd = isMac ? e.metaKey : e.ctrlKey;
+
+    if (e.key === '/' && !isTyping && !cmd && !e.altKey) {
+        e.preventDefault();
+        searchInput?.focus();
+        return;
+    }
+
+    if (e.key === 'Escape') {
+        const confirmM = document.getElementById('confirm-modal');
+        if (confirmM && !confirmM.classList.contains('hidden')) {
+            closeConfirmModal();
+            return;
+        }
+        if (document.activeElement === searchInput) {
+            searchInput.blur();
+        } else if (currentSearch || currentFilter !== 'all') {
+            resetFilters();
+        } else {
+            document.querySelectorAll('[id^="edit-"]').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.edit-toggle-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+        }
+        return;
+    }
+
+    if (e.key.toLowerCase() === 'n' && !isTyping && !cmd && !e.altKey) {
+        e.preventDefault();
+        focusNewItem();
+    }
+});
+
+/* ============================================================
+   INIT
+============================================================ */
+updateClearButton();
+updateBulkBar();
 </script>
 
 <style>
-    /* Hide default <details> marker */
+    /* Hide details marker */
     details summary::-webkit-details-marker { display: none; }
     details summary::marker { content: ''; }
 
-    /* Force the <details> open on desktop */
+    /* Force details open on desktop */
     @media (min-width: 1024px) {
-        details[open] > summary,
-        details > summary {
-            display: none;
-        }
-        details > *:not(summary) {
-            display: revert !important;
-        }
+        #add-item-details > summary { display: none; }
     }
 
-    /* Smooth fade-in for edit panel */
+    /* Details open animation */
+    details[open] > *:not(summary) {
+        animation: fadeIn 0.2s ease-out;
+    }
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-4px); }
         to   { opacity: 1; transform: translateY(0); }
     }
+
+    /* Edit panel fade-in */
     #portfolio-grid [id^="edit-"]:not(.hidden) {
         animation: fadeIn 0.2s ease-out;
+    }
+
+    /* Hide scrollbars on chip strip */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom select arrow */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 12px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
 </style>
 
