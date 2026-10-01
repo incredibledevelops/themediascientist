@@ -98,7 +98,10 @@ class Config:
     # ------------------------------------------------------------
     # MongoDB — CRITICAL
     # ------------------------------------------------------------
-    MONGO_URI = _require('MONGO_URI')
+    # MONGO_URI = _require('MONGO_URI')
+    MONGO_URI = os.getenv(
+        'MONGO_URI', 'mongodb://127.0.0.1:27017/lereve_properties',
+)
 
     # ------------------------------------------------------------
     # Paystack — optional (falls back to empty; app degrades gracefully)
@@ -113,7 +116,7 @@ class Config:
     MAIL_PORT = _int_env('MAIL_PORT', 587)
     MAIL_USERNAME = _env('MAIL_USERNAME')
     MAIL_PASSWORD = _env('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = _env('MAIL_DEFAULT_SENDER', '')
+    MAIL_DEFAULT_SENDER = _env('MAIL_DEFAULT_SENDER')
 
     # ------------------------------------------------------------
     # Admin seeding — optional (only used on first run if DB is empty)
